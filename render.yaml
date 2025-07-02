@@ -1,0 +1,30 @@
+# Render Blueprint to deploy the Dash dashboard on Render's free web-service tier
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: player-combos-dashboard
+    env: python
+    plan: free            # uses the free 750-hours/month tier
+    pythonVersion: 3
+
+    buildCommand: >-
+      pip install --upgrade pip && \
+      pip install -r requirements.txt
+
+    startCommand: >-
+      waitress-serve --host 0.0.0.0 --port $PORT app:server
+
+    autoDeploy: true       # every push to the default branch triggers a deploy
+
+    # Optional: specify region (defaults to us-central)
+    # region: oregon
+
+    # Optional health check (Render pings / on port $PORT by default)
+    # healthCheckPath: /
+
+    # If your parquet file grows beyond repo limits, switch to an external bucket
+    # and expose credentials here via envVars.
+    # envVars:
+    #   - key: S3_URL
+    #     sync: false
