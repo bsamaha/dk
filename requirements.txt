@@ -1,0 +1,5 @@
+polars
+dash
+pandas
+dash-bootstrap-components
+waitress
