@@ -1,5 +1,5 @@
 polars
+psutil
 dash
-pandas
 dash-bootstrap-components
 waitress

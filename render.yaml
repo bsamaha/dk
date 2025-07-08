@@ -2,29 +2,25 @@
 # Docs: https://render.com/docs/blueprint-spec
 
 services:
-  - type: web
-    name: player-combos-dashboard
-    env: python
-    plan: free            # uses the free 750-hours/month tier
-    pythonVersion: 3
+- type: web
+  name: player-combos-dashboard
+  runtime: python
+  plan: free
 
-    buildCommand: >-
-      pip install --upgrade pip && \
-      pip install -r requirements.txt
+  buildCommand: >-
+    pip install --upgrade pip && \ pip install -r requirements.txt
 
-    startCommand: >-
-      waitress-serve --host 0.0.0.0 --port $PORT app:server
+  startCommand: waitress-serve --host=0.0.0.0 --port=$PORT app:server
 
-    autoDeploy: true       # every push to the default branch triggers a deploy
+  autoDeploy: true # every push to the default branch triggers a deploy
+  # Optional: specify region (defaults to us-central)
+  # region: oregon
 
-    # Optional: specify region (defaults to us-central)
-    # region: oregon
+  # Optional health check (Render pings / on port $PORT by default)
+  # healthCheckPath: /
 
-    # Optional health check (Render pings / on port $PORT by default)
-    # healthCheckPath: /
-
-    # If your parquet file grows beyond repo limits, switch to an external bucket
-    # and expose credentials here via envVars.
-    # envVars:
-    #   - key: S3_URL
-    #     sync: false
+  # If your parquet file grows beyond repo limits, switch to an external bucket
+  # and expose credentials here via envVars.
+  # envVars:
+  #   - key: S3_URL
+  #     sync: false

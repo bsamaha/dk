@@ -1,78 +1,112 @@
 from typing import Optional, List
+import logging
+from functools import lru_cache
 
 import polars as pl
+
+# Configure logging for performance monitoring
+logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=256)
+def _create_player_combo_key(players_tuple: tuple) -> str:
+    """Create a canonical key for player combinations.
+    
+    Args:
+        players_tuple: Tuple of sorted player names
+        
+    Returns:
+        str: Canonical string representation of the player combination
+    """
+    return "|".join(sorted(players_tuple))
+
+
+@lru_cache(maxsize=128)
+def _get_required_players_filter(required_players_tuple: tuple) -> bool:
+    """Cache the result of required players filtering logic.
+    
+    Args:
+        required_players_tuple: Tuple of required player names
+        
+    Returns:
+        bool: Whether the filtering should be applied
+    """
+    return len(required_players_tuple) > 0 if required_players_tuple else False
+
+
+# Note: Full DataFrame caching is removed to avoid memory issues
+# Instead, we rely on the existing @lru_cache in data_manager.py
+# and optimized operations within this function
 
 
 def find_unique_player_combinations(
     df: pl.DataFrame,
-    n_rounds: int | None = None,
+    n_rounds: int = 20,
     required_players: Optional[List[str]] = None,
 ) -> pl.DataFrame:
     """
     Find teams with unique combinations of players in the first N rounds.
+    
+    Optimized version using lazy evaluation and efficient operations.
 
     Args:
         df: The draft DataFrame
-        n_rounds: Number of rounds to consider (default: 3)
-        required_players: Optional list of players that must all base on the team
+        n_rounds: Number of rounds to consider (default: 20).
+        required_players: Optional list of players that must all be on the team
 
     Returns:
         DataFrame with team_id and their unique player combinations
     """
-    # Determine the slice of the DataFrame that will be analysed.
-    # If ``n_rounds`` is ``None`` (the new default), analyse the **entire** draft.
-    # Otherwise, limit the data to the first *n_rounds* rounds.
-    if n_rounds is None:
-        rounds_subset = df.sort(["team_id", "round", "draft_position"])
-    else:
-        rounds_subset = (
-            df.filter(pl.col("round") <= n_rounds)
-            .sort(["team_id", "round", "draft_position"])
-        )
-
-    # Group by team and collect **all** player names in the selected rounds.
-    # ``players`` keeps the original draft order for downstream display
-    # while ``players_sorted`` will be used solely for combination de-duplication
-    team_combinations = rounds_subset.group_by("team_id").agg(
-        [
+    logger.info(f"Finding unique combinations for {n_rounds} rounds with {len(required_players) if required_players else 0} required players")
+    
+    # Create cache key from DataFrame and parameters
+    required_players_tuple = tuple(sorted(required_players)) if required_players else ()
+    
+    # Log cache information for monitoring
+    logger.debug(f"Cache key parameters: rounds={n_rounds}, required_players={len(required_players_tuple)}")
+    
+    # Convert required_players to set for O(1) lookup performance
+    required_players_set = set(required_players) if required_players else None
+    
+    # Use lazy evaluation to chain operations efficiently
+    lazy_query = (
+        df.lazy()
+        .filter(pl.col("round") <= n_rounds)
+        .sort(["team_id", "round", "draft_position"])
+        .group_by("team_id")
+        .agg([
             pl.col("player").alias("players"),
             pl.col("player").sort().alias("players_sorted"),  # for order-insensitive comparison
             pl.col("draft").first(),
             pl.col("draft_position").first(),
-        ]
+        ])
     )
-
-    # Filter for teams that have all required players if specified
-    if required_players:
-        for player in required_players:
-            team_combinations = team_combinations.filter(
-                pl.col("players").list.contains(player)
+    
+    # Add required players filter if specified
+    if required_players_set:
+        lazy_query = lazy_query.filter(
+            pl.all_horizontal(
+                pl.col("players").list.contains(p) for p in required_players_set
             )
-
-    # Create a canonical (order-insensitive) string representation that will be
-    # used to identify duplicate rosters across different teams.
-    team_combinations = team_combinations.with_columns(
-        pl.col("players_sorted")
-        .map_elements(lambda x: "|".join(x), return_dtype=pl.Utf8)
-        .alias("player_combo")
-    )
-
-    # Deduplicate to one row per unique roster (order-insensitive).
-    # Keep the earliest draft/draft_position instance for display purposes.
+        )
+    
+    # Complete the lazy evaluation with final operations
     result = (
-        team_combinations
+        lazy_query
+        .with_columns(
+            pl.col("players_sorted").list.join("|").alias("player_combo")
+        )
         .sort("draft", "draft_position")
         .unique(subset="player_combo", keep="last")
-        .select(["team_id", "players", "draft", "draft_position"])
+        .select(["team_id", "draft", "draft_position", "players"])
+        .collect()  # Execute lazy query
     )
 
-    # Add some debug info
-    teams_meeting_criteria = team_combinations.height
+    # Efficient logging with minimal computation
     unique_team_count = result.height
-    total_teams_in_dataset = df['team_id'].n_unique()
-    percentage_of_total = (unique_team_count / total_teams_in_dataset * 100) if total_teams_in_dataset > 0 else 0
-
-    print(f"Teams meeting player list criteria: {teams_meeting_criteria}")
-    print(f"Teams with unique combinations: {unique_team_count} of {total_teams_in_dataset} ({percentage_of_total:.2f}%)")
+    if unique_team_count > 0:
+        logger.info(f"Found {unique_team_count:,} unique team combinations")
+    else:
+        logger.warning("No teams found matching the specified criteria")
 
     return result
