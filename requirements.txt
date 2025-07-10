@@ -1,5 +1,0 @@
-polars
-psutil
-dash
-dash-bootstrap-components
-waitress

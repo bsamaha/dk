@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "mantine-datatable": "^8.1.2"
+  }
+}
