@@ -205,5 +205,84 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         return final_df.to_dicts()
 
 
+    # ------------------------------------------------------------------
+    # Heat Map (draft round x position counts)
+    # ------------------------------------------------------------------
+    @staticmethod
+    def get_heat_map() -> List[Dict[str, Any]]:
+        """Return pick counts grouped by round & position for heat-map visual.
+        """
+        sql = """
+        SELECT round, Position, COUNT(*) AS count
+        FROM picks
+        GROUP BY round, Position
+        ORDER BY round, Position;
+        """
+        df = duckdb_service.query(sql)
+        return df.to_dicts()
+
+    # ------------------------------------------------------------------
+    # Stack Finder (QB + WR/TE same NFL team drafted by same fantasy team)
+    # ------------------------------------------------------------------
+    @staticmethod
+    def get_stacks(n_rounds: int = 10, limit: int = 100) -> List[Dict[str, Any]]:
+        """Find basic QB/receiver stacks drafted within first `n_rounds`."""
+        sql = f"""
+        WITH early AS (
+            SELECT draft, team_id, player, Position, Team AS nfl_team, round
+            FROM picks
+            WHERE round <= {n_rounds}
+        ),
+        qbs AS (
+            SELECT draft, team_id, player AS qb, nfl_team, round AS round_qb
+            FROM early
+            WHERE Position = 'QB'
+        ),
+        wrte AS (
+            SELECT draft, team_id, player AS receiver, nfl_team, round AS round_receiver
+            FROM early
+            WHERE Position IN ('WR', 'TE')
+        ),
+        combos AS (
+            SELECT q.draft, q.team_id, q.nfl_team, q.qb, w.receiver, q.round_qb, w.round_receiver
+            FROM qbs q
+            JOIN wrte w
+              ON q.draft = w.draft AND q.team_id = w.team_id AND q.nfl_team = w.nfl_team
+        )
+        SELECT *
+        FROM combos
+        ORDER BY draft, team_id
+        LIMIT {limit};
+        """
+        return duckdb_service.query(sql).to_dicts()
+
+    # ------------------------------------------------------------------
+    # ADP Drift (compare first half vs second half drafts)
+    # ------------------------------------------------------------------
+    @staticmethod
+    def get_adp_drift() -> List[Dict[str, Any]]:
+        """Calculate average pick drift between early vs late halves of drafts."""
+        # Determine midpoint draft id
+        midpoint_df = duckdb_service.query("""SELECT median(draft) AS mid FROM picks""")
+        mid = int(midpoint_df["mid"][0])
+
+        sql_template = """
+        SELECT player, Position, AVG(pick) AS avg_pick
+        FROM picks
+        WHERE draft {cond}
+        GROUP BY player, Position
+        """
+        early_df = duckdb_service.query(sql_template.format(cond=f"<= {mid}") )
+        late_df = duckdb_service.query(sql_template.format(cond=f"> {mid}") )
+
+        # Join on player/position
+        merged = (
+            early_df.rename({"avg_pick": "avg_pick_early"})
+            .join(late_df.rename({"avg_pick": "avg_pick_late"}), on=["player", "Position"], how="inner")
+            .with_columns((pl.col("avg_pick_late") - pl.col("avg_pick_early")).alias("drift"))
+            .sort("drift", descending=True)
+        )
+        return merged.to_dicts()
+
 # Global singleton
 analytics_service = AnalyticsService()

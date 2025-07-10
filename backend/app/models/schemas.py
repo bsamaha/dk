@@ -149,6 +149,45 @@ class RosterConstruction(BaseModel):
     position_counts: Dict[str, int] = Field(..., description="Counts of players per position")
 
 
+class DriftEntry(BaseModel):
+    """ADP drift for a player between two time periods."""
+    name: str
+    position: Position
+    avg_pick_early: float
+    avg_pick_late: float
+    drift: float  # positive means rising (later pick number), negative means ADP climbs
+
+
+class DriftResponse(BaseModel):
+    drifts: List[DriftEntry]
+
+
+class HeatMapCell(BaseModel):
+    round: int
+    position: Position
+    count: int
+
+
+class HeatMapResponse(BaseModel):
+    cells: List[HeatMapCell]
+    total_picks: int
+
+
+class StackEntry(BaseModel):
+    draft_id: int
+    team_id: int
+    nfl_team: str  # e.g., PHI
+    qb: str
+    receiver: str  # WR or TE
+    round_qb: int
+    round_receiver: int
+
+
+class StackFinderResponse(BaseModel):
+    stacks: List[StackEntry]
+    total_stacks: int
+
+
 class RosterConstructionResponse(BaseModel):
     """Response model for roster construction analysis."""
     roster_constructions: List[RosterConstruction] = Field(..., description="List of team roster constructions")
