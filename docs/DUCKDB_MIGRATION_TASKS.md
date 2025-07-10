@@ -23,7 +23,7 @@ This tracker enumerates all tasks required to integrate DuckDB while retaining P
 
 ## C. Refactor Existing Endpoints
 - ☑️ **C1. Player combinations** – port heavy group-by logic to DuckDB SQL.
-- ⬜ **C2. Pending analytics** – design SQL for Heat Map, Stack Finder, Drift endpoints.
+- ☑️ **C2. Analytics endpoints** – Heat Map, Stack Finder, Drift implemented via DuckDB SQL.
 - ⬜ **C3. Implement fallback** – use Polars if DuckDB slower (>20 %).
 
 ---
