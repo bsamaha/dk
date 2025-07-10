@@ -68,6 +68,16 @@ Complete these steps in order, checking off each when done. Update `ENGINEERING.
    - Tag `v2.0.0` and deploy with `deploy.sh`.
 
 
+
+### 4.1 Progress Snapshot (2025-07-10)
+| Task | Status |
+|------|--------|
+| 1. DuckDB Integration | ☑️ Completed |
+| 2. Heat Map | ☑️ Completed |
+| 3. Cross-Team Stack Finder | ☑️ Completed |
+| 4. Roster Construction Drift | ☑️ Completed |
+| 5. Hardening & Release Prep | ⬜ In progress |
+
 ---
 
 ## 5. Deliverables Summary
