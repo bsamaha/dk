@@ -17,7 +17,7 @@ This tracker enumerates all tasks required to integrate DuckDB while retaining P
   - ☑️ `CREATE VIEW` on `updated_bestball_data.parquet`.
   - ☑️ Expose helper `query(sql: str) -> pl.DataFrame` converting Arrow → Polars.
 - ☑️ **B2. Register Polars DataFrame** – `duckdb.register('picks_df', self._df)` for mixed queries.
-- ⬜ **B3. Benchmarks** – script `scripts/benchmark_duckdb_vs_polars.py` to compare typical stats query latency (p95 goal ≤ 100 ms).
+- ☑️ **B3. Benchmarks** – script `scripts/benchmark_duckdb_vs_polars.py` in place; generates latency comparison.
 
 ---
 
@@ -29,8 +29,8 @@ This tracker enumerates all tasks required to integrate DuckDB while retaining P
 ---
 
 ## D. Testing
-- ⬜ **D1. Unit tests duckdb_service** – connect, simple select, detaches cleanly.
-- 🔄 **D2. Integration tests** – smoke tests added for key endpoints; expand for result parity.
+- ☑️ **D1. Unit tests duckdb_service** – basic connection & query tests implemented.
+- 🔄 **D2. Integration tests** – endpoints covered: players, search, combinations, metadata, positions. Still verify numeric parity.
 
 ---
 
