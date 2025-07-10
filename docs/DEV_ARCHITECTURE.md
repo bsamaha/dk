@@ -93,5 +93,16 @@ flowchart TD
    2. Register route in React Router (planned) or sidebar link.
    3. Use existing `api.ts` or add new fetch wrapper.
 
+
+---
+
+## 5. Deployment & Ops (Lean Stack)
+* **Runtime**: Single Docker container (FastAPI + Uvicorn) sized for ≤ 400 MiB RAM on EC2 `t3a.small` Spot.
+* **Build**: Multi-stage Dockerfile (python:3.12-slim → final) ~110 MB image.
+* **CI/CD**: GitHub Action – lint → test → build → push.  Post-push `deploy.sh` (below) SSHs into the instance and pulls the latest tag.
+* **Resilience**: `docker run --restart=always`; Auto Scaling Group desired = 1 to auto-replace on pre-emption.
+* **Observability**: Structured `uvicorn` JSON logs shipped via CloudWatch Agent.
+* **Security**: Inbound 443/80 only; API served behind CloudFront, CORS allowlist enforced.
+
 ---
 *End of Developer Architecture Guide*
