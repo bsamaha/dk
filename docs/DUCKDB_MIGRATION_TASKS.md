@@ -35,9 +35,9 @@ This tracker enumerates all tasks required to integrate DuckDB while retaining P
 ---
 
 ## E. Documentation & ADR
-- ⬜ **E1. ENGINEERING.md** – add DuckDB section under Data Layer.
-- ⬜ **E2. ADR-0001** – document rationale for DuckDB + Polars hybrid (simplicity, performance).
-- ⬜ **E3. DEV_ARCHITECTURE.md** – update diagrams.
+- ☑️ **E1. ENGINEERING.md** – DuckDB section added under Data Layer.
+- ☑️ **E2. ADR-0001** – rationale for DuckDB + Polars hybrid documented.
+- ☑️ **E3. DEV_ARCHITECTURE.md** – architecture guide updated with fallback details.
 
 ---
 

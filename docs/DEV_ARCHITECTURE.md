@@ -36,9 +36,10 @@ sequenceDiagram
 *Routers remain thin (no heavy logic) and delegate to `data_service`.*
 
 ### 1.3 DataService Responsibilities
-* Lazy DuckDB query construction
-* In-process `@lru_cache` for hot endpoints
-* No external dependencies – ideal for single-process deployment
+* Executes heavy aggregations in **DuckDB** SQL for analytics, players list, and combinations.
+* Benchmarks a Polars equivalent and **automatically falls back** when Polars is >20 % faster (see `analytics_service.py`).
+* In-process `@lru_cache` for hot endpoints to avoid recomputation.
+* No external services – ideal for stateless single-process deployment.
 
 ---
 

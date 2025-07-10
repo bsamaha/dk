@@ -57,6 +57,24 @@ Function | Description (Polars)
 `get_roster_construction` | Group by team then pivot(position,count)
 Note: LRU(128) memoisation to cache recent query results.
 
+### 3.3 DuckDB & AnalyticsService
+DuckDB is embedded via `duckdb_service` and leveraged for SQL-heavy aggregations (heat-map, stack finder, ADP drift, player listing, roster combinations). Each query path is wrapped by **AnalyticsService**, which benchmarks execution time and falls back to the original Polars implementation when DuckDB is more than 20 % slower (and >50 ms absolute latency).
+
+Key points:
+* Single in-memory DuckDB connection, `PRAGMA enable_object_cache`, view on Parquet file.
+* Polars dataframe also registered as `picks_df` for hybrid queries.
+* Fallback guard pattern:
+  ```python
+  t0 = time.perf_counter()
+  duck_df = duckdb_service.query(sql)
+  dur_duck = time.perf_counter() - t0
+  if dur_duck > 0.05 and dur_pol < dur_duck * 0.8:
+      return pol_result
+  ```
+* Ensures the fastest path is served without changing public API contracts.
+
+See `docs/adr/ADR-0001-duckdb-polars-hybrid.md` for full rationale.
+
 ## 4. Frontend Layout
 Dir | Key Components
 ---|---
