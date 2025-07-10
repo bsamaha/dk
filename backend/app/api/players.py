@@ -6,6 +6,7 @@ from ..models.schemas import (
     PlayersResponse, PlayerFilter, Position, ErrorResponse, PlayerDetailsResponse, SortableColumn, SortOrder, PageInfo
 )
 from ..services.data_service import data_service
+from ..services.analytics_service import analytics_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -24,7 +25,7 @@ async def get_players(
     try:
         logger.info(f"Fetching players with filters: positions={positions}, search_term={search_term}")
         
-        players, total_count = data_service.get_players(
+        players, total_count = analytics_service.get_players(
             positions=positions,
             search_term=search_term,
             limit=limit,
@@ -67,7 +68,7 @@ async def search_players(
     try:
         logger.info(f"Searching players with query: {q}")
         
-        players, total_count = data_service.get_players(
+        players, total_count = analytics_service.get_players(
             search_term=q,
             limit=limit,
             offset=0
