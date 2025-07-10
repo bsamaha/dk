@@ -8,11 +8,13 @@ schemas remain unchanged.
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any, List, Dict, Optional, Tuple
 
 import polars as pl
 
 from .duckdb_service import duckdb_service
+from .data_service import data_service  # Polars fallback
 from ..models.schemas import Player, Position, SortableColumn, SortOrder
 
 logger = logging.getLogger(__name__)
@@ -91,10 +93,33 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         )
 
         logger.info("Running DuckDB players query: limit=%d offset=%d", limit, offset)
+        t0 = time.perf_counter()
         df: pl.DataFrame = duckdb_service.query(final_sql)
+        dur_duck = time.perf_counter() - t0
+
         if df.is_empty():
             return [], total_count
 
+        # Optionally benchmark Polars path if DuckDB slower than 50 ms
+        players: List[Player]
+        if dur_duck > 0.05:  # 50 ms threshold to consider fallback check
+            t1 = time.perf_counter()
+            pol_players, pol_total = data_service.get_players(
+                positions=positions,
+                search_term=search_term,
+                limit=limit,
+                offset=offset,
+                sort_by=sort_by,
+                sort_order=sort_order,
+            )
+            dur_pol = time.perf_counter() - t1
+            if dur_pol < dur_duck * 0.8:  # >20 % faster
+                logger.info(
+                    "Polars faster (%.2f ms) than DuckDB (%.2f ms); using fallback", dur_pol * 1e3, dur_duck * 1e3
+                )
+                return pol_players, pol_total
+
+        # Default: use DuckDB result
         df = df.rename({"player": "name", "Position": "position", "Team": "team"})
         players = [Player(**row) for row in df.to_dicts()]
         return players, total_count
@@ -150,10 +175,30 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             num_required,
             n_rounds,
         )
+        t0 = time.perf_counter()
         df: pl.DataFrame = duckdb_service.query(sql)
+        dur_duck = time.perf_counter() - t0
+
         if df.is_empty():
             return []
 
+        # Optionally benchmark Polars path if DuckDB slower than 50 ms
+        result: List[Dict[str, Any]]
+        if dur_duck > 0.05:  # 50 ms threshold to consider fallback check
+            t1 = time.perf_counter()
+            pol_result = data_service.get_player_combinations(
+                required_players=required_players,
+                n_rounds=n_rounds,
+                limit=limit,
+            )
+            dur_pol = time.perf_counter() - t1
+            if dur_pol < dur_duck * 0.8:  # >20 % faster
+                logger.info(
+                    "Polars faster (%.2f ms) than DuckDB (%.2f ms); using fallback", dur_pol * 1e3, dur_duck * 1e3
+                )
+                return pol_result
+
+        # Default: use DuckDB result
         # Aggregate per team using Polars (cheap at this stage)
         result_df = (
             df.lazy()
