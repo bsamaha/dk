@@ -38,25 +38,31 @@
 ## 4. Implementation Checklist (Single Engineer)
 Complete these steps in order, checking off each when done. Update `ENGINEERING.md` and `PRD.md` as noted.
 
-1. **Heat Map**
-   - DuckDB query prototype (`notebooks/heatmap.ipynb`).
+1. **DuckDB Integration**
+   - Add `duckdb>=0.10` to `backend/requirements.txt` and install locally.
+   - Extend `DataService` (or new `duckdb_service.py`) to initialise an **in-memory DuckDB connection**, `ATTACH` the Parquet file, and expose `query_duckdb(sql: str) -> pl.DataFrame` helper.
+   - Keep Polars for fast DataFrame ops; use DuckDB for complex SQL-style analytics (hybrid approach).
+   - Refactor existing endpoints incrementally to call DuckDB where beneficial; benchmark vs Polars (target p95 ≤ 100 ms).
+   - Document architecture change in ENGINEERING.md and ADR-0001.
+
+2. **Heat Map**
    - Add `/api/analytics/heatmap` endpoint & Pydantic models.
    - Build paginated colour-gradient table in React (`HeatMapTab.tsx`).
    - Update docs: endpoint matrix + PRD Feature F-HMAP.
 
-2. **Cross-Team Stack Finder**
-   - Implement lift/support DuckDB query.
+3. **Cross-Team Stack Finder**
+   - Implement lift/support **DuckDB** query.
    - Add `/api/analytics/stacks` endpoint.
    - Create sortable DataGrid UI (`StacksTab.tsx`).
    - Update docs: ENGINEERING & PRD (F-STACK).
 
-3. **Roster Construction Drift**
+4. **Roster Construction Drift**
    - Drift query & `/api/analytics/drift` endpoint.
    - Build area stack chart UI (`DriftTab.tsx`).
    - Ensure mobile layout works.
    - Update docs: ENGINEERING & PRD (F-DRIFT).
 
-4. **Hardening & Release Prep**
+5. **Hardening & Release Prep**
    - Accessibility & Lighthouse checks.
    - Add ADR-0001 (Lean Stack) and refresh `DEV_ARCHITECTURE.md`.
    - Tag `v2.0.0` and deploy with `deploy.sh`.
