@@ -23,9 +23,9 @@ This document supersedes the previous Heat Map workstream. All unfinished heat-m
 - ☑️ **B1. Pydantic Models** – add `DraftSlotRow` & `DraftSlotResponse` to `backend/app/models/schemas.py`.
 - ☑️ **B2. Service Layer** – implement `get_draft_slot_correlation(slot: int, metric: str = "percent", top_n: int = 25)` with `@lru_cache(256)`.
 - ☑️ **B3. Router** – new module `backend/app/api/analytics.py`
-  - [ ] `GET /api/analytics/draft-slot` with params `slot`, `metric`, `top_n`.
-  - [ ] Add to `app/api/__init__.py`.
-- [ ] **B4. Unit Tests**
+  - ☑️ `GET /api/analytics/draft-slot` with params `slot`, `metric`, `top_n`.
+  - ☑️ Add to `app/api/__init__.py`.
+- ☑️ **B4. Unit Tests**
   - [ ] `tests/services/test_data_service_draft_slot.py`
   - [ ] `tests/api/test_draft_slot.py`
 
