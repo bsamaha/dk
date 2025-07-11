@@ -251,6 +251,81 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
 
 
     # ------------------------------------------------------------------
+    # Draft Slot Correlation
+    # ------------------------------------------------------------------
+    @staticmethod
+    def get_draft_slot_correlation(
+        slot: int,
+        metric: str = "percent",
+        top_n: int = 25,
+        min_teams: int = 10,
+    ) -> List[Dict[str, Any]]:
+        """Return players most correlated with a given draft slot.
+
+        Args:
+            slot: Draft slot (1–12)
+            metric: Scoring metric – ``count``, ``percent``, or ``ratio``.
+            top_n: Number of players to return.
+            min_teams: Filter to players drafted by at least this many teams in the slot.
+        """
+        if metric not in {"count", "percent", "ratio"}:
+            raise ValueError("metric must be 'count', 'percent', or 'ratio'")
+
+        # --------------------------------------------------------------
+        # Pre-compute unique team counts overall and for the slot.
+        # --------------------------------------------------------------
+        totals_sql = f"""
+        WITH uniq AS (
+            SELECT DISTINCT draft, team_id, draft_position
+            FROM picks
+        )
+        SELECT
+            COUNT(*)                            AS total_overall,
+            SUM(CASE WHEN draft_position = {slot} THEN 1 ELSE 0 END) AS total_slot
+        FROM uniq;
+        """
+        totals_df: pl.DataFrame = duckdb_service.query(totals_sql)
+        if totals_df.is_empty():
+            return []
+        total_overall = int(totals_df["total_overall"][0])
+        total_slot = int(totals_df["total_slot"][0]) or 1  # avoid div/0
+
+        # --------------------------------------------------------------
+        # Compute counts per player.
+        # --------------------------------------------------------------
+        query_sql = f"""
+        WITH uniq AS (
+            SELECT DISTINCT draft, team_id, draft_position, player
+            FROM picks
+        ),
+        counts AS (
+            SELECT
+                player,
+                COUNT(*)                         AS overall,
+                SUM(CASE WHEN draft_position = {slot} THEN 1 ELSE 0 END) AS slot
+            FROM uniq
+            GROUP BY player
+            HAVING slot >= {min_teams}
+        )
+        SELECT
+            player,
+            slot,
+            overall,
+            CAST(slot) / {total_slot}  AS p_slot,
+            CAST(overall) / {total_overall} AS p_overall,
+            CASE
+                WHEN '{metric}' = 'count'   THEN slot
+                WHEN '{metric}' = 'percent' THEN CAST(slot) / {total_slot}
+                ELSE (CAST(slot) / {total_slot}) / (CAST(overall) / {total_overall})
+            END                           AS score
+        FROM counts
+        ORDER BY score DESC
+        LIMIT {top_n};
+        """
+        result_df: pl.DataFrame = duckdb_service.query(query_sql)
+        return result_df.to_dicts()
+
+    # ------------------------------------------------------------------
     # Heat Map (draft round x position counts)
     # ------------------------------------------------------------------
     @staticmethod
