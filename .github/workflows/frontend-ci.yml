@@ -1,0 +1,55 @@
+name: Frontend CI & Lighthouse
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  frontend-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build production bundle
+        working-directory: frontend
+        run: npm run build
+
+      - name: Run Lighthouse performance audit (fail if score < 0.90)
+        working-directory: frontend
+        run: |
+          npm install -g lighthouse serve jq
+          # Serve build in background on port 4173
+          serve -s dist -l 4173 &
+          SERVER_PID=$!
+          # Give server a moment to start
+          sleep 3
+          lighthouse http://localhost:4173 \
+            --quiet --output=json --output-path=lighthouse-report.json
+          # Extract numeric performance score (0-1)
+          SCORE=$(jq '.categories.performance.score' lighthouse-report.json)
+          echo "Lighthouse performance score: $SCORE"
+          # Convert to percentage and fail if < 0.90
+          THRESHOLD=0.90
+          awk -v score="$SCORE" -v threshold="$THRESHOLD" 'BEGIN { exit (score+0 >= threshold ? 0 : 1) }'
+          # Clean up server
+          kill $SERVER_PID
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: frontend/lighthouse-report.json

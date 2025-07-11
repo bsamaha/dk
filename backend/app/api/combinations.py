@@ -3,7 +3,8 @@ from typing import List
 import logging
 
 from ..models.schemas import CombinationsResponse, CombinationFilter, RosterConstructionResponse
-from ..services.data_service import data_service
+from ..services.data_service import data_service  # still used for roster construction
+from ..services.analytics_service import analytics_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -27,7 +28,7 @@ async def get_player_combinations(
             limit=limit
         )
 
-        combinations_data = data_service.get_player_combinations(
+        combinations_data = analytics_service.get_player_combinations(
             required_players=required_players,
             n_rounds=n_rounds,
             limit=limit

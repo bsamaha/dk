@@ -63,8 +63,9 @@ Complete these steps in order, checking off each when done. Update `ENGINEERING.
    - Update docs: ENGINEERING & PRD (F-DRIFT).
 
 5. **Hardening & Release Prep**
-   - Accessibility & Lighthouse checks.
-   - Add ADR-0001 (Lean Stack) and refresh `DEV_ARCHITECTURE.md`.
+   - Accessibility & Lighthouse checks (✅ Production build score ≥90).
+   - CI Lighthouse guard.
+   - Add ADR-0002 (Lean Stack) and refresh `DEV_ARCHITECTURE.md`.
    - Tag `v2.0.0` and deploy with `deploy.sh`.
 
 
@@ -76,15 +77,15 @@ Complete these steps in order, checking off each when done. Update `ENGINEERING.
 | 2. Heat Map | ☑️ Completed |
 | 3. Cross-Team Stack Finder | ☑️ Completed |
 | 4. Roster Construction Drift | ☑️ Completed |
-| 5. Hardening & Release Prep | ⬜ In progress |
+| 5. Hardening & Release Prep | 🔄 In progress (Lighthouse done) |
 
 ---
 
 ## 5. Deliverables Summary
 1. 3 new REST endpoints under `/api/analytics/*`.
 2. *Analytics* page (`/analytics`) with tabs: Heat Map | Stacks | Drift.
-3. Updated documentation (PRD, ENGINEERING, DEV_ARCHITECTURE, ADR-0001).
-4. CI enhancements: cache pip & pnpm, Spot-instance resilience alarms.
+3. Updated documentation (PRD, ENGINEERING, DEV_ARCHITECTURE, ADR-0001, ADR-0002).
+4. CI enhancements: cache pip & npm, Lighthouse performance guard, Spot-instance resilience alarms.
 
 ---
 

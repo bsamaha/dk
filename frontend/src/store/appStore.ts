@@ -21,7 +21,7 @@ const initialFilters: PlayerFilter = {
 
 export const useAppStore = create<AppStore>()(
   devtools(
-    (set, get) => ({
+    (set, _get) => ({
       // Initial state
       selectedPlayers: [],
       currentView: 'overview',
