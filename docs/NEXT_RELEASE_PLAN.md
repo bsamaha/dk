@@ -15,7 +15,7 @@
 ## 2. Feature Scope
 | ID | Feature | User Value | API | UI Component |
 |----|---------|------------|-----|--------------|
-| F-HMAP | Player-Centric Heat Map | See which players are commonly drafted near an anchor pick | `GET /api/analytics/heatmap` | Heat-map table w/ gradient |
+| F-DSC | Draft Slot Correlation | Identify players strongly associated with a draft slot | `GET /api/analytics/draft-slot` | Bar chart & table |
 | F-STACK | Cross-Team Stack Finder | Find high-upside player pairs drafted together across teams | `GET /api/analytics/stacks` | Sortable DataGrid |
 | F-DRIFT | Roster Construction Drift | Track season-long shifts in positional allocation | `GET /api/analytics/drift` | Area stack chart |
 
@@ -45,10 +45,10 @@ Complete these steps in order, checking off each when done. Update `ENGINEERING.
    - Refactor existing endpoints incrementally to call DuckDB where beneficial; benchmark vs Polars (target p95 ≤ 100 ms).
    - Document architecture change in ENGINEERING.md and ADR-0001.
 
-2. **Heat Map**
-   - Add `/api/analytics/heatmap` endpoint & Pydantic models.
-   - Build paginated colour-gradient table in React (`HeatMapTab.tsx`).
-   - Update docs: endpoint matrix + PRD Feature F-HMAP.
+2. **Draft Slot Correlation**
+   - Add `/api/analytics/draft-slot` endpoint & Pydantic models.
+   - Build bar chart & sortable table in React (`DraftSlotTab.tsx`).
+   - Update docs: endpoint matrix + PRD Feature F-DSC.
 
 3. **Cross-Team Stack Finder**
    - Implement lift/support **DuckDB** query.
@@ -74,7 +74,7 @@ Complete these steps in order, checking off each when done. Update `ENGINEERING.
 | Task | Status |
 |------|--------|
 | 1. DuckDB Integration | ☑️ Completed |
-| 2. Heat Map | ☑️ Completed |
+| 2. Draft Slot Correlation | ☑️ Completed |
 | 3. Cross-Team Stack Finder | ☑️ Completed |
 | 4. Roster Construction Drift | ☑️ Completed |
 | 5. Hardening & Release Prep | 🔄 In progress (Lighthouse done) |
@@ -83,7 +83,7 @@ Complete these steps in order, checking off each when done. Update `ENGINEERING.
 
 ## 5. Deliverables Summary
 1. 3 new REST endpoints under `/api/analytics/*`.
-2. *Analytics* page (`/analytics`) with tabs: Heat Map | Stacks | Drift.
+2. *Analytics* page (`/analytics`) with tabs: Draft Slot | Stacks | Drift.
 3. Updated documentation (PRD, ENGINEERING, DEV_ARCHITECTURE, ADR-0001, ADR-0002).
 4. CI enhancements: cache pip & npm, Lighthouse performance guard, Spot-instance resilience alarms.
 

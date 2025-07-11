@@ -1,53 +1,53 @@
-# Heat Map Feature – Detailed Task Tracker (v2 Release)
+# Draft Slot Correlation Feature – Detailed Task Tracker (v2 Release)
 *Created 2025-07-10*
 
-This document replaces the placeholder reference to `notebooks/heatmap.ipynb`.  All work items are organised by swim-lane and use GitHub-style checkboxes so you (or CI) can mark progress.
+This document supersedes the previous Heat Map workstream. All unfinished heat-map tasks have been removed. Use this checklist to track the integration of the approved PoC (`scripts/draft_slot_correlation.py`) into production.
 
 ---
 
-## A. Data Exploration / Prototype
-- [ ] **A1. Create prototype script** `scripts/heatmap_prototype.py`
-  - [ ] Accept CLI args `--anchor-player` (str, required) and `--window` (int, default **3**, bounded 1-12).
-  - [ ] Load `data/updated_bestball_data.parquet` with Polars.
-  - [ ] For each draft containing the anchor, collect players drafted within `±window` picks.
-  - [ ] Aggregate → `count`, `pct_of_anchor_drafts`, `avg_distance`.
-  - [ ] Sort by `pct_of_anchor_drafts` desc; limit 500 rows.
-  - [ ] Print summary to stdout *and* save to `tmp/heatmap_<anchor>.csv`.
+## A. PoC & Data Validation
+- ☑️ **A1. PoC script** `scripts/draft_slot_correlation.py` (approved)
+  - [ ] Smoke-test on sample parquet – slot **1**, metric **percent**, ensure runtime ≤ 0.1 s.
+  - [ ] Document findings in `docs/notes/draft_slot_validation.md`.
+  - [ ] Validate calculated slot correlation metrics match PoC output.
+  - [ ] Metrics: `slot_count`, `slot_percent`, `ratio_vs_overall`.
+  - [ ] Sort by selected metric desc; limit 100 rows.
+  - [ ] Print summary to stdout *and* save to `tmp/draft_slot_<slot>.csv`.
   - [ ] Log execution time & peak RSS (psutil).
-- [ ] **A2. Smoke-test prototype** using an example anchor (`"Christian McCaffrey"`, window = 3). Ensure runtime ≤ 0.1 s.
-- [ ] **A3. Capture findings** in `docs/notes/heatmap_prototype_results.md` (dataset shape, timings, row count sanity).
+
+
 
 ---
 
 ## B. Backend (API)
-- [ ] **B1. Pydantic Models** – add `HeatMapRow` & `HeatMapResponse` to `backend/app/models/schemas.py`.
-- [ ] **B2. DataService** – implement `get_heatmap(anchor_player: str, window: int = 3, limit: int = 300)` with `@lru_cache(256)`.
+- [ ] **B1. Pydantic Models** – add `DraftSlotRow` & `DraftSlotResponse` to `backend/app/models/schemas.py`.
+- [ ] **B2. Service Layer** – implement `get_draft_slot_correlation(slot: int, metric: str = "percent", top_n: int = 25)` with `@lru_cache(256)`.
 - [ ] **B3. Router** – new module `backend/app/api/analytics.py`
-  - [ ] `GET /api/analytics/heatmap` with params `anchor_player`, `window (1-12)`, `limit (≤500)`.
+  - [ ] `GET /api/analytics/draft-slot` with params `slot`, `metric`, `top_n`.
   - [ ] Add to `app/api/__init__.py`.
 - [ ] **B4. Unit Tests**
-  - [ ] `tests/services/test_data_service_heatmap.py`
-  - [ ] `tests/api/test_heatmap.py`
+  - [ ] `tests/services/test_data_service_draft_slot.py`
+  - [ ] `tests/api/test_draft_slot.py`
 
 ---
 
 ## C. Frontend (UI)
 - [ ] **C1. TypeScript Interfaces** in `frontend/src/types/api.ts` (or similar).
-- [ ] **C2. API Layer** – `getHeatMap` fetch wrapper.
-- [ ] **C3. React Query Hook** – `useHeatMap`.
-- [ ] **C4. HeatMapTab Component**
-  - [ ] UI: PlayerAutocomplete, NumberInput, Table with gradient cells, Pagination.
-  - [ ] States: loading / empty / error.
+- [ ] **C2. API Layer** – `getDraftSlotCorrelation` fetch wrapper.
+- [ ] **C3. React Query Hook** – `useDraftSlotCorrelation`.
+- [ ] **C4. DraftSlotTab Component**
+  - [ ] Inputs: NumberInput for slot, SegmentedControl for metric, Top-N selector.
+  - [ ] Outputs: Bar chart (Recharts) and table; states: loading / empty / error / no-data.
   - [ ] Accessibility: ARIA labels, keyboard nav.
-- [ ] **C5. AnalyticsPage and Navigation** – add Analytics page with Tabs (Heat Map | Stacks | Drift) & update header nav.
-- [ ] **C6. Component Tests** – `HeatMapTab.spec.tsx`.
+- [ ] **C5. AnalyticsPage and Navigation** – add Analytics page with Tabs (Draft Slot | Stacks | Drift) & update header nav.
+- [ ] **C6. Component Tests** – `DraftSlotTab.spec.tsx`.
 
 ---
 
 ## D. Documentation
-- [ ] **D1. PRD.md** – add F-HMAP user story, flow, acceptance criteria.
+- [ ] **D1. PRD.md** – add F-DSC user story, flow, acceptance criteria.
 - [ ] **D2. ENGINEERING.md** – update endpoint matrix & diagrams.
-- [ ] **D3. DEV_ARCHITECTURE.md** – add component tree & data flow for Heat Map.
+- [ ] **D3. DEV_ARCHITECTURE.md** – add component tree & data flow for Draft Slot Correlation.
 
 ---
 
