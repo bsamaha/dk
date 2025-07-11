@@ -6,7 +6,7 @@ services:
     container_name: fantasy-analytics
     ports:
       # Expose the FastAPI+React app on host port 80
-      - "80:8000"
+      - "8080:8000"
     volumes:
       # Mount dataset / any runtime-writable space
       - ./data:/app/data:ro

@@ -55,6 +55,8 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
                 Team,
                 -- Correct overflow: if value negative add 256 then cast to SMALLINT
                 CAST(CASE WHEN pick < 0 THEN pick + 256 ELSE pick END AS SMALLINT) AS pick,
+                round,
+                draft_position,
                 draft,
                 team_id
             FROM parquet_scan('{sanitized_path}');

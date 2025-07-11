@@ -16,13 +16,17 @@ import type {
 
 // Create axios instance with base configuration
 // Determine API base URL dynamically
+// Determine whether we're running under a local Vite/React dev server.
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const isDevServerPort = window.location.port === '5173' || window.location.port === '3000';
+
+// 1) Prefer explicit build-time environment variable (defined in .env or CI)
 const baseURL =
-  // 1) Prefer explicit build-time environment variable (defined in .env or CI)
   import.meta.env.VITE_API_BASE_URL ||
-  // 2) If running locally (vite/dev server) fall back to localhost:8000
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  // 2) If we're on localhost *and* the port matches a known Vite dev server
+  (isLocalhost && isDevServerPort
     ? 'http://localhost:8000/api'
-    : // 3) Otherwise (production) use same-origin relative path handled by FastAPI
+    : // 3) Otherwise (docker / prod) use same-origin relative path handled by FastAPI
       '/api');
 
 const api = axios.create({

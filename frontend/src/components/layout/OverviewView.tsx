@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState, useMemo } from 'react';
 import { apiService } from '../../services/api';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { Select, SegmentedControl, Loader } from '@mantine/core';
 
 const OverviewView = () => {
   const { data: metadata, isLoading: metadataLoading } = useQuery({
@@ -13,11 +15,35 @@ const OverviewView = () => {
     queryFn: apiService.getPositionStats,
   });
 
+  // State for position analysis controls
+  const [selectedPosition, setSelectedPosition] = useState<'QB' | 'RB' | 'WR' | 'TE'>('QB');
+  const [aggregation, setAggregation] = useState<'mean' | 'median'>('mean');
+
+  const { data: roundCountsData, isLoading: roundCountsLoading } = useQuery({
+    queryKey: ['roundCounts', selectedPosition, aggregation],
+    queryFn: () => apiService.getPositionDraftCountsByRound(selectedPosition as any, aggregation),
+  });
+
+  const roundBarData = useMemo(
+    () =>
+      roundCountsData?.round_counts.map((rc) => ({
+        round: `R${rc.round}`,
+        count: rc.count,
+      })) || [],
+    [roundCountsData]
+  );
+
   const colors = ['#1e3a8a', '#f97316', '#059669', '#dc2626', '#7c2d12', '#0891b2'];
+
+  // Compute total drafted to convert counts to percentage values
+  const totalDrafted = positionStats?.position_stats.reduce(
+    (sum, stat) => sum + stat.total_drafted,
+    0
+  ) || 0;
 
   const pieData = positionStats?.position_stats.map((stat, index) => ({
     name: stat.position,
-    value: stat.total_drafted,
+    value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
     color: colors[index % colors.length]
   })) || [];
 
@@ -31,7 +57,7 @@ const OverviewView = () => {
       <div className="space-y-6">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             {[1, 2, 3].map(i => (
               <div key={i} className="bg-white p-6 rounded-lg shadow">
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -48,23 +74,23 @@ const OverviewView = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-navy-900 mb-2">
-          Fantasy Football Draft Analytics
+          Draftkings Bestball Milly Maker Draft Analytics
         </h1>
         <p className="text-gray-600 mb-2">
-          Comprehensive analysis of fantasy football draft patterns and player selections
+          Comprehensive analysis of DK fantasy football draft patterns and player selections
         </p>
         <div className="text-xs text-gray-500">Last Updated: June 27, 2025</div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg card-shadow">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-navy-100">
               <span className="text-navy-600 text-xl">👤</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Players</p>
+              <p className="text-sm font-medium text-gray-600">Unique Players Drafted</p>
               <p className="text-2xl font-bold text-navy-900">
                 {metadata?.total_players.toLocaleString() || '0'}
               </p>
@@ -99,6 +125,20 @@ const OverviewView = () => {
             </div>
           </div>
         </div>
+
+        <div className="bg-white p-6 rounded-lg card-shadow">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-purple-100">
+              <span className="text-purple-600 text-xl">📊</span>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total Picks</p>
+              <p className="text-2xl font-bold text-navy-900">
+                {(metadata?.total_teams ? metadata.total_teams * 20 : 0).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Charts */}
@@ -108,24 +148,25 @@ const OverviewView = () => {
           <h3 className="text-lg font-semibold text-navy-900 mb-4">
             Position Draft Distribution
           </h3>
-          <div className="h-80">
+          <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%"
                   cy="50%"
+                  label={({ name, value }: any) => `${name}: ${(value ?? 0).toFixed(1)}%`}
                   labelLine={false}
-                  outerRadius={80}
+                  outerRadius={120}
                   fill="#8884d8"
                   dataKey="value"
                 >
-
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+                <Legend verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -134,9 +175,9 @@ const OverviewView = () => {
         {/* Median Players Drafted per Team Bar Chart */}
         <div className="bg-white p-6 rounded-lg card-shadow">
           <h3 className="text-lg font-semibold text-navy-900 mb-4">
-            Median Players Drafted per Team
+            Median Players Drafted per Draft Lobby
           </h3>
-          <div className="h-80">
+          <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -150,54 +191,74 @@ const OverviewView = () => {
         </div>
       </div>
 
-      {/* Position Stats Table */}
-      <div className="bg-white rounded-lg card-shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-navy-900">
-            Position Statistics
-          </h3>
+      {/* Position Analysis */}
+      <div className="bg-white p-6 rounded-lg card-shadow">
+        <h4 className="text-lg font-semibold text-navy-900 mb-4">Position Analysis</h4>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+          {positionStats?.position_stats.map((stat) => (
+            <div
+              key={stat.position}
+              className="text-center border rounded-md p-4"
+            >
+              <p className="uppercase text-xs font-semibold text-gray-500">
+                {stat.position} Drafted
+              </p>
+              <p className="text-navy-600 mt-1 text-xl font-bold">
+                {stat.total_drafted.toLocaleString()}
+              </p>
+            </div>
+          ))}
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Position
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Drafted
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Unique Players
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Median Players Drafted
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {positionStats?.position_stats.map((stat) => (
-                <tr key={stat.position} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-navy-100 text-navy-800">
-                      {stat.position}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {stat.total_drafted.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {stat.unique_players.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {stat.median_draft_count.toFixed(1)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+        {/* Bar Chart & Controls */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-end">
+          <div className="lg:col-span-3">
+            <h5 className="text-center mb-2 font-semibold text-navy-900">
+              Position Stats by Round
+            </h5>
+            <div className="h-80">
+              {roundCountsLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={roundBarData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="round" />
+                    <YAxis />
+                    <Tooltip formatter={(v: number) => v.toFixed(2)} />
+                    <Bar dataKey="count" fill="#1e3a8a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div>
+            <Select
+              label="View by Position"
+              data={['QB', 'RB', 'WR', 'TE'].map((p) => ({ value: p, label: p }))}
+              value={selectedPosition}
+              onChange={(v) => v && setSelectedPosition(v as any)}
+            />
+            <SegmentedControl
+              fullWidth
+              className="mt-4"
+              data={[
+                { label: 'Average', value: 'mean' },
+                { label: 'Median', value: 'median' },
+              ]}
+              value={aggregation}
+              onChange={(val) => setAggregation(val as any)}
+            />
+          </div>
         </div>
       </div>
+
     </div>
   );
 };

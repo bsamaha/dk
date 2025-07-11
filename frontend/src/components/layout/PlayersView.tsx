@@ -7,7 +7,6 @@ import {
   Text,
   Button,
   Pagination,
-  Select,
   Box,
   Center,
   Loader,
@@ -16,7 +15,7 @@ import {
   TextInput
 } from '@mantine/core';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 import { apiService } from '../../services/api';
 import type { Position, Player } from '../../types';
 import PlayerTable from '../ui/PlayerTable';
@@ -51,14 +50,7 @@ const usePlayers = (page: number, positions: Position[], playerNames: string[], 
   });
 };
 
-// Custom hook for fetching position stats
-const usePositionStats = () => {
-  return useQuery({
-    queryKey: ['position-stats'],
-    queryFn: apiService.getPositionStats,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-  });
-};
+
 
 const positionOrder: Position[] = ['QB', 'RB', 'WR', 'TE'];
 
@@ -69,8 +61,6 @@ const PlayersView = () => {
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // State for chart controls
-  const [selectedPositionForChart, setSelectedPositionForChart] = useState<Position | 'ALL'>('ALL');
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
 
   // API data fetching
@@ -81,23 +71,17 @@ const PlayersView = () => {
   } = usePlayers(activePage, activePositions, selectedPlayers, searchTerm);
 
   const {
-    data: positionStatsData,
-    isLoading: isPositionStatsLoading,
-    error: positionStatsError
-  } = usePositionStats();
-
-  // Memoized derived state
-  const players = useMemo(() => playersData?.players || [], [playersData]);
-  const totalPages = useMemo(() => playersData?.page_info?.total_pages ?? 1, [playersData]);
-
-  // Fetch player details when a player is selected
-  const { data: playerDetailsData, isLoading: isPlayerDetailsLoading } = useQuery({
+    data: playerDetailsData,
+    isLoading: isPlayerDetailsLoading,
+  } = useQuery({
     queryKey: ['playerDetails', selectedPlayer?.name, selectedPlayer?.position, selectedPlayer?.team],
     queryFn: () => selectedPlayer ? apiService.getPlayerDetails(selectedPlayer.name, selectedPlayer.position, selectedPlayer.team) : null,
     enabled: !!selectedPlayer,
   });
 
-
+  // Memoized derived state
+  const players = useMemo(() => playersData?.players || [], [playersData]);
+  const totalPages = useMemo(() => playersData?.page_info?.total_pages ?? 1, [playersData]);
 
   // Handlers
   const handleClearFilters = () => {
@@ -119,37 +103,6 @@ const PlayersView = () => {
     console.log('Setting selectedPlayer to:', newSelectedPlayer);
     setSelectedPlayer(newSelectedPlayer);
   };
-
-  // Memoized chart data
-  const positionChartData = useMemo(() => {
-    if (!positionStatsData?.position_stats) return [];
-
-    // Filter data based on selected position
-    const filteredStats = selectedPositionForChart === 'ALL' 
-      ? positionStatsData.position_stats
-      : positionStatsData.position_stats.filter(stat => stat.position === selectedPositionForChart);
-
-    // Create a new structure suitable for Recharts
-    const chartData = filteredStats.map(stat => ({
-      position: stat.position,
-      'Unique Players': stat.unique_players,
-      'Total Drafted': stat.total_drafted,
-      'Median Draft Count': stat.median_draft_count,
-    }));
-
-    return chartData;
-  }, [positionStatsData, selectedPositionForChart]);
-
-  const renderStatCard = (title: string, value: number | string, isLoading: boolean) => (
-    <Paper withBorder p="md" radius="md" className="text-center">
-      <Text size="xs" c="dimmed" className="uppercase font-semibold">{title}</Text>
-      {isLoading ? (
-        <Center className="h-6"><Loader size="sm" /></Center>
-      ) : (
-        <Text size="xl" fw={700} className="text-navy-600 mt-1">{value}</Text>
-      )}
-    </Paper>
-  );
 
   return (
     <Container fluid className="p-4">
@@ -218,8 +171,8 @@ const PlayersView = () => {
             <Center className="h-64"><Text>No players found matching your criteria.</Text></Center>
           ) : (
             <>
-              <PlayerTable 
-                players={players} 
+              <PlayerTable
+                players={players}
                 selectedPlayer={selectedPlayer}
                 playerDetailsData={playerDetailsData}
                 isPlayerDetailsLoading={isPlayerDetailsLoading}
@@ -237,61 +190,6 @@ const PlayersView = () => {
             </>
           )}
         </Box>
-      </Paper>
-
-      {/* Position Analysis Section */}
-      <Paper withBorder shadow="sm" p="lg" radius="md">
-        <Title order={4} className="mb-4 text-navy-600">Position Analysis</Title>
-
-        {positionStatsError && (
-          <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red" mb="lg">
-            Failed to load position statistics. Some charts may not be available.
-          </Alert>
-        )}
-
-        <Grid>
-          {positionOrder.map(pos => (
-            <Grid.Col span={{ base: 6, sm: 4, md: 2 }} key={pos}>
-              {renderStatCard(
-                `${pos} Drafted`,
-                positionStatsData?.position_stats.find(p => p.position === pos)?.total_drafted ?? 'N/A',
-                isPositionStatsLoading
-              )}
-            </Grid.Col>
-          ))}
-        </Grid>
-
-        <Grid mt="xl" align="flex-end">
-          <Grid.Col span={{ base: 12, md: 9 }}>
-            <Title order={5} ta="center" mb="xs">Position Stats</Title>
-            <Box className="h-80">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={positionChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="position" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Unique Players" fill="#8884d8" />
-                  <Bar dataKey="Total Drafted" fill="#82ca9d" />
-                  <Bar dataKey="Median Draft Count" fill="#ffc658" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 3 }}>
-            <Select
-              label="View by Position"
-              value={selectedPositionForChart}
-              onChange={(value) => setSelectedPositionForChart(value as Position | 'ALL')}
-              data={[
-                { value: 'ALL', label: 'All Positions' },
-                ...positionOrder.map(pos => ({ value: pos, label: pos }))
-              ]}
-              disabled={isPositionStatsLoading}
-            />
-          </Grid.Col>
-        </Grid>
       </Paper>
     </Container>
   );

@@ -1,0 +1,28 @@
+services:
+  app:
+    # Re-use the same Dockerfile, but run uvicorn in reload-mode
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app/backend # hot-reload backend code
+      - ./data:/app/data:ro
+      - ./frontend/dist:/app/backend/app/frontend_dist # let React build output drop here
+    env_file:
+      - .env.development
+    ports:
+      - "8000:8000"
+
+  # Optional: separate container that runs the Vite dev server
+  frontend:
+    image: node:20-alpine
+    working_dir: /frontend
+    volumes:
+      - ./frontend:/frontend
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    env_file:
+      - .env.development
