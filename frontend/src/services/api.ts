@@ -15,8 +15,18 @@ import type {
 
 
 // Create axios instance with base configuration
+// Determine API base URL dynamically
+const baseURL =
+  // 1) Prefer explicit build-time environment variable (defined in .env or CI)
+  import.meta.env.VITE_API_BASE_URL ||
+  // 2) If running locally (vite/dev server) fall back to localhost:8000
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000/api'
+    : // 3) Otherwise (production) use same-origin relative path handled by FastAPI
+      '/api');
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
