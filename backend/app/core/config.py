@@ -17,10 +17,12 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
+        "http://localhost:8080",  # Docker-hosted UI
+        "http://127.0.0.1:8080",
     ]
     
     # Data Settings
-    DATA_PATH: str = "../data/updated_bestball_data.parquet"
+    DATA_PATH: str = "/app/data/bestball.parquet"
     
     class Config:
         env_file = ".env"

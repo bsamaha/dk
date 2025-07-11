@@ -142,9 +142,9 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             return []
 
         # Sanitize and build SQL IN list
-        players_sql_list = ", ".join(
-            [f"'{p.replace("'", "''")}'" for p in required_players]
-        )
+        # Escape single quotes by doubling them (SQL standard)
+        sanitized_players = [p.replace("'", "''") for p in required_players]
+        players_sql_list = ", ".join([f"'{p}'" for p in sanitized_players])
         num_required = len(required_players)
 
         sql = f"""

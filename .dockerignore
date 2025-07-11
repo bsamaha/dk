@@ -1,0 +1,26 @@
+# Ignore everything that isn't needed in the image
+# Version control
+.git
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node artifacts
+node_modules/
+frontend/node_modules/
+
+# Local/dev files
+.env
+.vscode/
+.idea/
+.DS_Store
+
+# Test caches
+.pytest_cache/
+coverage*
+
+# OS junk
+Thumbs.db

@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fantasy-analytics
+    ports:
+      # Expose the FastAPI+React app on host port 80
+      - "80:8000"
+    volumes:
+      # Mount dataset / any runtime-writable space
+      - ./data:/app/data:ro
+    # env_file:
+    #   # Supply environment variables (CORS list, secrets, etc.)
+    #   - .env
+    restart: unless-stopped

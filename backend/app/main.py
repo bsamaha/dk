@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import polars as pl
@@ -41,15 +43,29 @@ app.add_middleware(
 # Include API routes
 app.include_router(router, prefix="/api")
 
-@app.get("/")
-async def root():
-    """Root endpoint providing API information."""
-    return {
-        "message": "Fantasy Draft Analytics API",
-        "version": "1.0.0",
-        "docs": "/docs",
-        "redoc": "/redoc"
-    }
+# Try a few possible build locations for the compiled React app.
+_frontend_candidates = [
+    Path(__file__).resolve().parent / "frontend_dist",              # /app/backend/app/frontend_dist
+    Path(__file__).resolve().parent.parent / "frontend_dist",       # /app/backend/frontend_dist
+    Path(__file__).resolve().parents[2] / "frontend_dist",          # /app/frontend_dist
+]
+for _dist_dir in _frontend_candidates:
+    if _dist_dir.exists():
+        logger.info("Serving frontend from %s", _dist_dir)
+        app.mount("/", StaticFiles(directory=str(_dist_dir), html=True), name="frontend")
+        break
+else:
+    logger.warning("No built frontend found; API-only mode")
+
+    @app.get("/")  # type: ignore
+    async def root():
+        """Root endpoint providing API information (shown only when frontend is absent)."""
+        return {
+            "message": "Fantasy Draft Analytics API",
+            "version": "1.0.0",
+            "docs": "/docs",
+            "redoc": "/redoc"
+        }
 
 @app.get("/health")
 async def health_check():

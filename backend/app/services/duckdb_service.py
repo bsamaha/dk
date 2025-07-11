@@ -38,8 +38,10 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
         # Attach parquet file as a view so SQL can read it lazily.
         data_path = self._get_data_path()
         logger.info("Attaching parquet file to DuckDB: %s", data_path)
+        # Escape single quotes in path for SQL literal
+        sanitized_path = data_path.replace("'", "''")
         self._con.execute(
-            f"CREATE OR REPLACE VIEW picks AS SELECT * FROM parquet_scan('{data_path.replace("'", "''")}');"
+            f"CREATE OR REPLACE VIEW picks AS SELECT * FROM parquet_scan('{sanitized_path}');"
         )
 
         # Register Polars DataFrame for mixed queries (optional, may be used by
