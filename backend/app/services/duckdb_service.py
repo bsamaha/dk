@@ -40,8 +40,25 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
         logger.info("Attaching parquet file to DuckDB: %s", data_path)
         # Escape single quotes in path for SQL literal
         sanitized_path = data_path.replace("'", "''")
+        # Create a view that normalises negative INT8 picks which are the
+        # result of unsigned → signed overflow in the parquet file.  In the
+        # original dataset picks are 0-255 (round 1-17).  Values greater than
+        # 127 were stored as UINT8 but interpreted as INT8 when written,
+        # producing negatives (e.g. 130 → -126).  We fix this at source so all
+        # downstream SQL sees the correct unsigned value.
         self._con.execute(
-            f"CREATE OR REPLACE VIEW picks AS SELECT * FROM parquet_scan('{sanitized_path}');"
+            f"""
+            CREATE OR REPLACE VIEW picks AS
+            SELECT
+                player,
+                Position,
+                Team,
+                -- Correct overflow: if value negative add 256 then cast to SMALLINT
+                CAST(CASE WHEN pick < 0 THEN pick + 256 ELSE pick END AS SMALLINT) AS pick,
+                draft,
+                team_id
+            FROM parquet_scan('{sanitized_path}');
+            """
         )
 
         # Register Polars DataFrame for mixed queries (optional, may be used by
