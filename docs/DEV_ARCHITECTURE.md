@@ -50,7 +50,7 @@ frontend/src/
 ├─ components/
 │  ├─ layout/       # Shell: Header, Sidebar, MainContent
 │  ├─ views/        # Pages: OverviewView, PlayersView, PositionsView, CombinationsView
-│  └─ ui/           # Reusable atoms/molecules (PlayerTable, HistogramChart, ...)
+│  └─ ui/           # Reusable atoms/molecules (PlayerTable, HistogramChart, ..., DraftSlotControls)
 ├─ api/             # api.ts – fetch + TanStack Query wrappers
 ├─ hooks/           # custom hooks (e.g., usePlayers)
 ├─ store/           # Zustand global slices
@@ -70,6 +70,22 @@ flowchart TD
 ### 2.3 State Management Rules
 * **Server state** (remote data) → TanStack Query
 * **UI state** (selected tab, collapsed panels) → Zustand or local `useState`
+
+### 2.4 Draft Slot Correlation Component Tree
+```text
+AnalyticsView (Tabs)
+└─ DraftSlotTab
+   ├─ DraftSlotControls (NumberInput, SegmentedControl, Select)
+   ├─ BarChartWrapper (Recharts)
+   └─ DraftSlotTable (Mantine Table)
+```
+
+**Data Flow**
+1. `DraftSlotTab` initialises TanStack `useQuery(['draft-slot', slot, metric, topN])`.
+2. Query key hits `api.getDraftSlotCorrelation` which performs `axios.get('/api/analytics/draft-slot', {params})`.
+3. Backend `analytics_router.get_draft_slot_correlation` delegates to `AnalyticsService.get_draft_slot_correlation(slot, metric, top_n)` (DuckDB).
+4. Response arrives → `DraftSlotTab` sets chart + table data; controls update query key.
+5. React Query cache ensures instant refetch on metric/topN change.
 
 ---
 

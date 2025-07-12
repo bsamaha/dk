@@ -173,6 +173,23 @@ class HeatMapResponse(BaseModel):
     total_picks: int
 
 
+class DraftSlotRow(BaseModel):
+    """Statistics for a single player relative to a draft slot."""
+    player: str = Field(..., description="Player name")
+    slot: int = Field(..., description="Number of teams in the slot that drafted the player")
+    overall: int = Field(..., description="Number of teams overall that drafted the player")
+    p_slot: float = Field(..., description="Percentage of slot teams drafting the player")
+    p_overall: float = Field(..., description="Percentage of all teams drafting the player")
+    score: float = Field(..., description="Metric score used for ranking")
+
+
+class DraftSlotResponse(BaseModel):
+    """Response payload for draft slot correlation request."""
+    slot: int = Field(..., description="Draft slot analysed (1-12)")
+    metric: str = Field(..., description="Metric used – count | percent | ratio")
+    rows: List[DraftSlotRow] = Field(..., description="Top players correlated with the slot")
+
+
 class StackEntry(BaseModel):
     draft_id: int
     team_id: int

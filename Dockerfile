@@ -5,8 +5,8 @@ FROM node:20-alpine AS ui-builder
 WORKDIR /src/frontend
 
 # Install dependencies first (better layer caching)
-COPY frontend/package*.json ./
-RUN npm ci --silent --legacy-peer-deps
+COPY frontend/package.json ./
+RUN npm install --silent
 
 # Copy the rest of the frontend source and build
 COPY frontend .
