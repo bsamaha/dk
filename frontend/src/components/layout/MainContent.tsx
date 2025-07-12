@@ -1,10 +1,11 @@
 import OverviewView from './OverviewView';
+import AnalyticsView from './AnalyticsView';
 import PlayersView from './PlayersView';
 
 import CombinationsView from './CombinationsView';
 
 interface MainContentProps {
-  view: 'overview' | 'players' | 'combinations';
+  view: 'overview' | 'players' | 'combinations' | 'analytics';
 }
 
 const MainContent = ({ view }: MainContentProps) => {
@@ -16,6 +17,8 @@ const MainContent = ({ view }: MainContentProps) => {
         return <PlayersView />;
       case 'combinations':
         return <CombinationsView />;
+      case 'analytics':
+        return <AnalyticsView />;
       default:
         return <OverviewView />;
     }

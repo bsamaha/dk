@@ -305,18 +305,18 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
                 SUM(CASE WHEN draft_position = {slot} THEN 1 ELSE 0 END) AS slot
             FROM uniq
             GROUP BY player
-            HAVING slot >= {min_teams}
+            HAVING SUM(CASE WHEN draft_position = {slot} THEN 1 ELSE 0 END) >= {min_teams}
         )
         SELECT
             player,
             slot,
             overall,
-            CAST(slot) / {total_slot}  AS p_slot,
-            CAST(overall) / {total_overall} AS p_overall,
+            CAST(slot AS DOUBLE) / {total_slot}  AS p_slot,
+            CAST(overall AS DOUBLE) / {total_overall} AS p_overall,
             CASE
                 WHEN '{metric}' = 'count'   THEN slot
-                WHEN '{metric}' = 'percent' THEN CAST(slot) / {total_slot}
-                ELSE (CAST(slot) / {total_slot}) / (CAST(overall) / {total_overall})
+                WHEN '{metric}' = 'percent' THEN CAST(slot AS DOUBLE) / {total_slot}
+                ELSE (CAST(slot AS DOUBLE) / {total_slot}) / (CAST(overall AS DOUBLE) / {total_overall})
             END                           AS score
         FROM counts
         ORDER BY score DESC

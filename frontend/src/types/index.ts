@@ -102,6 +102,24 @@ export interface RosterConstructionResponse {
   roster_constructions: RosterConstruction[];
 }
 
+// ---------------- Draft Slot Correlation ----------------
+export interface DraftSlotRow {
+  player: string;
+  slot: number;
+  overall: number;
+  p_slot: number;
+  p_overall: number;
+  score: number;
+}
+
+export type DraftSlotMetric = 'count' | 'percent' | 'ratio';
+
+export interface DraftSlotResponse {
+  slot: number;
+  metric: DraftSlotMetric;
+  rows: DraftSlotRow[];
+}
+
 export interface RosterConstructionCount {
   QB: number;
   RB: number;
@@ -161,7 +179,7 @@ export interface CombinationFilter {
 // UI State Types
 export interface AppState {
   selectedPlayers: string[];
-  currentView: 'overview' | 'players' | 'combinations';
+  currentView: 'overview' | 'players' | 'combinations' | 'analytics';
   filters: PlayerFilter;
 }
 

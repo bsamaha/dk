@@ -32,22 +32,22 @@ This document supersedes the previous Heat Map workstream. All unfinished heat-m
 ---
 
 ## C. Frontend (UI)
-- [ ] **C1. TypeScript Interfaces** in `frontend/src/types/api.ts` (or similar).
-- [ ] **C2. API Layer** – `getDraftSlotCorrelation` fetch wrapper.
-- [ ] **C3. React Query Hook** – `useDraftSlotCorrelation`.
-- [ ] **C4. DraftSlotTab Component**
-  - [ ] Inputs: NumberInput for slot, SegmentedControl for metric, Top-N selector.
-  - [ ] Outputs: Bar chart (Recharts) and table; states: loading / empty / error / no-data.
-  - [ ] Accessibility: ARIA labels, keyboard nav.
-- [ ] **C5. AnalyticsPage and Navigation** – add Analytics page with Tabs (Draft Slot | Stacks | Drift) & update header nav.
-- [ ] **C6. Component Tests** – `DraftSlotTab.spec.tsx`.
+- ☑️ **C1. TypeScript Interfaces** in `frontend/src/types/index.ts`.
+- ☑️ **C2. API Layer** – `getDraftSlotCorrelation` fetch wrapper.
+- ☑️ **C3. React Query Hook** – `useDraftSlotCorrelation`.
+- 🔄 **C4. DraftSlotTab Component**
+  - ☑️ Inputs: NumberInput for slot, SegmentedControl for metric, Top-N selector.
+  - ☑️ Outputs: Bar chart (Recharts) and table; states: loading / empty / error / no-data.
+  - ☑️ Accessibility: ARIA labels, keyboard nav.
+- ☑️ **C5. AnalyticsPage and Navigation** – add Analytics page with Tabs (Draft Slot | Stacks | Drift) & update header nav.
+- ☑️ **C6. Component Tests** – `DraftSlotTab.spec.tsx`.
 
 ---
 
 ## D. Documentation
-- [ ] **D1. PRD.md** – add F-DSC user story, flow, acceptance criteria.
-- [ ] **D2. ENGINEERING.md** – update endpoint matrix & diagrams.
-- [ ] **D3. DEV_ARCHITECTURE.md** – add component tree & data flow for Draft Slot Correlation.
+- ☑️ **D1. PRD.md** – add F-DSC user story, flow, acceptance criteria.
+- ☑️ **D2. ENGINEERING.md** – update endpoint matrix & diagrams.
+- ☑️ **D3. DEV_ARCHITECTURE.md** – add component tree & data flow for Draft Slot Correlation.
 
 ---
 

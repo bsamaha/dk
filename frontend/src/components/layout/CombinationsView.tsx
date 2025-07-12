@@ -9,7 +9,7 @@ import type { DataTableSortStatus, DataTableProps } from 'mantine-datatable';
 
 const CombinationsView = () => {
   const [view, setView] = useState<'players' | 'rosters'>('players');
-  
+
   // State for Player Combinations
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [nRounds, setNRounds] = useState<number>(20);
@@ -92,6 +92,7 @@ const CombinationsView = () => {
   };
 
   const records = useMemo(() => data?.combinations ?? [], [data]);
+  const totalCombinations = data?.total_combinations ?? records.length;
 
   const columns = useMemo(() => [
     {
@@ -102,9 +103,14 @@ const CombinationsView = () => {
     },
     {
       accessor: 'draft_position',
-      title: 'Team #',
+      title: 'Draft Slot',
       width: 100,
       textAlignment: 'center',
+    },
+    {
+      accessor: 'position_counts',
+      title: 'Position Counts',
+      width: 200,
     },
     {
       accessor: 'players',
@@ -123,11 +129,6 @@ const CombinationsView = () => {
           ))}
         </div>
       )
-    },
-    {
-      accessor: 'position_counts',
-      title: 'Position Counts',
-      width: 200,
     },
   ], [selectedPlayers]);
 
@@ -187,8 +188,8 @@ const CombinationsView = () => {
               <Button variant="default" onClick={handleClear} disabled={isLoading || isFetching}>
                 Clear
               </Button>
-              <Button 
-                onClick={handleSearch} 
+              <Button
+                onClick={handleSearch}
                 disabled={selectedPlayers.length === 0 || isLoading || isFetching}
                 loading={isLoading || isFetching}
                 className="bg-navy-600 hover:bg-navy-700"
@@ -211,9 +212,9 @@ const CombinationsView = () => {
             </Alert>
           )}
 
-          {isSubmitted && !isLoading && !isFetching && (
+          {isSubmitted && !isLoading && !isFetching && !error && (
             <Paper withBorder shadow="sm" p={0} radius="md" mt="xl">
-              <Title order={4} p="md" className="border-b">Results</Title>
+              <Title order={4} p="md" className="border-b">Results ({totalCombinations} teams)</Title>
               <DataTable
                 withTableBorder
                 withColumnBorders
@@ -233,7 +234,7 @@ const CombinationsView = () => {
       {view === 'rosters' && (
         <Paper shadow="sm" p="lg" withBorder>
           <Title order={3} mb="md" className="text-navy-600">Roster Construction Counts</Title>
-          
+
           <Paper p="md" mb="md" withBorder>
             <Grid align="end">
               {(['QB', 'RB', 'WR', 'TE'] as Position[]).map(pos => (
@@ -255,7 +256,7 @@ const CombinationsView = () => {
                 </Grid.Col>
               ))}
               <Grid.Col span={{ base: 12, sm: 'auto' }} >
-                  <Button onClick={clearFilters} variant="outline">Clear Filters</Button>
+                <Button onClick={clearFilters} variant="outline">Clear Filters</Button>
               </Grid.Col>
             </Grid>
           </Paper>

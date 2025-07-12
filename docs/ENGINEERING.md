@@ -47,6 +47,7 @@ GET | `/api/positions/stats/first_player` | `get_first_player_position_stats` | 
 GET | `/api/positions/stats/{position}/by_round` | `get_position_draft_counts_by_round` | aggregation
 GET | `/api/combinations/` | `get_player_combinations` | required_players[], n_rounds, limit
 GET | `/api/combinations/roster-construction/` | `get_roster_construction` | –
+GET | `/api/analytics/draft-slot` | `get_draft_slot_correlation` | slot, metric, top_n
 
 ### 3.2 DataService Highlights
 Function | Description (Polars)
@@ -102,7 +103,7 @@ Dir | Key Components
 Layer | Framework | Coverage
 ---|---|---
 Backend | Pytest | ~20 % (data_service unit tests)
-Frontend | Vitest + RTL | 0 % (planned)
+Frontend | Vitest + RTL | ~15 % (`DraftSlotTab` covered)
 E2E | Playwright | backlog
 
 ## 7. Observed Pain Points / Tech Debt

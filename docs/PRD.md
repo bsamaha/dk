@@ -27,6 +27,28 @@ Provide fantasy-football enthusiasts and analysts with fast, data-driven insight
 | F-6 | Combinations Search | `/combinations` → choose 2-4 players + N rounds → returns matching teams | `GET /api/combinations/` |
 | F-7 | Draft-wide Roster Construction | `/combinations` second card | `GET /api/combinations/roster-construction/` |
 | F-8 | Responsive UI & Error Handling | Works down to 375 px; loading skeletons; retry logic; user-friendly errors | Front-end only |
+| F-DSC | Draft Slot Correlation | `/analytics` → choose "Draft Slot" tab → set slot, metric, top-N → view bar chart + table | `GET /api/analytics/draft-slot` |
+
+## 4.1 Feature Detail — Draft Slot Correlation (F-DSC)
+### User Story
+As a competitive drafter, I want to know which players historically correlate with **draft slot X** so that I can maximise advance-rate upside when drafting from that position.
+
+### Flow (UI)
+1. Navigate to **Analytics** in header.
+2. Land on **Draft Slot** tab.
+3. Input desired **Draft Slot** (1–12).
+4. Toggle **Metric** (Count | % Slot | % Overall).
+5. Adjust **Top-N** selector (10-50).
+6. Observe bar chart + sortable table; refine inputs as needed.
+
+### Acceptance Criteria
+| ID | Given | When | Then |
+|----|-------|------|------|
+| AC-DSC-1 | Valid slot 1–12 | Load tab | Data fetch completes < 600 ms 95-th pct |
+| AC-DSC-2 | Metric toggled | User clicks another metric | Chart & table update without full page reload |
+| AC-DSC-3 | No data (edge) | Backend returns [] | UI shows "No players meet criteria" message |
+| AC-DSC-4 | Keyboard only | Tab through controls | All inputs reachable & `aria-label` present |
+| AC-DSC-5 | Error 5xx | Backend fails | Error Alert with retry button appears |
 
 ## 5. Functional Requirements (excerpt)
 | Req ID | Description | Priority |

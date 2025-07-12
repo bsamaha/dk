@@ -7,6 +7,7 @@ const Header = () => {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'players', label: 'Players', icon: '👤' },
+    { id: 'analytics', label: 'Analytics', icon: '📈' },
 
     { id: 'combinations', label: 'Combinations', icon: '🔗' },
   ] as const;

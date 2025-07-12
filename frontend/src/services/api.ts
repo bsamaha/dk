@@ -10,6 +10,7 @@ import type {
   FirstPlayerDraftStats,
   PositionRoundCountsResponse,
   Position,
+  DraftSlotResponse,
   RosterConstructionResponse
 } from '../types';
 
@@ -167,6 +168,17 @@ export const apiService = {
       team: team,
     });
     const response = await api.get(`/players/details?${params.toString()}`);
+    return response.data;
+  },
+
+  // ---------------- Draft Slot Correlation ----------------
+  async getDraftSlotCorrelation(slot: number, metric: 'count' | 'percent' | 'ratio' = 'percent', top_n: number = 25): Promise<DraftSlotResponse> {
+    const params = new URLSearchParams({
+      slot: slot.toString(),
+      metric,
+      top_n: top_n.toString(),
+    });
+    const response = await api.get(`/analytics/draft-slot?${params.toString()}`);
     return response.data;
   },
 };
