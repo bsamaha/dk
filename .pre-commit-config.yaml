@@ -1,0 +1,38 @@
+# Top-level pre-commit configuration
+# Docs: https://pre-commit.com/
+
+repos:
+  # Python formatters / linters
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        language_version: python3.12
+        args: ["--check"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.2
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile","black","--filter-files"]
+
+  # Frontend lint / format (requires Node + pnpm installed locally)
+  - repo: local
+    hooks:
+      - id: frontend-lint
+        name: "pnpm lint (frontend)"
+        entry: bash -c "cd frontend && pnpm install --silent && pnpm run lint"
+        language: system
+        types: [javascript, typescript, tsx, jsx]
+        pass_filenames: false
+
+  # Sort package.json (optional)
+  - repo: https://github.com/keith/ronn-pre-commit
+    rev: v0.4.0
+    hooks: []
