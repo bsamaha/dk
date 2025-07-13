@@ -46,7 +46,9 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         total_drafts_df = duckdb_service.query(
             "SELECT COUNT(DISTINCT draft) AS n FROM picks LIMIT 1;"
         )
-        total_drafts: int = int(total_drafts_df.item()) if not total_drafts_df.is_empty() else 1
+        total_drafts: int = (
+            int(total_drafts_df.item()) if not total_drafts_df.is_empty() else 1
+        )
 
         # --------------------------------------------------------------
         # Build dynamic WHERE clause based on optional filters.
@@ -81,11 +83,15 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         """
 
         # Total count BEFORE pagination
-        total_count_df = duckdb_service.query(f"SELECT COUNT(*) AS cnt FROM ({base_sql})")
-        total_count: int = int(total_count_df['cnt'][0]) if not total_count_df.is_empty() else 0
+        total_count_df = duckdb_service.query(
+            f"SELECT COUNT(*) AS cnt FROM ({base_sql})"
+        )
+        total_count: int = (
+            int(total_count_df["cnt"][0]) if not total_count_df.is_empty() else 0
+        )
 
         # Apply order, pagination
-        order_dir = 'DESC' if sort_order == SortOrder.DESC else 'ASC'
+        order_dir = "DESC" if sort_order == SortOrder.DESC else "ASC"
         final_sql = (
             f"{base_sql}\n"
             f"ORDER BY {sort_by.value} {order_dir}\n"
@@ -115,7 +121,9 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             dur_pol = time.perf_counter() - t1
             if dur_pol < dur_duck * 0.8:  # >20 % faster
                 logger.info(
-                    "Polars faster (%.2f ms) than DuckDB (%.2f ms); using fallback", dur_pol * 1e3, dur_duck * 1e3
+                    "Polars faster (%.2f ms) than DuckDB (%.2f ms); using fallback",
+                    dur_pol * 1e3,
+                    dur_duck * 1e3,
                 )
                 return pol_players, pol_total
 
@@ -193,7 +201,9 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             dur_pol = time.perf_counter() - t1
             if dur_pol < dur_duck * 0.8:  # >20 % faster
                 logger.info(
-                    "Polars faster (%.2f ms) than DuckDB (%.2f ms); using fallback", dur_pol * 1e3, dur_duck * 1e3
+                    "Polars faster (%.2f ms) than DuckDB (%.2f ms); using fallback",
+                    dur_pol * 1e3,
+                    dur_duck * 1e3,
                 )
                 return pol_result
 
@@ -243,11 +253,12 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             )
             final_df = result_df.join(position_counts_str_df, on="team_id", how="left")
         else:
-            final_df = result_df.with_columns(pl.lit(None, dtype=pl.String).alias("position_counts"))
+            final_df = result_df.with_columns(
+                pl.lit(None, dtype=pl.String).alias("position_counts")
+            )
 
         logger.info("DuckDB combination query returned %d teams", final_df.height)
         return final_df.to_dicts()
-
 
     # ------------------------------------------------------------------
     # Draft Slot Correlation
@@ -329,8 +340,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
     # ------------------------------------------------------------------
     @staticmethod
     def get_heat_map() -> List[Dict[str, Any]]:
-        """Return pick counts grouped by round & position for heat-map visual.
-        """
+        """Return pick counts grouped by round & position for heat-map visual."""
         sql = """
         SELECT round, Position, COUNT(*) AS count
         FROM picks
@@ -391,17 +401,24 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         WHERE draft {cond}
         GROUP BY player, Position
         """
-        early_df = duckdb_service.query(sql_template.format(cond=f"<= {mid}") )
-        late_df = duckdb_service.query(sql_template.format(cond=f"> {mid}") )
+        early_df = duckdb_service.query(sql_template.format(cond=f"<= {mid}"))
+        late_df = duckdb_service.query(sql_template.format(cond=f"> {mid}"))
 
         # Join on player/position
         merged = (
             early_df.rename({"avg_pick": "avg_pick_early"})
-            .join(late_df.rename({"avg_pick": "avg_pick_late"}), on=["player", "Position"], how="inner")
-            .with_columns((pl.col("avg_pick_late") - pl.col("avg_pick_early")).alias("drift"))
+            .join(
+                late_df.rename({"avg_pick": "avg_pick_late"}),
+                on=["player", "Position"],
+                how="inner",
+            )
+            .with_columns(
+                (pl.col("avg_pick_late") - pl.col("avg_pick_early")).alias("drift")
+            )
             .sort("drift", descending=True)
         )
         return merged.to_dicts()
+
 
 # Global singleton
 analytics_service = AnalyticsService()
