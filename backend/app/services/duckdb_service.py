@@ -80,13 +80,19 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
     @staticmethod
     def _get_data_path() -> str:
         """Return absolute path to the parquet data file (shared with DataService)."""
-        backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        return os.path.abspath(os.path.join(backend_dir, "..", "data", "updated_bestball_data.parquet"))
+        backend_dir = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        return os.path.abspath(
+            os.path.join(backend_dir, "..", "data", "updated_bestball_data.parquet")
+        )
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
-    def query(self, sql: str, params: Optional[Sequence[Any]] | None = None) -> pl.DataFrame:  # noqa: D401
+    def query(
+        self, sql: str, params: Optional[Sequence[Any]] | None = None
+    ) -> pl.DataFrame:  # noqa: D401
         """Run *read-only* SQL against DuckDB and return a Polars ``DataFrame``.
 
         Parameters

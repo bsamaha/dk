@@ -9,13 +9,13 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, List, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import polars as pl
 
-from .duckdb_service import duckdb_service
-from .data_service import data_service  # Polars fallback
 from ..models.schemas import Player, Position, SortableColumn, SortOrder
+from .data_service import data_service  # Polars fallback
+from .duckdb_service import duckdb_service
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +183,6 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             return []
 
         # Optionally benchmark Polars path if DuckDB slower than 50 ms
-        result: List[Dict[str, Any]]
         if dur_duck > 0.05:  # 50 ms threshold to consider fallback check
             t1 = time.perf_counter()
             pol_result = data_service.get_player_combinations(

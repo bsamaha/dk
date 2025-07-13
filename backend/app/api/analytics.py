@@ -1,18 +1,18 @@
 """New analytics endpoints powered by DuckDB."""
 
-from fastapi import APIRouter, HTTPException, Query
 import logging
-from typing import List
+
+from fastapi import APIRouter, HTTPException, Query
 
 from ..models.schemas import (
-    HeatMapResponse,
-    HeatMapCell,
-    StackFinderResponse,
-    StackEntry,
-    DriftResponse,
-    DriftEntry,
-    DraftSlotRow,
     DraftSlotResponse,
+    DraftSlotRow,
+    DriftEntry,
+    DriftResponse,
+    HeatMapCell,
+    HeatMapResponse,
+    StackEntry,
+    StackFinderResponse,
 )
 from ..services.analytics_service import analytics_service
 
@@ -32,9 +32,13 @@ async def get_heat_map():
 
 
 @router.get("/stacks", response_model=StackFinderResponse)
-async def get_stacks(n_rounds: int = Query(10, ge=1, le=20), limit: int = Query(100, ge=1, le=1000)):
+async def get_stacks(
+    n_rounds: int = Query(10, ge=1, le=20), limit: int = Query(100, ge=1, le=1000)
+):
     try:
-        stacks = [StackEntry(**row) for row in analytics_service.get_stacks(n_rounds, limit)]
+        stacks = [
+            StackEntry(**row) for row in analytics_service.get_stacks(n_rounds, limit)
+        ]
         return StackFinderResponse(stacks=stacks, total_stacks=len(stacks))
     except Exception as exc:
         logger.exception("Stack finder error: %s", exc)
@@ -48,11 +52,16 @@ async def get_draft_slot(
     top_n: int = Query(25, ge=1, le=100),
 ):
     try:
-        rows = [DraftSlotRow(**r) for r in analytics_service.get_draft_slot_correlation(slot, metric, top_n)]
+        rows = [
+            DraftSlotRow(**r)
+            for r in analytics_service.get_draft_slot_correlation(slot, metric, top_n)
+        ]
         return DraftSlotResponse(slot=slot, metric=metric, rows=rows)
     except Exception as exc:
         logger.exception("Draft slot correlation error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to compute draft slot correlation")
+        raise HTTPException(
+            status_code=500, detail="Failed to compute draft slot correlation"
+        )
 
 
 @router.get("/drift", response_model=DriftResponse)

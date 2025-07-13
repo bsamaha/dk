@@ -27,12 +27,8 @@ repos:
     hooks:
       - id: frontend-lint
         name: "pnpm lint (frontend)"
-        entry: bash -c "cd frontend && pnpm install --silent && pnpm run lint"
+        entry: bash -c "cd frontend && npx pnpm install --silent && npx pnpm run lint"
         language: system
-        types: [javascript, typescript, tsx, jsx]
         pass_filenames: false
 
-  # Sort package.json (optional)
-  - repo: https://github.com/keith/ronn-pre-commit
-    rev: v0.4.0
-    hooks: []
+
