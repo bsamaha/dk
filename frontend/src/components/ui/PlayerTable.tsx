@@ -114,7 +114,7 @@ const PlayerTable = ({
       rows.push(
         <Table.Tr key={`${player.name}-expansion-${index}`}>
           <Table.Td colSpan={6} p={0}>
-            <Collapse in={true} transitionDuration={300}>
+            <Collapse in={selectedPlayer?.name === player.name} transitionDuration={300}>
               <Paper p="md" m="md" withBorder>
                 <Title order={4} mb="md">
                   {selectedPlayer.name} - Draft Analysis
