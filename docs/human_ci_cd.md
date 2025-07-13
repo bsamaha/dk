@@ -45,13 +45,24 @@
    ssh ec2-user@$EC2_HOST 'chmod +x ~/app/scripts/deploy.sh'
    ```
 
-5. **Open Port 80 in Security Group** (if not already) – CloudFront expects it.
+5. **Open Port 22 for GitHub Actions**
 
-6. **First Manual Deploy**
+   - **Purpose**: To allow the GitHub Actions runner to SSH into your EC2 instance for deployment.
+   - **Action**:
+     - In the EC2 instance's Security Group, add an inbound rule.
+     - **Type**: `SSH`
+     - **Protocol**: `TCP`
+     - **Port Range**: `22`
+     - **Source**: `Anywhere (0.0.0.0/0)`
+   - **Note**: While `Anywhere` is used, access is still secured by the SSH private key.
+
+6. **Open Port 80 in Security Group** (if not already) – CloudFront expects it.
+
+7. **First Manual Deploy**
    * On GitHub → Actions → *Manual Deploy* → choose branch `main` SHA.
    * Verify via `docker ps` and hitting `/health`.
 
-7. **Set Up Pre-commit Locally** (`pip install pre-commit && pre-commit install`).
+8. **Set Up Pre-commit Locally** (`pip install pre-commit && pre-commit install`).
 
 ---
 *Once these steps are complete the automated pipeline should run end-to-end.*
