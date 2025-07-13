@@ -1,7 +1,7 @@
 # Developer Architecture Guide
-*Scope: FastAPI backend + React-TS frontend – 2025-07-10*
+*Scope: FastAPI backend + React-TS frontend – 2024-07-16*
 
-> This guide is intentionally concise. Each section is self-contained; jump directly to the layer you need to modify.
+> This guide is intentionally concise. Each section is self-contained; jump directly to the layer you need to modify. For in-depth backend details, see [backend_detailed.md](backend_detailed.md).
 
 ---
 
@@ -10,15 +10,23 @@
 ```text
 backend/app/
 ├─ core/            # settings, logging
+│  ├─ __init__.py
+│  └─ config.py
 ├─ models/          # Pydantic schemas (contracts)
+│  ├─ __init__.py
+│  └─ schemas.py
 ├─ services/
-│  └─ data_service.py  # Polars + DuckDB queries (singleton)
+│  ├─ __init__.py
+│  ├─ data_service.py      # Polars queries (singleton)
+│  ├─ duckdb_service.py    # DuckDB SQL integration
+│  └─ analytics_service.py # Hybrid analytics with fallback
 ├─ api/             # Thin routers only
 │  ├─ __init__.py   # aggregates routers with prefixes
 │  ├─ metadata.py   # /api/metadata/*
 │  ├─ players.py    # /api/players/*
 │  ├─ positions.py  # /api/positions/*
-│  └─ combinations.py # /api/combinations/*
+│  ├─ combinations.py # /api/combinations/*
+│  └─ analytics.py  # /api/analytics/* (heat-map, stacks, etc.)
 └─ main.py          # FastAPI app factory & CORS
 ```
 
@@ -27,19 +35,23 @@ backend/app/
 sequenceDiagram
     browser->>API: GET /api/players?search_term=Dobbins
     API->>players.router: get_players
-    players.router->>data_service: get_players()
-    data_service->>DuckDB: read_parquet & SQL
-    DuckDB-->>data_service: RecordBatch
-    data_service-->>players.router: List[Player]
+    players.router->>analytics_service: get_players()
+    alt Complex Query
+        analytics_service->>duckdb_service: SQL query
+    else Simple Query or Fallback
+        analytics_service->>data_service: Polars operations
+    end
+    duckdb_service-->>analytics_service: Polars DataFrame
+    analytics_service-->>players.router: List[Player]
     players.router-->>API: PlayersResponse (JSON)
 ```
-*Routers remain thin (no heavy logic) and delegate to `data_service`.*
+*Routers remain thin (no heavy logic) and delegate to `analytics_service` or `data_service`.*
 
-### 1.3 DataService Responsibilities
-* Executes heavy aggregations in **DuckDB** SQL for analytics, players list, and combinations.
-* Benchmarks a Polars equivalent and **automatically falls back** when Polars is >20 % faster (see `analytics_service.py`).
-* In-process `@lru_cache` for hot endpoints to avoid recomputation.
-* No external services – ideal for stateless single-process deployment.
+### 1.3 Service Responsibilities
+- **DataService**: Handles Polars-based data loading, filtering, and basic aggregations. Loads Parquet at startup, provides methods like get_players, get_player_details.
+- **DuckDBService**: Embedded SQL engine for complex queries; creates views on Parquet, executes SQL, returns Polars DFs.
+- **AnalyticsService**: Orchestrates analytics; prefers DuckDB for efficiency, benchmarks and falls back to Polars if >20% faster and >50ms. Adds advanced features like draft slot correlation and ADP drift.
+*No external services – ideal for stateless single-process deployment.*
 
 ---
 
@@ -158,7 +170,10 @@ GET | `/api/positions/stats/first_player` | `get_first_player_position_stats` | 
 GET | `/api/positions/stats/{position}/by_round` | `get_position_draft_counts_by_round` | aggregation
 GET | `/api/combinations/` | `get_player_combinations` | required_players[], n_rounds, limit
 GET | `/api/combinations/roster-construction/` | `get_roster_construction` | –
-GET | `/api/analytics/draft-slot` | `get_draft_slot_correlation` | slot, metric, top_n
+GET | `/api/analytics/heat-map` | `get_heat_map` | –
+GET | `/api/analytics/stacks` | `get_stacks` | n_rounds, limit
+GET | `/api/analytics/draft-slot` | `get_draft_slot` | slot, metric, top_n
+GET | `/api/analytics/drift` | `get_adp_drift` | limit
 
 ### 6.3 DataService Highlights
 Function | Description (Polars)
@@ -170,7 +185,22 @@ Function | Description (Polars)
 Note: `@lru_cache(maxsize=128)` memoises recent results.
 
 ### 6.4 DuckDB & AnalyticsService
-DuckDB is embedded via `duckdb_service` and leveraged for SQL-heavy aggregations (heat map, stack finder, ADP drift). `AnalyticsService` benchmarks execution time and falls back to Polars when DuckDB is >20 % slower **and** >50 ms absolute.
+DuckDB is embedded via `duckdb_service` and leveraged for SQL-heavy aggregations (heat map, stack finder, ADP drift, draft slot correlation). `AnalyticsService` benchmarks execution time and falls back to Polars when DuckDB is >20% slower **and** >50ms absolute. This hybrid approach ensures optimal performance without added complexity.
+
+Key points:
+* Single in-memory DuckDB connection, `PRAGMA enable_object_cache`, view on Parquet file.
+* Polars dataframe also registered as `picks_df` for hybrid queries.
+* Fallback guard pattern:
+  ```python
+  t0 = time.perf_counter()
+  duck_df = duckdb_service.query(sql)
+  dur_duck = time.perf_counter() - t0
+  if dur_duck > 0.05 and dur_pol < dur_duck * 0.8:
+      return pol_result
+  ```
+* Ensures the fastest path is served without changing public API contracts.
+
+See `docs/adr/ADR-0001-duckdb-polars-hybrid.md` for full rationale.
 
 ### 6.5 Frontend Layout
 Dir | Key Components
@@ -197,16 +227,23 @@ Dir | Key Components
 
 ### 6.7 Testing Status
 Layer | Framework | Coverage
----|---|---
-Backend | Pytest | ~20 % (data_service unit tests)
-Frontend | Vitest + RTL | ~15 % (`DraftSlotTab` covered)
+---|---|----
+Backend | Pytest | 78% (services high, analytics moderate)
+Frontend | Vitest + RTL | ~15% (`DraftSlotTab` covered)
 E2E | Playwright | backlog
 
+For detailed backend test documentation, see [backend_tests.md](backend_tests.md).
+
 ### 6.8 Observed Pain Points / Tech Debt
-* No deep-link routing to specific player or position.
+* No deep-link routing to specific player or position (frontend).
 * Combination endpoint heavy payload; consider server pagination.
 * DataService caches lost on deploy; investigate persisted cache strategy.
 * Tailwind 4 upgrade blocked by PostCSS plugin.
+* Low test coverage (~20% backend, ~15% frontend).
+* Potential memory pressure if dataset grows beyond current 12MB Parquet.
+* Dependency versions not pinned, risking updates.
+
+For detailed backend issues and lean improvements, see [backend_detailed.md](backend_detailed.md).
 
 ---
 *End of Architecture & Engineering Guide*

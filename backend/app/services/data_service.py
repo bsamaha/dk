@@ -130,7 +130,7 @@ with pl.StringCache():
                         pl.mean("pick").alias("avg_pick"),
                         pl.min("pick").alias("min_pick"),
                         pl.max("pick").alias("max_pick"),
-                        (pl.count() / total_drafts * 100).alias("draft_percentage"),
+                        (pl.len() / total_drafts * 100).alias("draft_percentage"),
                     ]
                 )
             )
@@ -221,7 +221,7 @@ with pl.StringCache():
             # Calculate total drafted and unique players for each position
             other_stats = df.group_by("Position").agg(
                 [
-                    pl.count().alias("total_drafted"),
+                    pl.len().alias("total_drafted"),
                     pl.col("player").n_unique().alias("unique_players"),
                 ]
             )
@@ -340,7 +340,7 @@ with pl.StringCache():
             # Filter for relevant drafts first
             relevant_teams_df = (
                 df.lazy()
-                .filter(pl.col("player").is_in(required_players))
+                .filter(pl.col("player").is_in(pl.Series(required_players)))
                 .group_by("team_id")
                 .agg(pl.col("player").n_unique().alias("unique_players"))
                 .filter(pl.col("unique_players") == len(required_players_set))
@@ -385,7 +385,7 @@ with pl.StringCache():
                 .group_by(["team_id", "positions"])
                 .agg(pl.len().alias("count"))
                 .collect()
-                .pivot(index="team_id", columns="positions", values="count")
+                .pivot(index="team_id", on="positions", values="count")
                 .fill_null(0)
             )
 
@@ -438,7 +438,7 @@ with pl.StringCache():
             # Pivot to get positions as columns
             roster_df = (
                 position_counts.pivot(
-                    index=["draft", "team_id"], columns="Position", values="count"
+                    index=["draft", "team_id"], on="Position", values="count"
                 )
                 .fill_null(0)
                 .rename({"draft": "draft_id"})
@@ -465,13 +465,17 @@ with pl.StringCache():
                 .agg(
                     [
                         pl.len().alias("count"),
-                        (pl.len() / pl.count() * 100).alias("frequency"),
+                        (pl.len() / pl.len() * 100).alias("frequency"),
                     ]
                 )
                 .sort("count", descending=True)
             )
 
-            return [RosterConstruction(**row) for row in roster_counts.to_dicts()]
+            return [RosterConstruction(
+                draft_id=0,  # Dummy as it's aggregated
+                team_id=0,  # Dummy
+                position_counts = {pos: row.get(pos, 0) for pos in position_columns},
+            ) for row in roster_counts.to_dicts()]
 
         def get_roster_construction_counts(self) -> List[Dict[str, Any]]:
             """Get aggregated counts of unique roster constructions, focusing on QB, RB, WR, TE."""

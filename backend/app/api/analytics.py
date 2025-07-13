@@ -48,7 +48,7 @@ async def get_stacks(
 @router.get("/draft-slot", response_model=DraftSlotResponse)
 async def get_draft_slot(
     slot: int = Query(..., ge=1, le=12),
-    metric: str = Query("percent", regex="^(count|percent|ratio)$"),
+    metric: str = Query("percent", pattern="^(count|percent|ratio)$"),
     top_n: int = Query(25, ge=1, le=100),
 ):
     try:

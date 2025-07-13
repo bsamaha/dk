@@ -342,7 +342,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
     def get_heat_map() -> List[Dict[str, Any]]:
         """Return pick counts grouped by round & position for heat-map visual."""
         sql = """
-        SELECT round, Position, COUNT(*) AS count
+        SELECT round, Position as position, COUNT(*) AS count
         FROM picks
         GROUP BY round, Position
         ORDER BY round, Position;
