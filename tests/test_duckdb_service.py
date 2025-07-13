@@ -1,7 +1,7 @@
 """Unit tests for DuckDBService."""
 
-import pytest
 import polars as pl
+import pytest
 
 from backend.app.services.duckdb_service import duckdb_service
 
@@ -15,15 +15,16 @@ def test_duckdb_basic_select() -> None:
     assert df[0, "two"] == 2
 
 
-@pytest.mark.parametrize("anchor_player", [
-    "Christian McCaffrey",
-    "Travis Kelce",
-])
+@pytest.mark.parametrize(
+    "anchor_player",
+    [
+        "Christian McCaffrey",
+        "Travis Kelce",
+    ],
+)
 def test_duckdb_parquet_scan(anchor_player: str) -> None:
     """Ensure the attached parquet view is queryable."""
-    sql = (
-        "SELECT COUNT(*) AS cnt FROM picks WHERE player = ? LIMIT 1;"
-    )
+    sql = "SELECT COUNT(*) AS cnt FROM picks WHERE player = ? LIMIT 1;"
     df = duckdb_service.query(sql, [anchor_player])
     # Result should be one row and one column
     assert df.shape == (1, 1)

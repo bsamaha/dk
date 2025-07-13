@@ -8,7 +8,10 @@ client = TestClient(app)
 
 
 def test_draft_slot_endpoint_basic():
-    resp = client.get("/api/analytics/draft-slot", params={"slot": 1, "metric": "percent", "top_n": 15})
+    resp = client.get(
+        "/api/analytics/draft-slot",
+        params={"slot": 1, "metric": "percent", "top_n": 15},
+    )
     assert resp.status_code == 200
     payload = resp.json()
     assert payload["slot"] == 1
@@ -18,7 +21,9 @@ def test_draft_slot_endpoint_basic():
     assert len(rows) <= 15
     if rows:
         sample = rows[0]
-        assert {"player", "slot", "overall", "p_slot", "p_overall", "score"}.issubset(sample.keys())
+        assert {"player", "slot", "overall", "p_slot", "p_overall", "score"}.issubset(
+            sample.keys()
+        )
 
 
 def test_draft_slot_invalid_metric():

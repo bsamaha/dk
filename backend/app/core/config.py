@@ -1,14 +1,15 @@
-from pydantic_settings import BaseSettings
 from typing import List
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     """Application settings."""
-    
+
     # API Settings
     API_V1_STR: str = "/api"
     PROJECT_NAME: str = "Fantasy Draft Analytics API"
-    
+
     # CORS Settings
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000",  # React dev server
@@ -20,10 +21,10 @@ class Settings(BaseSettings):
         "http://localhost:8080",  # Docker-hosted UI
         "http://127.0.0.1:8080",
     ]
-    
+
     # Data Settings
     DATA_PATH: str = "/app/data/bestball.parquet"
-    
+
     class Config:
         env_file = ".env"
 
