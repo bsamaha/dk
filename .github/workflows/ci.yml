@@ -18,13 +18,10 @@ jobs:
           pip install -r backend/requirements.txt
           pip install ruff black==25.1.0
       - run: ruff check backend && black --check backend
-      - run: pytest -q
+      - run: PYTHONPATH=. pytest -q
 
   frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
@@ -35,9 +32,15 @@ jobs:
           node-version: 20
           cache: 'pnpm'
           cache-dependency-path: frontend/pnpm-lock.yaml
-      - run: pnpm i --frozen-lockfile
-      - run: pnpm run lint
-      - run: pnpm run test --run
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: pnpm i --frozen-lockfile
+      - name: Lint
+        working-directory: ./frontend
+        run: pnpm run lint
+      - name: Test
+        working-directory: ./frontend
+        run: pnpm run test --run
 
   types:
     runs-on: ubuntu-latest
