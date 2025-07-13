@@ -1,3 +1,4 @@
+# windsurf:linter:disable-rule: context-access-might-be-invalid
 name: Release
 
 on:
