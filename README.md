@@ -5,12 +5,14 @@ A modern React + TypeScript frontend with FastAPI backend for analyzing fantasy 
 ## 🚀 Quick Start
 
 ### Windows
+
 ```bash
 # Double-click or run in command prompt
 start-dev.bat
 ```
 
 ### Mac/Linux
+
 ```bash
 # Make executable and run
 chmod +x start-dev.sh
@@ -18,9 +20,10 @@ chmod +x start-dev.sh
 ```
 
 This will automatically:
+
 - Create Python virtual environment (if needed)
 - Install backend dependencies
-- Install frontend dependencies (if needed) 
+- Install frontend dependencies (if needed)
 - Start both servers concurrently
 
 ## 📱 Access Points
@@ -32,6 +35,7 @@ This will automatically:
 ## 🛠 Manual Setup
 
 ### Backend (FastAPI)
+
 ```bash
 # Create and activate virtual environment
 python -m venv .venv
@@ -47,6 +51,7 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Frontend (React + Vite)
+
 ```bash
 cd frontend
 
@@ -59,7 +64,7 @@ npm run dev
 
 ## 🏗 Project Structure
 
-```
+```text
 dk/
 ├── backend/              # FastAPI backend
 │   ├── app/
@@ -91,6 +96,7 @@ dk/
 ## 🔧 Tech Stack
 
 ### Frontend
+
 - React 19 + TypeScript
 - Vite (build tool)
 - Tailwind CSS + Mantine UI
@@ -98,7 +104,8 @@ dk/
 - Zustand (global state)
 - Recharts (data visualization)
 
-### Backend  
+### Backend
+
 - FastAPI
 - Polars (data processing)
 - Pydantic (data validation)
@@ -107,6 +114,7 @@ dk/
 ## 📊 Data
 
 The application analyzes fantasy football draft data from a Parquet file (`data/updated_bestball_data.parquet`). The data includes:
+
 - Player names and positions
 - Draft rounds and positions
 - Team compositions
@@ -115,17 +123,20 @@ The application analyzes fantasy football draft data from a Parquet file (`data/
 ## 🐛 Troubleshooting
 
 ### Port Already in Use
+
 If you get port conflicts, kill existing processes:
+
 ```bash
 # Windows
 netstat -ano | findstr :8000
 taskkill /PID <PID> /F
 
-# Mac/Linux  
+# Mac/Linux
 lsof -ti:8000 | xargs kill -9
 ```
 
 ### Dependencies Issues
+
 ```bash
 # Backend - update pip and reinstall
 pip install --upgrade pip
@@ -138,6 +149,7 @@ npm install
 ```
 
 ### Data File Missing
+
 Ensure `data/updated_bestball_data.parquet` exists in the project root.
 
 ## 🤝 Contributing

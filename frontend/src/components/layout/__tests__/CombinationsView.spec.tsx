@@ -69,7 +69,7 @@ describe('CombinationsView', () => {
     // Mock useQuery with stable return values
     vi.mocked(useQuery).mockImplementation((options) => {
       const queryKey = Array.isArray(options.queryKey) ? options.queryKey[0] : options.queryKey;
-      
+
       if (queryKey === 'metadata') {
         return {
           data: mockMetadata,
@@ -81,7 +81,7 @@ describe('CombinationsView', () => {
           isSuccess: true
         } as unknown as UseQueryResult;
       }
-      
+
       if (queryKey === 'rosterConstructionCounts') {
         return {
           data: mockRosterData,
@@ -93,7 +93,7 @@ describe('CombinationsView', () => {
           isSuccess: true
         } as unknown as UseQueryResult;
       }
-      
+
       if (queryKey === 'combinations') {
         return {
           data: mockCombinationsData,
@@ -105,7 +105,7 @@ describe('CombinationsView', () => {
           isSuccess: true
         } as unknown as UseQueryResult;
       }
-      
+
       return {
         data: undefined,
         isLoading: false,
@@ -158,8 +158,8 @@ describe('CombinationsView', () => {
     expect(screen.getByRole('radiogroup')).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /player combinations/i })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /roster constructions/i })).toBeInTheDocument();
-    
+
     // Check for the main heading
     expect(screen.getByRole('heading', { name: /player combinations/i })).toBeInTheDocument();
   });
-}); 
+});

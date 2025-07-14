@@ -1,12 +1,15 @@
 # Developer Architecture Guide
-*Scope: FastAPI backend + React-TS frontend – 2024-07-16*
+
+**Scope**: FastAPI backend + React-TS frontend – 2024-07-16
 
 > This guide is intentionally concise. Each section is self-contained; jump directly to the layer you need to modify. For in-depth backend details, see [backend_detailed.md](backend_detailed.md).
 
 ---
 
 ## 1. Backend (FastAPI)
+
 ### 1.1 Module Layout
+
 ```text
 backend/app/
 ├─ core/            # settings, logging
@@ -31,6 +34,7 @@ backend/app/
 ```
 
 ### 1.2 Request Flow
+
 ```mermaid
 sequenceDiagram
     browser->>API: GET /api/players?search_term=Dobbins
@@ -45,9 +49,11 @@ sequenceDiagram
     analytics_service-->>players.router: List[Player]
     players.router-->>API: PlayersResponse (JSON)
 ```
+
 *Routers remain thin (no heavy logic) and delegate to `analytics_service` or `data_service`.*
 
 ### 1.3 Service Responsibilities
+
 - **DataService**: Handles Polars-based data loading, filtering, and basic aggregations. Loads Parquet at startup, provides methods like get_players, get_player_details.
 - **DuckDBService**: Embedded SQL engine for complex queries; creates views on Parquet, executes SQL, returns Polars DFs.
 - **AnalyticsService**: Orchestrates analytics; prefers DuckDB for efficiency, benchmarks and falls back to Polars if >20% faster and >50ms. Adds advanced features like draft slot correlation and ADP drift.
@@ -56,7 +62,9 @@ sequenceDiagram
 ---
 
 ## 2. Frontend (React + Vite)
+
 ### 2.1 Directory Map
+
 ```text
 frontend/src/
 ├─ components/
@@ -71,6 +79,7 @@ frontend/src/
 ```
 
 ### 2.2 Data Fetch Lifecycle
+
 ```mermaid
 flowchart TD
     A[Component] -->|useQuery| B(api.ts fetch)
@@ -80,10 +89,12 @@ flowchart TD
 ```
 
 ### 2.3 State Management Rules
-* **Server state** (remote data) → TanStack Query
-* **UI state** (selected tab, collapsed panels) → Zustand or local `useState`
+
+- **Server state** (remote data) → TanStack Query
+- **UI state** (selected tab, collapsed panels) → Zustand or local `useState`
 
 ### 2.4 Draft Slot Correlation Component Tree
+
 ```text
 AnalyticsView (Tabs)
 └─ DraftSlotTab
@@ -92,7 +103,8 @@ AnalyticsView (Tabs)
    └─ DraftSlotTable (Mantine Table)
 ```
 
-**Data Flow**
+#### Data Flow
+
 1. `DraftSlotTab` initialises TanStack `useQuery(['draft-slot', slot, metric, topN])`.
 2. Query key hits `api.getDraftSlotCorrelation` which performs `axios.get('/api/analytics/draft-slot', {params})`.
 3. Backend `analytics_router.get_draft_slot_correlation` delegates to `AnalyticsService.get_draft_slot_correlation(slot, metric, top_n)` (DuckDB).
@@ -102,6 +114,7 @@ AnalyticsView (Tabs)
 ---
 
 ## 3. Cross-Cutting Concerns
+
 | Concern | Implementation |
 |---------|----------------|
 | Type Safety | Pydantic ↔ `datamodel-codegen` → TypeScript types |
@@ -112,6 +125,7 @@ AnalyticsView (Tabs)
 ---
 
 ## 4. Extending the System
+
 1. **Add new endpoint**
    1. Create query in `data_service.py`.
    2. Expose via new function in appropriate `api/*.py`.
@@ -121,21 +135,23 @@ AnalyticsView (Tabs)
    2. Register route in React Router (planned) or sidebar link.
    3. Use existing `api.ts` or add new fetch wrapper.
 
-
 ---
 
 ## 5. Deployment & Ops (Lean Stack)
-* **Runtime**: Single Docker container (FastAPI + Uvicorn) sized for ≤ 400 MiB RAM on EC2 `t3a.small` Spot.
-* **Build**: Multi-stage Dockerfile (python:3.12-slim → final) ~110 MB image.
-* **CI/CD**: GitHub Action – lint → test → build → push.  Post-push `deploy.sh` (below) SSHs into the instance and pulls the latest tag.
-* **Resilience**: `docker run --restart=always`; Auto Scaling Group desired = 1 to auto-replace on pre-emption.
-* **Observability**: Structured `uvicorn` JSON logs shipped via CloudWatch Agent.
-* **Security**: Inbound 443/80 only; API served behind CloudFront, CORS allowlist enforced.
+
+- **Runtime**: Single Docker container (FastAPI + Uvicorn) sized for ≤ 400 MiB RAM on EC2 `t3a.small` Spot.
+- **Build**: Multi-stage Dockerfile (python:3.12-slim → final) ~110 MB image.
+- **CI/CD**: GitHub Action – lint → test → build → push.  Post-push `deploy.sh` (below) SSHs into the instance and pulls the latest tag.
+- **Resilience**: `docker run --restart=always`; Auto Scaling Group desired = 1 to auto-replace on pre-emption.
+- **Observability**: Structured `uvicorn` JSON logs shipped via CloudWatch Agent.
+- **Security**: Inbound 443/80 only; API served behind CloudFront, CORS allowlist enforced.
 
 ---
+
 ## 6. Tech Stack & Endpoint Matrix
 
 ### 6.1 Technology Stack
+
 Layer | Tech | Notes
 ---|---|---
 Front-End | React 18 + TS, Vite, Tailwind v3, Mantine 7, Recharts 2 | Theme: navy `#002D72`, orange `#FF7F0E`
@@ -146,6 +162,7 @@ Infra | Local: bare; Prod: EC2 Spot single container | CORS enabled
 Tooling | Ruff, Black; ESLint + Prettier | GitHub Actions CI
 
 ### 6.2 Backend Layout & Endpoints
+
 | Path | Responsibility |
 |------|----------------|
 | `app/main.py` | Instantiate FastAPI, include routers, CORS, health |
@@ -157,6 +174,7 @@ Tooling | Ruff, Black; ESLint + Prettier | GitHub Actions CI
 | `app/models/schemas.py` | Pydantic models (Player, Responses) |
 
 #### 6.2.1 Endpoint Matrix (excerpt)
+
 Method | Route | Handler | Params
 ---|---|---|---
 GET | `/` | `root` | –
@@ -176,6 +194,7 @@ GET | `/api/analytics/draft-slot` | `get_draft_slot` | slot, metric, top_n
 GET | `/api/analytics/drift` | `get_adp_drift` | limit
 
 ### 6.3 DataService Highlights
+
 Function | Description (Polars)
 ---|---
 `get_players` | Filter + sort df, slice for pagination
@@ -185,12 +204,15 @@ Function | Description (Polars)
 Note: `@lru_cache(maxsize=128)` memoises recent results.
 
 ### 6.4 DuckDB & AnalyticsService
+
 DuckDB is embedded via `duckdb_service` and leveraged for SQL-heavy aggregations (heat map, stack finder, ADP drift, draft slot correlation). `AnalyticsService` benchmarks execution time and falls back to Polars when DuckDB is >20% slower **and** >50ms absolute. This hybrid approach ensures optimal performance without added complexity.
 
 Key points:
-* Single in-memory DuckDB connection, `PRAGMA enable_object_cache`, view on Parquet file.
-* Polars dataframe also registered as `picks_df` for hybrid queries.
-* Fallback guard pattern:
+
+- Single in-memory DuckDB connection, `PRAGMA enable_object_cache`, view on Parquet file.
+- Polars dataframe also registered as `picks_df` for hybrid queries.
+- Fallback guard pattern:
+
   ```python
   t0 = time.perf_counter()
   duck_df = duckdb_service.query(sql)
@@ -198,11 +220,13 @@ Key points:
   if dur_duck > 0.05 and dur_pol < dur_duck * 0.8:
       return pol_result
   ```
-* Ensures the fastest path is served without changing public API contracts.
+
+- Ensures the fastest path is served without changing public API contracts.
 
 See `docs/adr/ADR-0001-duckdb-polars-hybrid.md` for full rationale.
 
 ### 6.5 Frontend Layout
+
 Dir | Key Components
 ---|---
 `src/components/layout/` | `Header`, `Sidebar`, `MainContent`
@@ -212,12 +236,14 @@ Dir | Key Components
 `src/types/` | Shared TS mirrors of backend schemas
 
 #### 6.5.1 Player Click Data Flow
+
 1. `PlayerTable` row `<a>` triggers `handlePlayerClick` in `PlayersView`.
 2. Zustand `selectedPlayer` state updated.
 3. React-Query fetches `GET /players/details`.
 4. Mantine `Collapse` expands with stats grid + Recharts histogram.
 
 ### 6.6 Dev Scripts
+
 | Step | Command |
 |------|---------|
 | Install backend deps | `pip install -r backend/requirements.txt` |
@@ -226,6 +252,7 @@ Dir | Key Components
 | Run FE dev | `pnpm dev` (opens http://localhost:5173) |
 
 ### 6.7 Testing Status
+
 Layer | Framework | Coverage
 ---|---|----
 Backend | Pytest | 78% (services high, analytics moderate)
@@ -237,15 +264,18 @@ For detailed frontend test documentation, see [frontend_tests.md](frontend_tests
 For detailed backend test documentation, see [backend_tests.md](backend_tests.md).
 
 ### 6.8 Observed Pain Points / Tech Debt
-* No deep-link routing to specific player or position (frontend).
-* Combination endpoint heavy payload; consider server pagination.
-* DataService caches lost on deploy; investigate persisted cache strategy.
-* Tailwind 4 upgrade blocked by PostCSS plugin.
-* Low test coverage (~20% backend, ~15% frontend).
-* Potential memory pressure if dataset grows beyond current 12MB Parquet.
-* Dependency versions not pinned, risking updates.
+
+- No deep-link routing to specific player or position (frontend).
+- Combination endpoint heavy payload; consider server pagination.
+- DataService caches lost on deploy; investigate persisted cache strategy.
+- Tailwind 4 upgrade blocked by PostCSS plugin.
+- Low test coverage (~20% backend, ~15% frontend).
+- Potential memory pressure if dataset grows beyond current 12MB Parquet.
+- Dependency versions not pinned, risking updates.
+- **SQL Injection Risk**: `analytics_service` uses f-strings to build SQL queries, creating a security risk. This requires refactoring to use parameterized queries. The `B608` Bandit check is temporarily suppressed.
 
 For detailed backend issues and lean improvements, see [backend_detailed.md](backend_detailed.md).
 
 ---
-*End of Architecture & Engineering Guide*
+
+End of Architecture & Engineering Guide

@@ -2,33 +2,104 @@
 # Docs: https://pre-commit.com/
 
 repos:
-  # Python formatters / linters
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
+  # ===== GENERAL FILE CHECKS =====
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
     hooks:
-      - id: black
-        language_version: python3.12
-        args: ["--check"]
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom YAML tags
+      - id: check-toml
+      - id: check-json
+        exclude: ^frontend/tsconfig.*\.json$
+      - id: check-added-large-files
+        args: ['--maxkb=1000']  # Prevent files > 1MB
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+
+  # ===== PYTHON BACKEND =====
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black", "--filter-files"]
+        files: ^backend/
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.2
     hooks:
       - id: ruff
+        args: ["--fix", "--exit-non-zero-on-fix"]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  # Python security and quality
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        files: ^backend/.*\.py$
+        # No 'args' needed; bandit will use pyproject.toml
+
+  # ===== FRONTEND =====
+  # Note: Frontend hooks disabled due to Windows PATH issues
+  # Run manually with: cd frontend && pnpm run lint && pnpm run format
+  # - repo: local
+  #   hooks:
+  #     - id: frontend-lint
+  #       name: "ESLint (frontend)"
+  #       entry: cmd /c "cd frontend && pnpm install --silent && pnpm run lint"
+  #       language: system
+  #       files: ^frontend/.*\.(ts|tsx|js|jsx)$
+  #       pass_filenames: false
+
+  # ===== PACKAGE MANAGEMENT =====
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        files: ^frontend/package\.json$
+        args: ["--write"]
+
+  # ===== DOCUMENTATION =====
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.37.0
+    hooks:
+      - id: markdownlint
         args: ["--fix"]
+        files: ^(docs/.*\.md|README\.md)$
 
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+  # ===== COMMIT MESSAGE =====
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.0.0
     hooks:
-      - id: isort
-        args: ["--profile","black","--filter-files"]
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: ["feat", "fix", "chore", "docs", "style", "refactor", "perf", "test", "build", "ci"] # Allowed commit types
 
-  # Frontend lint / format (requires Node + pnpm installed locally)
-  - repo: local
+  # ===== SECRETS DETECTION =====
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
     hooks:
-      - id: frontend-lint
-        name: "pnpm lint (frontend)"
-        entry: bash -c "cd frontend && npx pnpm install --silent && npx pnpm run lint"
-        language: system
-        pass_filenames: false
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: ^(frontend/pnpm-lock\.yaml|frontend/package-lock\.json|.*\.lock)$
 
+# ===== CONFIGURATION =====
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
 
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

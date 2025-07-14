@@ -3,7 +3,7 @@ import { useAppStore } from '../../store/appStore';
 
 const Header = () => {
   const { currentView, setCurrentView } = useAppStore();
-  
+
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'players', label: 'Players', icon: '👤' },
@@ -26,7 +26,7 @@ const Header = () => {
               </h1>
             </div>
           </div>
-          
+
           <nav className="flex items-center space-x-1">
             {navItems.map((item) => (
               <button

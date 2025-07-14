@@ -10,4 +10,4 @@ describe('appStore', () => {
     });
     expect(result.current.currentView).toBe('players');
   });
-}); 
+});

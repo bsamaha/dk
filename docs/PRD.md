@@ -1,14 +1,17 @@
 # Fantasy Football Draft Analytics Dashboard – Product Requirements Document (PRD) v2
 
 ## 1. Purpose
+
 Provide fantasy-football enthusiasts and analysts with fast, data-driven insights into Best-Ball draft behaviour so they can make smarter roster decisions.
 
 ## 2. Target Users
+
 * Serious Best-Ball drafters tracking ADP trends
 * Analysts / content creators producing draft-strategy content
 * Internal data-science team validating predictive models
 
 ## 3. Goals & Success Metrics
+
 | Goal | Success Metric |
 |------|---------------|
 | Fast, visual exploration of 600 k+ pick records | Initial page < **1.5 s** on desktop |
@@ -17,6 +20,7 @@ Provide fantasy-football enthusiasts and analysts with fast, data-driven insight
 | Zero unhandled UI exceptions in production | Sentry shows < **0.1** errors / 100 sessions |
 
 ## 4. Current Feature Set
+
 | ID | Feature | User Flow | Data Source / API |
 |----|---------|-----------|--------------------|
 | F-1 | Overview Dashboard | Land on `/` → view total drafts, teams, picks + high-level charts | `GET /api/metadata/` |
@@ -30,10 +34,13 @@ Provide fantasy-football enthusiasts and analysts with fast, data-driven insight
 | F-DSC | Draft Slot Correlation | `/analytics` → choose "Draft Slot" tab → set slot, metric, top-N → view bar chart + table | `GET /api/analytics/draft-slot` |
 
 ## 4.1 Feature Detail — Draft Slot Correlation (F-DSC)
+
 ### User Story
+
 As a competitive drafter, I want to know which players historically correlate with **draft slot X** so that I can maximise advance-rate upside when drafting from that position.
 
 ### Flow (UI)
+
 1. Navigate to **Analytics** in header.
 2. Land on **Draft Slot** tab.
 3. Input desired **Draft Slot** (1–12).
@@ -42,6 +49,7 @@ As a competitive drafter, I want to know which players historically correlate wi
 6. Observe bar chart + sortable table; refine inputs as needed.
 
 ### Acceptance Criteria
+
 | ID | Given | When | Then |
 |----|-------|------|------|
 | AC-DSC-1 | Valid slot 1–12 | Load tab | Data fetch completes < 600 ms 95-th pct |
@@ -51,6 +59,7 @@ As a competitive drafter, I want to know which players historically correlate wi
 | AC-DSC-5 | Error 5xx | Backend fails | Error Alert with retry button appears |
 
 ## 5. Functional Requirements (excerpt)
+
 | Req ID | Description | Priority |
 |--------|-------------|----------|
 | FR-1 | User can filter player list by multiple positions simultaneously | P0 |
@@ -61,6 +70,7 @@ As a competitive drafter, I want to know which players historically correlate wi
 | FR-6 | Front-end must show retry w/ back-off on 5xx up to 3 tries | P2 |
 
 ## 6. Non-Functional Requirements
+
 | Area | Requirement |
 |------|-------------|
 | Performance | Backend loads 12 MB parquet into memory once; subsequent queries complete < 50 ms |
@@ -70,12 +80,14 @@ As a competitive drafter, I want to know which players historically correlate wi
 | Maintainability | 80 %+ TypeScript coverage; black/ruff & eslint/prettier CI gates |
 
 ## 7. Known Gaps / Backlog for v2
+
 * Team-level win-rate overlay
 * User authentication & saved “watch lists”
 * Real-time draft room assistant (WebSocket)
 * CI/CD pipeline to staging (Netlify FE + Fly.io backend)
 
 ## 8. Proposed vNext (v2) Feature Set – Data-Science Powered
+
 | ID | Feature | User Value | DS Method | New API |
 |----|---------|-----------|-----------|---------|
 | F-9 | Draft Pick Volatility | Identify risky vs stable picks using std-dev & IQR of draft position | DuckDB `stddev` + percentile | `GET /api/players/volatility` |
@@ -85,9 +97,11 @@ As a competitive drafter, I want to know which players historically correlate wi
 | F-13 | ADP Trend Tracker | Track ADP movement over season/draft chronology | Rolling avg by draft index | `GET /api/players/adp_trend` |
 
 ### 8.1 Data Requirements
+
 Current parquet already holds draft_id, pick, player, position, team, round. No extra fields needed; draft_id order serves as time proxy.
 
 ### 8.2 Success Signals
+
 * ≥ 70 % beta users try at least one new analytic card.
 * Average session length increases by 20 %.
 

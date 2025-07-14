@@ -5,7 +5,9 @@
 > This file is the **single entry-point** to all engineering knowledge for the Fantasy Football Draft Analytics Dashboard.  Every other markdown document is referenced here so automated tooling (e.g., AI assistants) can quickly locate deeper context without crawling the entire repo.
 
 ---
+
 ## 0. Quick Links
+
 | Area | Doc | Purpose |
 |------|-----|---------|
 | Architectural Decision | [`adr/ADR-0002-lean-stack.md`](adr/ADR-0002-lean-stack.md) | Lean single-container deployment principle |
@@ -16,19 +18,25 @@
 | Services Overview | [`services/README.md`](services/README.md) | Business-logic services & extension workflow |
 
 ---
+
 ## 1. Table of Contents
+
 1. [System Purpose](#1-system-purpose)
-2. [High-Level Architecture](#2-high-level-architecture)
+2. [High-Level Architecture](#2-high-level-architecture-snapshot)
 3. [Document Map](#3-document-map)
-4. [Developer Onboarding](#4-developer-onboarding)
+4. [Developer Onboarding](#4-developer-onboarding-1-minute-version)
 5. [AI Assistant Tips](#5-ai-assistant-tips)
 
 ---
+
 ## 1. System Purpose
+
 Provide lightning-fast analytics for fantasy-football drafts from a 12 MB parquet data set while running in a **single Docker container** (see ADR-0002).  Users explore players, positions, combinations, and advanced analytics via a modern React UI backed by a typed FastAPI service.
 
 ---
+
 ## 2. High-Level Architecture (snapshot)
+
 ```mermaid
 flowchart LR
     subgraph Front-End (Vite 5173)
@@ -41,10 +49,13 @@ flowchart LR
     B -- REST/JSON --> C
     E -- parquet --> F[data/bestball.parquet]
 ```
+
 *Entire stack ships as **one container**; CloudFront terminates TLS and routes to port 80 → 8000 inside the EC2 Spot instance.*
 
 ---
+
 ## 3. Document Map
+>
 > Follow the links to drill down from coarse → fine granularity.
 
 ```text
@@ -52,6 +63,12 @@ README.md (this file)
  ├─ ADRs/
  │   └─ ADR-0002-lean-stack.md           # Deployment principle
  ├─ DEV_ARCHITECTURE.md                  # Deep dive, request flows, component trees
+ ├─ PRE_COMMIT_SETUP.md                  # Pre-commit hooks setup & usage
+ ├─ CI_CD.md                             # GitHub Actions pipeline
+ ├─ backend_detailed.md                  # Backend deep dive
+ ├─ frontend_detailed.md                 # Frontend deep dive
+ ├─ backend_tests.md                     # Backend testing guide
+ ├─ frontend_tests.md                    # Frontend testing guide
 
  ├─ api/
  │   ├─ README.md                        # Summary & backlog table
@@ -67,19 +84,25 @@ README.md (this file)
 ```
 
 ---
+
 ## 4. Developer Onboarding (1-minute version)
+
 1. **Clone & Run** – `make dev` → http://localhost:5173 & http://localhost:8000
-2. **Read** – Skim [`DEV_ARCHITECTURE.md`](DEV_ARCHITECTURE.md) for architecture, endpoint matrix, and stack cheat-sheet.
-3. **Deep Dive** – Jump to package README of the area you plan to edit (`api`, `models`, `services`).
-4. **Lean Principle** – Any proposal that adds *external infra* must answer ADR-0002 constraints.
-5. **Contribute** – Create a branch → PR; CI runs lint + tests + docs build.
+2. **Setup Pre-commit** – Follow [`PRE_COMMIT_SETUP.md`](PRE_COMMIT_SETUP.md) to install code quality hooks
+3. **Read** – Skim [`DEV_ARCHITECTURE.md`](DEV_ARCHITECTURE.md) for architecture, endpoint matrix, and stack cheat-sheet.
+4. **Deep Dive** – Jump to package README of the area you plan to edit (`api`, `models`, `services`).
+5. **Lean Principle** – Any proposal that adds *external infra* must answer ADR-0002 constraints.
+6. **Contribute** – Create a branch → PR; CI runs lint + tests + docs build.
 
 ---
+
 ## 5. AI Assistant Tips
+
 * Prefer **relative links** above to fetch detailed docs quickly.
 * When you need request/response shapes, open [`models/schemas.md`](models/schemas.md) instead of scraping code.
 * For query logic performance tweaks, inspect [`services/analytics_service.md`](services/analytics_service.md).
 * ADR-0002 is the *north star*—avoid suggesting Redis, Prometheus, or multi-service deployments unless refactor is explicitly underway.
 
 ---
-*Last updated: 2025-07-12*
+
+Last updated: 2025-07-12

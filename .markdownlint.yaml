@@ -1,0 +1,38 @@
+# Markdownlint configuration
+# Docs: https://github.com/DavidAnson/markdownlint
+
+# Default rule configuration
+default: true
+
+# Disable rules that conflict with our documentation style
+MD007:
+  # Unordered list indentation
+  indent: 2
+
+MD013:
+  # Line length - disabled completely
+  false
+
+MD024:
+  # Multiple headings with same content - allow in different sections
+  siblings_only: true
+
+MD033:
+  # Inline HTML - allow for better documentation formatting
+  allowed_elements: ["br", "sub", "sup", "details", "summary", "img"]
+
+MD034:
+  # Bare URL - allow for simple URL references
+  false
+
+MD041:
+  # First line in file should be top-level heading - not always needed
+  false
+
+MD046:
+  # Code block style - allow both indented and fenced
+  style: "consistent"
+
+MD048:
+  # Code fence style - consistent within file
+  style: "consistent"

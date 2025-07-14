@@ -471,11 +471,14 @@ with pl.StringCache():
                 .sort("count", descending=True)
             )
 
-            return [RosterConstruction(
-                draft_id=0,  # Dummy as it's aggregated
-                team_id=0,  # Dummy
-                position_counts = {pos: row.get(pos, 0) for pos in position_columns},
-            ) for row in roster_counts.to_dicts()]
+            return [
+                RosterConstruction(
+                    draft_id=0,  # Dummy as it's aggregated
+                    team_id=0,  # Dummy
+                    position_counts={pos: row.get(pos, 0) for pos in position_columns},
+                )
+                for row in roster_counts.to_dicts()
+            ]
 
         def get_roster_construction_counts(self) -> List[Dict[str, Any]]:
             """Get aggregated counts of unique roster constructions, focusing on QB, RB, WR, TE."""

@@ -19,6 +19,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
 def create_app():
     app = FastAPI(
         title="Fantasy Draft Analytics API",
@@ -65,10 +66,13 @@ def create_app():
                 "docs": "/docs",
                 "redoc": "/redoc",
             }
+
     return app
+
 
 app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)  # nosec B104

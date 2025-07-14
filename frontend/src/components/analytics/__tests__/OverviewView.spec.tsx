@@ -15,7 +15,7 @@ describe('OverviewView', () => {
       unobserve: vi.fn(),
       disconnect: vi.fn(),
     }));
-    
+
     // Mock matchMedia
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
@@ -30,13 +30,13 @@ describe('OverviewView', () => {
         dispatchEvent: vi.fn(),
       })),
     });
-    
+
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    
+
     // Mock useQuery with proper return values
     vi.mocked(useQuery).mockImplementation((options) => {
       const queryKey = Array.isArray(options.queryKey) ? options.queryKey[0] : options.queryKey;
-      
+
       if (queryKey === 'metadata') {
         return {
           data: { total_players: 100, total_drafts: 50, total_teams: 12 },
@@ -48,7 +48,7 @@ describe('OverviewView', () => {
           isSuccess: true
         } as unknown as UseQueryResult;
       }
-      
+
       if (queryKey === 'positionStats') {
         return {
           data: { position_stats: [{ position: 'QB', total_drafted: 10, median_draft_count: 2 }] },
@@ -60,7 +60,7 @@ describe('OverviewView', () => {
           isSuccess: true
         } as unknown as UseQueryResult;
       }
-      
+
       if (queryKey === 'roundCounts') {
         return {
           data: { round_counts: [{ round: 1, count: 5 }] },
@@ -72,7 +72,7 @@ describe('OverviewView', () => {
           isSuccess: true
         } as unknown as UseQueryResult;
       }
-      
+
       return {
         data: undefined,
         isLoading: false,
@@ -99,7 +99,7 @@ describe('OverviewView', () => {
       refetch: vi.fn(),
       isSuccess: false
     } as unknown as UseQueryResult);
-    
+
     render(<MantineProvider><OverviewView /></MantineProvider>);
     expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
@@ -108,4 +108,4 @@ describe('OverviewView', () => {
     render(<MantineProvider><OverviewView /></MantineProvider>);
     expect(screen.getByText('100')).toBeInTheDocument();
   });
-}); 
+});

@@ -24,4 +24,4 @@ describe('Sidebar', () => {
     expect(screen.getByText('100')).toBeInTheDocument();
     expect(screen.getByText('Total Players:')).toBeInTheDocument();
   });
-}); 
+});

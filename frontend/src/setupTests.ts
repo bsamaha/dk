@@ -19,11 +19,11 @@ Object.defineProperty(window, 'matchMedia', {
 // Mock ResizeObserver
 class MockResizeObserver {
   callback: ResizeObserverCallback;
-  
+
   constructor(callback: ResizeObserverCallback) {
     this.callback = callback;
   }
-  
+
   observe = vi.fn();
   unobserve = vi.fn();
   disconnect = vi.fn();

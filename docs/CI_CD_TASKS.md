@@ -1,10 +1,12 @@
 # CI/CD Implementation Task List
+
 *Derived from [`CI_CD.md`](CI_CD.md)*
 
-> **Owner:** single engineer  
+> **Owner:** single engineer
 > **Goal:** Ship a working, lightweight pipeline that gates PRs with tests and automatically deploys the merged image to our EC2 Spot instance.
 
 ---
+
 ## Sequential Tasks
 
 1. **Bootstrap Pre-commit Hooks**
@@ -46,10 +48,14 @@
    - [ ] Commit & push.
 
 ---
+
 ## Done Criteria
+
 - CI passes for every PR with <3 min runtime.
 - Merging to `main` builds image, pushes to GHCR, deploys to EC2 automatically.
 - Rollback possible via Manual Deploy workflow.
 - Pre-commit hooks prevent lint/format errors from reaching CI.
 
-*Last updated: 2025-07-12*
+---
+
+Last updated: 2025-07-12

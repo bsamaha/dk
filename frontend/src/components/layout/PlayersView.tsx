@@ -37,7 +37,7 @@ const usePlayers = (page: number, positions: Position[], playerNames: string[], 
       } else if (searchTerm.trim()) {
         combinedSearchTerm = searchTerm.trim();
       }
-      
+
       return apiService.getPlayers({
         offset: (page - 1) * 20,
         limit: 20,
@@ -128,7 +128,7 @@ const PlayersView = () => {
             />
           </Grid.Col>
         </Grid>
-        
+
         <Grid mt="sm">
           <Grid.Col span={{ base: 12, md: 8 }}>
             {(selectedPlayers.length > 0 || searchTerm.trim()) && (

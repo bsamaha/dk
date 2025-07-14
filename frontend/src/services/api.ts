@@ -1,8 +1,8 @@
 import axios from 'axios';
-import type { 
-  MetadataResponse, 
-  PlayersResponse, 
-  PositionStatsResponse, 
+import type {
+  MetadataResponse,
+  PlayersResponse,
+  PositionStatsResponse,
   PlayerFilter,
   CombinationFilter,
   CombinationsResponse,
@@ -75,19 +75,19 @@ export const apiService = {
   // Get players with filtering
   async getPlayers(filters: PlayerFilter = {}): Promise<PlayersResponse> {
     const params = new URLSearchParams();
-    
+
     if (filters.search_term) {
       params.append('search_term', filters.search_term);
     }
-    
+
     if (filters.positions && filters.positions.length > 0) {
       filters.positions.forEach(pos => params.append('positions', pos));
     }
-    
+
     if (filters.limit) {
       params.append('limit', filters.limit.toString());
     }
-    
+
     if (filters.offset) {
       params.append('offset', filters.offset.toString());
     }

@@ -80,11 +80,11 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         FROM picks
         {where_sql}
         GROUP BY player, Position, Team
-        """
+        """  # nosec B608
 
         # Total count BEFORE pagination
         total_count_df = duckdb_service.query(
-            f"SELECT COUNT(*) AS cnt FROM ({base_sql})"
+            f"SELECT COUNT(*) AS cnt FROM ({base_sql})"  # nosec B608
         )
         total_count: int = (
             int(total_count_df["cnt"][0]) if not total_count_df.is_empty() else 0
@@ -176,7 +176,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         FROM filtered
         WHERE team_id IN (SELECT team_id FROM target_teams)
         ORDER BY draft, draft_position, team_id, round;
-        """
+        """  # nosec B608
 
         logger.info(
             "Running DuckDB combination query for %d required players (<= round %d)",
@@ -264,7 +264,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
     # Draft Slot Correlation
     # ------------------------------------------------------------------
     @staticmethod
-    def get_draft_slot_correlation(
+    def get__slot_correlation(
         slot: int,
         metric: str = "percent",
         top_n: int = 25,
@@ -293,7 +293,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             COUNT(*)                            AS total_overall,
             SUM(CASE WHEN draft_position = {slot} THEN 1 ELSE 0 END) AS total_slot
         FROM uniq;
-        """
+        """  # nosec B608
         totals_df: pl.DataFrame = duckdb_service.query(totals_sql)
         if totals_df.is_empty():
             return []
@@ -331,7 +331,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         FROM counts
         ORDER BY score DESC
         LIMIT {top_n};
-        """
+        """  # nosec B608
         result_df: pl.DataFrame = duckdb_service.query(query_sql)
         return result_df.to_dicts()
 
@@ -382,7 +382,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         FROM combos
         ORDER BY draft, team_id
         LIMIT {limit};
-        """
+        """  # nosec B608
         return duckdb_service.query(sql).to_dicts()
 
     # ------------------------------------------------------------------

@@ -33,7 +33,7 @@ describe('DraftSlotTab', () => {
     }));
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.mocked(useDraftSlotCorrelation).mockReturnValue({
-      data: { 
+      data: {
         slot: 10,
         metric: 'percent',
         rows: mockData
@@ -69,4 +69,4 @@ describe('DraftSlotTab', () => {
     fireEvent.change(screen.getByLabelText('Draft Slot'), { target: { value: '5' } });
     expect(useDraftSlotCorrelation).toHaveBeenCalledWith({ slot: 5, metric: 'percent', topN: 25 });
   });
-}); 
+});

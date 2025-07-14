@@ -11,9 +11,9 @@ interface PlayerAutocompleteProps {
   className?: string;
 }
 
-const PlayerAutocomplete = ({ 
-  value, 
-  onChange, 
+const PlayerAutocomplete = ({
+  value,
+  onChange,
   placeholder = "Search and select players...",
   disabled = false,
   className = ""
@@ -45,20 +45,20 @@ const PlayerAutocomplete = ({
         console.log('all_players is not an array:', typeof metadataData.all_players, metadataData.all_players);
         return [];
       }
-      
+
       console.log('Processing player options from', metadataData.all_players.length, 'players');
-      
+
       // Use Set to track unique player names and prevent duplicates
       const uniqueNames = new Set<string>();
       const options: string[] = [];
-      
+
       metadataData.all_players.forEach((playerName: string) => {
         if (playerName && typeof playerName === 'string' && !uniqueNames.has(playerName)) {
           uniqueNames.add(playerName);
           options.push(playerName);
         }
       });
-      
+
       console.log('Generated', options.length, 'unique player options');
       return options.sort();
     } catch (error) {
@@ -71,9 +71,9 @@ const PlayerAutocomplete = ({
   const filteredOptions = useMemo(() => {
     try {
       if (!searchValue) return playerOptions;
-      
+
       const search = searchValue.toLowerCase();
-      return playerOptions.filter(playerName => 
+      return playerOptions.filter(playerName =>
         playerName && playerName.toLowerCase().includes(search)
       );
     } catch (err) {

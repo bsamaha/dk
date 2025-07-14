@@ -29,4 +29,4 @@ describe('Header', () => {
     fireEvent.click(screen.getByText('Players'));
     expect(setCurrentView).toHaveBeenCalledWith('players');
   });
-}); 
+});

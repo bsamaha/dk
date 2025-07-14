@@ -36,4 +36,4 @@ describe('PlayersView', () => {
     expect(searchInput).toHaveValue('Test');
   });
   // Add tests for pagination, details collapse, etc.
-}); 
+});

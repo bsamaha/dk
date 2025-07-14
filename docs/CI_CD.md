@@ -3,14 +3,18 @@
 > Covers GitHub Actions pipelines that lint, test, build, and deploy the **single-container** application described in [`DEV_ARCHITECTURE.md`](DEV_ARCHITECTURE.md).
 
 ---
+
 ## 1. Goals
+
 1. **Fail Fast** – catch lint & unit-test failures within two minutes.
 2. **Deterministic Builds** – Docker image is the *only* artefact promoted to environments.
 3. **One-Click Deploy** – shipping to production requires merging to `main`; rollback = redeploy previous tag.
 4. **Cost Awareness** – jobs run on `ubuntu-latest` with aggressive caching to minimise runner minutes.
 
 ---
+
 ## 2. Workflow Overview
+
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `.github/workflows/ci.yml` | `pull_request`, `push` to feature branches | Lint + unit tests + type-check + build artefacts (no push) |
@@ -20,7 +24,9 @@
 > **Why separate?** CI runs on every PR; Release only on merge to `main` to avoid wasting build minutes.
 
 ---
+
 ## 3. `ci.yml` (Quality Gate)
+
 ```yaml
 name: CI
 on:
@@ -69,12 +75,15 @@ jobs:
 ```
 
 ### Key Points
+
 * **Caching** – `actions/setup-python` & Node caches speed up installs.
 * **Parallelism** – backend & frontend jobs run in parallel; status job gates PR.
 * **Fail-fast** – first error aborts remaining steps (default).
 
 ---
+
 ## 4. `release.yml` (Build & Deploy)
+
 ```yaml
 name: Release
 on:
@@ -128,13 +137,16 @@ jobs:
 ```
 
 ### Highlights
+
 * **Multi-Stage Dockerfile** – first stage installs Python/Node deps, second stage is slim runtime.
 * **Image Tagging** – SHA tag for immutability (`bestball:${{ github.sha }}`) ; optionally `latest` or SemVer tags on releases.
 * **Cache-to/from – GHA registry speeds up subsequent builds by ~60 % (does not affect ECR).
 * **Deploy Script** – idempotent: pulls tag, stops old container, starts new with `--restart=always`.
 
 ---
+
 ## 5. Secrets & Variables
+
 | Secret | Purpose |
 |--------|---------|
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | IAM creds with `AmazonEC2ContainerRegistryFullAccess` |
@@ -146,24 +158,32 @@ jobs:
 | `ENV` | `prod` passed as container env var |
 
 ---
+
 ## 6. Local Pre-Flight (`make ci`)
+
 ```bash
 make ci  # ruff → black --check → pytest → frontend lint+test
 ```
+
 Mirrors the CI steps so developers catch failures before pushing.
 
 ---
+
 ## 7. Rollback Procedure
+
 1. Open **Actions → Manual Deploy** workflow.
 2. Enter previously-known image tag (list via `docker images` on EC2).
 3. Workflow will call `deploy.sh tag` which restarts container with that tag.
 
 ---
+
 ## 8. Future Enhancements
+
 * **Smoke Tests** – small Playwright job that hits `/health` & key pages after deploy.
 * **Snyk Scan** – add dependency vulnerability check.
 * **Concurrency Guards** – `concurrency: group: deploy cancel-in-progress: true` to avoid overlapping deploys.
 * **Canary Deploy** – run new container on port 9000, run smoke tests, then switch Nginx.
 
 ---
-*Last updated: 2025-07-12*
+
+Last updated: 2025-07-12
