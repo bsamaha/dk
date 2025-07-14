@@ -50,9 +50,7 @@ def test_root(client):
         assert response.json()["detail"] == "Not Found"  # nosec B101
     else:
         # Unexpected response
-        assert (
-            False
-        ), f"Unexpected response: {response.status_code} {response.content}"  # nosec B101
+        assert False, f"Unexpected response: {response.status_code} {response.content}"  # nosec B101
 
 
 def test_get_metadata(client, mock_data_service):
