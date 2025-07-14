@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from typing import Any, Optional, Sequence
 
 import duckdb  # type: ignore
@@ -40,6 +41,11 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
         logger.info("Attaching parquet file to DuckDB: %s", data_path)
         # Escape single quotes in path for SQL literal
         sanitized_path = data_path.replace("'", "''")
+        # Validate path: Ensure it's a valid, safe file path (no SQL special chars)
+        if not re.match(r"^[a-zA-Z0-9_./-]*$", sanitized_path) or not os.path.exists(
+            sanitized_path
+        ):
+            raise ValueError(f"Invalid or unsafe path: {sanitized_path}")
         # Create a view that normalises negative INT8 picks which are the
         # result of unsigned → signed overflow in the parquet file.  In the
         # original dataset picks are 0-255 (round 1-17).  Values greater than
@@ -47,7 +53,7 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
         # producing negatives (e.g. 130 → -126).  We fix this at source so all
         # downstream SQL sees the correct unsigned value.
         self._con.execute(
-            """
+            f"""
             CREATE OR REPLACE VIEW picks AS
             SELECT
                 player,
@@ -59,9 +65,8 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
                 draft_position,
                 draft,
                 team_id
-            FROM parquet_scan(?);
-            """,
-            [sanitized_path],  # Parameterizes the path to prevent injection
+            FROM parquet_scan('{sanitized_path}');
+            """  # nosec B608  # Safe due to prior path validation (regex + exists check)
         )
 
         # Register Polars DataFrame for mixed queries (optional, may be used by
@@ -113,5 +118,12 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
         return pl.from_arrow(result.arrow())
 
 
-# Global singleton instance so it can be imported anywhere.
-duckdb_service = DuckDBService()
+# Lazy singleton instance so it can be imported anywhere without immediate initialization.
+_duckdb_instance = None
+
+
+def get_duckdb_service() -> DuckDBService:
+    global _duckdb_instance
+    if _duckdb_instance is None:
+        _duckdb_instance = DuckDBService()
+    return _duckdb_instance

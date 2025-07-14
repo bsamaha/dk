@@ -15,7 +15,7 @@ import polars as pl
 
 from ..models.schemas import Player, Position, SortableColumn, SortOrder
 from .data_service import data_service  # Polars fallback
-from .duckdb_service import duckdb_service
+from .duckdb_service import get_duckdb_service
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         # --------------------------------------------------------------
         # Pre-compute total drafts for draft_percentage calculation.
         # --------------------------------------------------------------
-        total_drafts_df = duckdb_service.query(
+        total_drafts_df = get_duckdb_service().query(
             "SELECT COUNT(DISTINCT draft) AS n FROM picks LIMIT 1;"
         )
         total_drafts: int = (
@@ -83,7 +83,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         """  # nosec B608
 
         # Total count BEFORE pagination
-        total_count_df = duckdb_service.query(
+        total_count_df = get_duckdb_service().query(
             f"SELECT COUNT(*) AS cnt FROM ({base_sql})"  # nosec B608
         )
         total_count: int = (
@@ -100,7 +100,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
 
         logger.info("Running DuckDB players query: limit=%d offset=%d", limit, offset)
         t0 = time.perf_counter()
-        df: pl.DataFrame = duckdb_service.query(final_sql)
+        df: pl.DataFrame = get_duckdb_service().query(final_sql)
         dur_duck = time.perf_counter() - t0
 
         if df.is_empty():
@@ -184,7 +184,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             n_rounds,
         )
         t0 = time.perf_counter()
-        df: pl.DataFrame = duckdb_service.query(sql)
+        df: pl.DataFrame = get_duckdb_service().query(sql)
         dur_duck = time.perf_counter() - t0
 
         if df.is_empty():
@@ -294,7 +294,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             SUM(CASE WHEN draft_position = {slot} THEN 1 ELSE 0 END) AS total_slot
         FROM uniq;
         """  # nosec B608
-        totals_df: pl.DataFrame = duckdb_service.query(totals_sql)
+        totals_df: pl.DataFrame = get_duckdb_service().query(totals_sql)
         if totals_df.is_empty():
             return []
         total_overall = int(totals_df["total_overall"][0])
@@ -332,7 +332,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         ORDER BY score DESC
         LIMIT {top_n};
         """  # nosec B608
-        result_df: pl.DataFrame = duckdb_service.query(query_sql)
+        result_df: pl.DataFrame = get_duckdb_service().query(query_sql)
         return result_df.to_dicts()
 
     # ------------------------------------------------------------------
@@ -347,7 +347,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         GROUP BY round, Position
         ORDER BY round, Position;
         """
-        df = duckdb_service.query(sql)
+        df = get_duckdb_service().query(sql)
         return df.to_dicts()
 
     # ------------------------------------------------------------------
@@ -383,7 +383,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         ORDER BY draft, team_id
         LIMIT {limit};
         """  # nosec B608
-        return duckdb_service.query(sql).to_dicts()
+        return get_duckdb_service().query(sql).to_dicts()
 
     # ------------------------------------------------------------------
     # ADP Drift (compare first half vs second half drafts)
@@ -392,7 +392,9 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
     def get_adp_drift() -> List[Dict[str, Any]]:
         """Calculate average pick drift between early vs late halves of drafts."""
         # Determine midpoint draft id
-        midpoint_df = duckdb_service.query("""SELECT median(draft) AS mid FROM picks""")
+        midpoint_df = get_duckdb_service().query(
+            """SELECT median(draft) AS mid FROM picks"""
+        )
         mid = int(midpoint_df["mid"][0])
 
         sql_template = """
@@ -401,8 +403,8 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         WHERE draft {cond}
         GROUP BY player, Position
         """
-        early_df = duckdb_service.query(sql_template.format(cond=f"<= {mid}"))
-        late_df = duckdb_service.query(sql_template.format(cond=f"> {mid}"))
+        early_df = get_duckdb_service().query(sql_template.format(cond=f"<= {mid}"))
+        late_df = get_duckdb_service().query(sql_template.format(cond=f"> {mid}"))
 
         # Join on player/position
         merged = (
