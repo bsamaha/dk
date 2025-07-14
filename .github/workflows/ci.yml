@@ -18,7 +18,7 @@ jobs:
           pip install -r backend/requirements.txt
           pip install ruff black==25.1.0
       - run: ruff check backend && ruff format --check backend
-      - run: PYTHONPATH=. pytest -q
+      - run: cd backend && PYTHONPATH=. pytest -q  # Run from backend/ directory
 
   frontend:
     runs-on: ubuntu-latest
