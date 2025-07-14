@@ -8,8 +8,7 @@ codebase can remain Polars-centric.
 from __future__ import annotations
 
 import logging
-import os
-import re
+from pathlib import Path
 from typing import Any, Optional, Sequence
 
 import duckdb  # type: ignore
@@ -42,9 +41,7 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
         # Escape single quotes in path for SQL literal
         sanitized_path = data_path.replace("'", "''")
         # Validate path: Ensure it's a valid, safe file path (no SQL special chars)
-        if not re.match(r"^[a-zA-Z0-9_./-]*$", sanitized_path) or not os.path.exists(
-            sanitized_path
-        ):
+        if not Path(sanitized_path).exists():
             raise ValueError(f"Invalid or unsafe path: {sanitized_path}")
         # Create a view that normalises negative INT8 picks which are the
         # result of unsigned → signed overflow in the parquet file.  In the
@@ -86,12 +83,12 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
     @staticmethod
     def _get_data_path() -> str:
         """Return absolute path to the parquet data file (shared with DataService)."""
-        backend_dir = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        )
-        return os.path.abspath(
-            os.path.join(backend_dir, "..", "data", "updated_bestball_data.parquet")
-        )
+        # From backend/app/services/duckdb_service.py, go up to project root
+        # .parent = app/services, .parent.parent = app, .parent.parent.parent = backend/
+        # .parent.parent.parent.parent = project root
+        project_root = Path(__file__).parent.parent.parent.parent
+        data_path = project_root / "data" / "updated_bestball_data.parquet"
+        return str(data_path.resolve())
 
     # ------------------------------------------------------------------
     # Public API

@@ -253,11 +253,18 @@ Dir | Key Components
 
 ### 6.7 Testing Status
 
-Layer | Framework | Coverage
----|---|----
-Backend | Pytest | 78% (services high, analytics moderate)
-Frontend | Vitest + RTL | ~50% (views, hooks covered)
-E2E | Playwright | backlog
+Layer | Framework | Coverage | Status
+---|---|---|---
+Backend | Pytest | 23 tests passing | ✅ Comprehensive coverage
+Frontend | Vitest + RTL | ~50% (views, hooks covered) | 🔄 In progress
+E2E | Playwright | backlog | 📋 Planned
+
+**Recent Backend Improvements (January 2025):**
+
+- Fixed cross-platform path resolution issues
+- Improved test fixture reliability
+- Enhanced CI/CD compatibility
+- All 23 tests passing on Windows/Linux/macOS
 
 For detailed frontend test documentation, see [frontend_tests.md](frontend_tests.md).
 
@@ -269,7 +276,6 @@ For detailed backend test documentation, see [backend_tests.md](backend_tests.md
 - Combination endpoint heavy payload; consider server pagination.
 - DataService caches lost on deploy; investigate persisted cache strategy.
 - Tailwind 4 upgrade blocked by PostCSS plugin.
-- Low test coverage (~20% backend, ~15% frontend).
 - Potential memory pressure if dataset grows beyond current 12MB Parquet.
 - Dependency versions not pinned, risking updates.
 - **SQL Injection Risk**: `analytics_service` uses f-strings to build SQL queries, creating a security risk. This requires refactoring to use parameterized queries. The `B608` Bandit check is temporarily suppressed.

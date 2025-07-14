@@ -7,7 +7,7 @@ from app.services.analytics_service import AnalyticsService
 
 @pytest.fixture
 def mock_duckdb_service():
-    with patch("app.services.analytics_service.duckdb_service") as mock:
+    with patch("app.services.analytics_service.get_duckdb_service") as mock:
         yield mock
 
 
@@ -33,7 +33,7 @@ def test_get_players(mock_duckdb_service, mock_data_service):
             }
         ]
     )
-    mock_duckdb_service.query.side_effect = [
+    mock_duckdb_service.return_value.query.side_effect = [
         df_total_drafts,
         df_total_count,
         df_players,
@@ -49,9 +49,11 @@ def test_get_players_fallback(mock_duckdb_service, mock_data_service):
     def query_side_effect(sql: str):
         if "COUNT(DISTINCT draft)" in sql:
             return pl.DataFrame({"n": [100]})
-        return pl.DataFrame({"cnt": [0]}) if "COUNT(*)" in sql else pl.DataFrame()
+        if "COUNT(*)" in sql:
+            return pl.DataFrame({"cnt": [0]})
+        return pl.DataFrame()
 
-    mock_duckdb_service.query.side_effect = query_side_effect
+    mock_duckdb_service.return_value.query.side_effect = query_side_effect
 
     with patch(
         "time.perf_counter", side_effect=[0, 0.06, 0.061, 0.07]

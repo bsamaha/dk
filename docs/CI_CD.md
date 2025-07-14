@@ -44,8 +44,8 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
       - run: pip install -r backend/requirements.txt
-      - run: ruff check backend && black --check backend
-      - run: pytest -q
+      - run: ruff check backend && ruff format --check backend
+      - run: cd backend && PYTHONPATH=. pytest -q
 
   frontend:
     runs-on: ubuntu-latest
@@ -162,7 +162,7 @@ jobs:
 ## 6. Local Pre-Flight (`make ci`)
 
 ```bash
-make ci  # ruff → black --check → pytest → frontend lint+test
+make ci  # ruff → ruff format --check → pytest → frontend lint+test
 ```
 
 Mirrors the CI steps so developers catch failures before pushing.
