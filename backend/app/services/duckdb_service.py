@@ -47,7 +47,7 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
         # producing negatives (e.g. 130 → -126).  We fix this at source so all
         # downstream SQL sees the correct unsigned value.
         self._con.execute(
-            f"""
+            """
             CREATE OR REPLACE VIEW picks AS
             SELECT
                 player,
@@ -59,8 +59,9 @@ class DuckDBService:  # pylint: disable=too-few-public-methods
                 draft_position,
                 draft,
                 team_id
-            FROM parquet_scan('{sanitized_path}');
-            """
+            FROM parquet_scan(?);
+            """,
+            [sanitized_path],  # Parameterizes the path to prevent injection
         )
 
         # Register Polars DataFrame for mixed queries (optional, may be used by

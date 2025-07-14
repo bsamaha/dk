@@ -49,9 +49,7 @@ def test_get_players_fallback(mock_duckdb_service, mock_data_service):
     mock_duckdb_service.query.side_effect = lambda sql: (
         pl.DataFrame({"n": [100]})
         if "COUNT(DISTINCT draft)" in sql
-        else pl.DataFrame({"cnt": [0]})
-        if "COUNT(*)" in sql
-        else pl.DataFrame()
+        else pl.DataFrame({"cnt": [0]}) if "COUNT(*)" in sql else pl.DataFrame()
     )
     with patch(
         "time.perf_counter", side_effect=[0, 0.06, 0.061, 0.07]

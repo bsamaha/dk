@@ -36,8 +36,6 @@ repos:
       - id: ruff
         args: ["--fix", "--exit-non-zero-on-fix"]
         files: ^backend/
-      - id: ruff-format
-        files: ^backend/
 
   # Python security and quality
   - repo: https://github.com/PyCQA/bandit
@@ -46,6 +44,13 @@ repos:
       - id: bandit
         files: ^backend/.*\.py$
         # No 'args' needed; bandit will use pyproject.toml
+
+  - repo: https://github.com/psf/black
+    rev: 25.1.0  # Match the version from CI
+    hooks:
+      - id: black
+        files: ^backend/  # Only backend Python files
+        args: []  # Auto-fixes instead of --check
 
   # ===== FRONTEND =====
   # Note: Frontend hooks disabled due to Windows PATH issues
