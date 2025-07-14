@@ -1,51 +1,72 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MantineProvider } from '@mantine/core';
 import DraftSlotTab from '../DraftSlotTab';
+import { useDraftSlotCorrelation } from '../../../hooks/useDraftSlotCorrelation';
 
-// Mock the hook to return deterministic data
-vi.mock('../../../hooks/useDraftSlotCorrelation', () => {
-  return {
-    useDraftSlotCorrelation: () => ({
-      data: {
-        slot: 1,
-        metric: 'percent',
-        rows: [
-          {
-            player: 'Player A',
-            slot: 10,
-            overall: 100,
-            p_slot: 0.1,
-            p_overall: 0.01,
-            score: 10,
-          },
-        ],
-      },
-      isLoading: false,
-      error: null,
-    }),
-  };
-});
+// Mock the custom hook
+vi.mock('../../../hooks/useDraftSlotCorrelation');
 
-const renderWithClient = (ui: React.ReactElement) => {
-  const queryClient = new QueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  );
-};
+const mockData = [
+  {
+    player: 'Player A',
+    position: 'QB',
+    slot: 10,
+    overall: 100,
+    p_slot: 0.5,
+    p_overall: 0.3,
+    score: 0.8
+  }
+];
 
 describe('DraftSlotTab', () => {
-  it('renders chart and table once data is loaded', () => {
-    renderWithClient(<DraftSlotTab />);
-
-    // Expect player row to appear
-    expect(screen.getByText('Player A')).toBeInTheDocument();
-
-    // Expect tooltip label labels exist (YAxis category)
-    expect(screen.getByText('Player A')).toBeTruthy();
-
-    // Table headers
-    expect(screen.getByText('#')).toBeInTheDocument();
-    expect(screen.getByText('Slot Cnt')).toBeInTheDocument();
+  beforeEach(() => {
+    window.matchMedia = vi.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.mocked(useDraftSlotCorrelation).mockReturnValue({
+      data: { 
+        slot: 10,
+        metric: 'percent',
+        rows: mockData
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      isFetching: false,
+      refetch: vi.fn()
+    } as unknown as ReturnType<typeof useDraftSlotCorrelation>);
   });
-});
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('renders controls and table', () => {
+    render(
+      <MantineProvider>
+        <DraftSlotTab />
+      </MantineProvider>
+    );
+    expect(screen.getByText('Draft Slot')).toBeInTheDocument();
+    expect(screen.getByText('Player A')).toBeInTheDocument();
+  });
+
+  it('updates on control change', () => {
+    render(
+      <MantineProvider>
+        <DraftSlotTab />
+      </MantineProvider>
+    );
+    fireEvent.change(screen.getByLabelText('Draft Slot'), { target: { value: '5' } });
+    expect(useDraftSlotCorrelation).toHaveBeenCalledWith({ slot: 5, metric: 'percent', topN: 25 });
+  });
+}); 

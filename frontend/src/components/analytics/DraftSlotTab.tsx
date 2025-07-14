@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
-import { NumberInput, SegmentedControl, Select, Table, Loader, Alert, ActionIcon, Popover, Tooltip } from '@mantine/core';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { useDraftSlotCorrelation } from '../../hooks/useDraftSlotCorrelation';
+import { NumberInput, SegmentedControl, Select, Loader, Alert, Popover, ActionIcon, Table, Tooltip } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
-import type { DraftSlotMetric } from '../../types';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import type { DraftSlotRow, DraftSlotMetric } from '../../types';
 
 const metricOptions: { label: string; value: DraftSlotMetric }[] = [
     { label: 'Count', value: 'count' },
@@ -23,7 +23,7 @@ const DraftSlotTab = () => {
 
     const chartData = useMemo(() => {
         if (!data) return [];
-        return data.rows.map((row: any) => ({
+        return data.rows.map((row: DraftSlotRow) => ({
             name: row.player,
             value: row.score,
         }));
@@ -146,7 +146,7 @@ const DraftSlotTab = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {data?.rows.map((row: any, idx: number) => (
+                            {data?.rows.map((row: DraftSlotRow, idx: number) => (
                                 <tr key={row.player}>
                                     <td>{idx + 1}</td>
                                     <td>{row.player}</td>

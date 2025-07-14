@@ -11,7 +11,9 @@ import type {
   PositionRoundCountsResponse,
   Position,
   DraftSlotResponse,
-  RosterConstructionResponse
+  RosterConstructionResponse,
+  Player,
+  RosterConstructionCount
 } from '../types';
 
 
@@ -105,7 +107,7 @@ export const apiService = {
   // Search players by name
   async searchPlayers(query: string, limit: number = 20): Promise<{
     query: string;
-    results: any[];
+    results: Player[];
     total_found: number;
   }> {
     const response = await api.get(`/players/search?q=${encodeURIComponent(query)}&limit=${limit}`);
@@ -149,13 +151,13 @@ export const apiService = {
   },
 
   // Get aggregated roster construction counts
-  async getRosterConstructionCounts(): Promise<any> { // TODO: Define a proper type for this
+  async getRosterConstructionCounts(): Promise<RosterConstructionCount[]> {
     const response = await api.get('/positions/roster-construction/counts');
     return response.data;
   },
 
   // Get team data
-  async getTeams(limit: number = 100): Promise<any> {
+  async getTeams(limit: number = 100): Promise<{ teams: string[]; total_count: number }> {
     const response = await api.get(`/teams/?limit=${limit}`);
     return response.data;
   },

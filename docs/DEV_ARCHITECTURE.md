@@ -229,8 +229,10 @@ Dir | Key Components
 Layer | Framework | Coverage
 ---|---|----
 Backend | Pytest | 78% (services high, analytics moderate)
-Frontend | Vitest + RTL | ~15% (`DraftSlotTab` covered)
+Frontend | Vitest + RTL | ~50% (views, hooks covered)
 E2E | Playwright | backlog
+
+For detailed frontend test documentation, see [frontend_tests.md](frontend_tests.md).
 
 For detailed backend test documentation, see [backend_tests.md](backend_tests.md).
 

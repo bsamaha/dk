@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { apiService } from '../../services/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Select, SegmentedControl, Loader } from '@mantine/core';
+import type { Position } from '../../types';
 
 const OverviewView = () => {
   const { data: metadata, isLoading: metadataLoading } = useQuery({
@@ -21,7 +22,7 @@ const OverviewView = () => {
 
   const { data: roundCountsData, isLoading: roundCountsLoading } = useQuery({
     queryKey: ['roundCounts', selectedPosition, aggregation],
-    queryFn: () => apiService.getPositionDraftCountsByRound(selectedPosition as any, aggregation),
+    queryFn: () => apiService.getPositionDraftCountsByRound(selectedPosition as Position, aggregation),
   });
 
   const roundBarData = useMemo(
@@ -35,24 +36,7 @@ const OverviewView = () => {
 
   const colors = ['#1e3a8a', '#f97316', '#059669', '#dc2626', '#7c2d12', '#0891b2'];
 
-  // Compute total drafted to convert counts to percentage values
-  const totalDrafted = positionStats?.position_stats.reduce(
-    (sum, stat) => sum + stat.total_drafted,
-    0
-  ) || 0;
-
-  const pieData = positionStats?.position_stats.map((stat, index) => ({
-    name: stat.position,
-    value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
-    color: colors[index % colors.length]
-  })) || [];
-
-  const barData = positionStats?.position_stats.map((stat) => ({
-    position: stat.position,
-    medianDraftCount: stat.median_draft_count,
-  })) || [];
-
-  if (metadataLoading || positionStatsLoading) {
+  if (metadataLoading || positionStatsLoading || roundCountsLoading) {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
@@ -69,6 +53,17 @@ const OverviewView = () => {
       </div>
     );
   }
+
+  const totalDrafted = positionStats?.position_stats.reduce((sum, stat) => sum + stat.total_drafted, 0) || 0;
+  const pieData = positionStats?.position_stats.map((stat, index) => ({
+    name: stat.position,
+    value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
+    color: colors[index % colors.length]
+  })) || [];
+  const barData = positionStats?.position_stats.map((stat) => ({
+    position: stat.position,
+    medianDraftCount: stat.median_draft_count,
+  })) || [];
 
   return (
     <div className="space-y-6">
@@ -155,6 +150,7 @@ const OverviewView = () => {
                   data={pieData}
                   cx="50%"
                   cy="50%"
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   label={({ name, value }: any) => `${name}: ${(value ?? 0).toFixed(1)}%`}
                   labelLine={false}
                   outerRadius={120}
@@ -240,10 +236,10 @@ const OverviewView = () => {
           {/* Controls */}
           <div>
             <Select
-              label="View by Position"
+              label="Position"
               data={['QB', 'RB', 'WR', 'TE'].map((p) => ({ value: p, label: p }))}
               value={selectedPosition}
-              onChange={(v) => v && setSelectedPosition(v as any)}
+              onChange={(v) => v && setSelectedPosition(v as 'QB' | 'RB' | 'WR' | 'TE')}
             />
             <SegmentedControl
               fullWidth
@@ -253,7 +249,7 @@ const OverviewView = () => {
                 { label: 'Median', value: 'median' },
               ]}
               value={aggregation}
-              onChange={(val) => setAggregation(val as any)}
+              onChange={(val) => setAggregation(val as 'mean' | 'median')}
             />
           </div>
         </div>
