@@ -69,7 +69,7 @@ async def get_players(
         logger.error(f"Error fetching players: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Failed to fetch players: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/search")
@@ -91,7 +91,7 @@ async def search_players(
         logger.error(f"Error searching players: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Failed to search players: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/details", response_model=PlayerDetailsResponse)
@@ -105,12 +105,12 @@ async def get_player_details(
         logger.info(
             f"Fetching details for player: {player_name}, position: {position}, team: {team}"
         )
-        details = data_service.get_player_details(player_name, position, team)
-        if not details:
+        if details := data_service.get_player_details(player_name, position, team):
+            return PlayerDetailsResponse(**details)
+        else:
             raise HTTPException(status_code=404, detail="Player not found")
-        return PlayerDetailsResponse(**details)
     except Exception as e:
         logger.error(f"Error fetching player details: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Failed to fetch player details: {str(e)}"
-        )
+        ) from e

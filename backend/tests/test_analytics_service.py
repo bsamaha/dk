@@ -46,11 +46,13 @@ def test_get_players(mock_duckdb_service, mock_data_service):
 
 # Add tests for fallback logic
 def test_get_players_fallback(mock_duckdb_service, mock_data_service):
-    mock_duckdb_service.query.side_effect = lambda sql: (
-        pl.DataFrame({"n": [100]})
-        if "COUNT(DISTINCT draft)" in sql
-        else pl.DataFrame({"cnt": [0]}) if "COUNT(*)" in sql else pl.DataFrame()
-    )
+    def query_side_effect(sql: str):
+        if "COUNT(DISTINCT draft)" in sql:
+            return pl.DataFrame({"n": [100]})
+        return pl.DataFrame({"cnt": [0]}) if "COUNT(*)" in sql else pl.DataFrame()
+
+    mock_duckdb_service.query.side_effect = query_side_effect
+
     with patch(
         "time.perf_counter", side_effect=[0, 0.06, 0.061, 0.07]
     ):  # dur_duck=0.06, dur_pol=0.009 < 0.048
