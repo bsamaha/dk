@@ -92,6 +92,16 @@ repos:
         args: ['--baseline', '.secrets.baseline']
         exclude: ^(frontend/pnpm-lock\.yaml|frontend/package-lock\.json|.*\.lock)$
 
+  # ===== ENSURE FRONTEND LOCKFILE SYNC =====
+  - repo: local
+    hooks:
+      - id: check-frontend-lockfile-sync
+        name: 'Check pnpm-lock.yaml is in sync with package.json (frontend)'
+        entry: bash -c 'cd frontend && pnpm install --lockfile-only --check'
+        language: system
+        files: ^frontend/package\.json$
+        pass_filenames: false
+
 # ===== CONFIGURATION =====
 ci:
   autofix_commit_msg: |
