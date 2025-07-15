@@ -1,5 +1,7 @@
-
 import { useAppStore } from '../../store/appStore';
+import Logo from '../ui/Logo';
+import { IconSun, IconMoon } from '@tabler/icons-react';
+import { useColorScheme } from '../../contexts/ColorSchemeContext';
 
 const Header = () => {
   const { currentView, setCurrentView } = useAppStore();
@@ -12,32 +14,33 @@ const Header = () => {
     { id: 'combinations', label: 'Combinations', icon: '🔗' },
   ] as const;
 
+  const { colorScheme, toggleColorScheme } = useColorScheme();
+
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
+    <header className="bg-white dark:bg-surface-dark text-gridiron-graphite dark:text-white border-b border-gray-200 dark:border-white/10 shadow-sm">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
-                <span className="text-white text-lg font-bold">FF</span>
-              </div>
-              <h1 className="text-xl font-bold text-navy-900">
-                Fantasy Football Analytics
+              <Logo size={48} />
+              <h1 className="text-xl font-heading font-semibold dark:text-white">
+                TheSignalCaller
               </h1>
             </div>
           </div>
 
           <nav className="flex items-center space-x-1">
-            {navItems.map((item) => (
+            {navItems.map(item => (
               <button
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
                 className={`
                   px-4 py-2 rounded-lg font-medium transition-colors duration-200
                   flex items-center space-x-2
-                  ${currentView === item.id
-                    ? 'bg-navy-100 text-navy-900 border border-navy-200'
-                    : 'text-gray-600 hover:text-navy-700 hover:bg-gray-50'
+                  ${
+                    currentView === item.id
+                      ? 'bg-signal-green/10 text-signal-green border border-signal-green/30'
+                      : 'text-gridiron-graphite dark:text-white hover:text-signal-green hover:bg-gray-50 dark:hover:bg-gridiron-graphite-light'
                   }
                 `}
               >
@@ -45,6 +48,17 @@ const Header = () => {
                 <span className="hidden sm:inline">{item.label}</span>
               </button>
             ))}
+            <button
+              onClick={() => toggleColorScheme()}
+              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gridiron-graphite/20 transition"
+              aria-label="Toggle color scheme"
+            >
+              {colorScheme === 'dark' ? (
+                <IconSun size={18} />
+              ) : (
+                <IconMoon size={18} />
+              )}
+            </button>
           </nav>
         </div>
       </div>

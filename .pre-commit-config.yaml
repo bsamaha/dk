@@ -15,6 +15,7 @@ repos:
         exclude: ^frontend/tsconfig.*\.json$
       - id: check-added-large-files
         args: ['--maxkb=1000']  # Prevent files > 1MB
+        exclude: ^frontend/public/brand/
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: mixed-line-ending

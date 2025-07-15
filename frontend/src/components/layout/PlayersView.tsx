@@ -12,7 +12,7 @@ import {
   Loader,
   Alert,
   MultiSelect,
-  TextInput
+  TextInput,
 } from '@mantine/core';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 
@@ -23,7 +23,12 @@ import PlayerAutocomplete from '../ui/PlayerAutocomplete';
 import { IconAlertCircle, IconSearch } from '@tabler/icons-react';
 
 // Custom hook for fetching player data
-const usePlayers = (page: number, positions: Position[], playerNames: string[], searchTerm: string) => {
+const usePlayers = (
+  page: number,
+  positions: Position[],
+  playerNames: string[],
+  searchTerm: string
+) => {
   return useQuery({
     queryKey: ['players', page, positions, playerNames, searchTerm],
     queryFn: () => {
@@ -42,15 +47,13 @@ const usePlayers = (page: number, positions: Position[], playerNames: string[], 
         offset: (page - 1) * 20,
         limit: 20,
         positions: positions.length > 0 ? positions : undefined,
-        search_term: combinedSearchTerm || undefined
+        search_term: combinedSearchTerm || undefined,
       });
     },
     placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
-
-
 
 const positionOrder: Position[] = ['QB', 'RB', 'WR', 'TE'];
 
@@ -70,18 +73,31 @@ const PlayersView = () => {
     error: playersError,
   } = usePlayers(activePage, activePositions, selectedPlayers, searchTerm);
 
-  const {
-    data: playerDetailsData,
-    isLoading: isPlayerDetailsLoading,
-  } = useQuery({
-    queryKey: ['playerDetails', selectedPlayer?.name, selectedPlayer?.position, selectedPlayer?.team],
-    queryFn: () => selectedPlayer ? apiService.getPlayerDetails(selectedPlayer.name, selectedPlayer.position, selectedPlayer.team) : null,
-    enabled: !!selectedPlayer,
-  });
+  const { data: playerDetailsData, isLoading: isPlayerDetailsLoading } =
+    useQuery({
+      queryKey: [
+        'playerDetails',
+        selectedPlayer?.name,
+        selectedPlayer?.position,
+        selectedPlayer?.team,
+      ],
+      queryFn: () =>
+        selectedPlayer
+          ? apiService.getPlayerDetails(
+              selectedPlayer.name,
+              selectedPlayer.position,
+              selectedPlayer.team
+            )
+          : null,
+      enabled: !!selectedPlayer,
+    });
 
   // Memoized derived state
   const players = useMemo(() => playersData?.players || [], [playersData]);
-  const totalPages = useMemo(() => playersData?.page_info?.total_pages ?? 1, [playersData]);
+  const totalPages = useMemo(
+    () => playersData?.page_info?.total_pages ?? 1,
+    [playersData]
+  );
 
   // Handlers
   const handleClearFilters = () => {
@@ -99,25 +115,36 @@ const PlayersView = () => {
   const handlePlayerClick = (player: Player) => {
     console.log('Player clicked:', player);
     console.log('Current selectedPlayer:', selectedPlayer);
-    const newSelectedPlayer = selectedPlayer?.name === player.name ? null : player;
+    const newSelectedPlayer =
+      selectedPlayer?.name === player.name ? null : player;
     console.log('Setting selectedPlayer to:', newSelectedPlayer);
     setSelectedPlayer(newSelectedPlayer);
   };
 
   return (
-    <Container fluid className="p-4">
-      <Title order={2} className="mb-6 text-navy-700">Player Analysis</Title>
+    <Container fluid className="p-4 text-gridiron-graphite dark:text-white">
+      <Title order={2} className="mb-6 text-gridiron-graphite font-heading">
+        Player Analysis
+      </Title>
 
       {/* Player Search Section */}
-      <Paper withBorder shadow="sm" p="lg" radius="md" className="mb-8">
-        <Title order={4} className="mb-4 text-navy-600">Player Search & Filters</Title>
+      <Paper
+        withBorder
+        shadow="sm"
+        p="lg"
+        radius="md"
+        className="mb-8 bg-white dark:bg-surface-dark-elev"
+      >
+        <Title order={4} className="mb-4 text-gridiron-graphite">
+          Player Search & Filters
+        </Title>
         <Grid align="flex-end">
           <Grid.Col span={{ base: 12, md: 6 }}>
             <TextInput
               leftSection={<IconSearch size={16} />}
               placeholder="Search by player name (e.g., Dobbins)..."
               value={searchTerm}
-              onChange={(event) => setSearchTerm(event.currentTarget.value)}
+              onChange={event => setSearchTerm(event.currentTarget.value)}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, md: 6 }}>
@@ -134,27 +161,26 @@ const PlayersView = () => {
             {(selectedPlayers.length > 0 || searchTerm.trim()) && (
               <Text size="sm" c="dimmed">
                 {searchTerm.trim() && `Searching for: "${searchTerm.trim()}" `}
-                {selectedPlayers.length > 0 && `Selected players: ${selectedPlayers.join(', ')}`}
+                {selectedPlayers.length > 0 &&
+                  `Selected players: ${selectedPlayers.join(', ')}`}
               </Text>
             )}
           </Grid.Col>
           <Grid.Col span={{ base: 12, md: 4 }}>
-            <Button
-              variant="outline"
-              onClick={handleClearFilters}
-              fullWidth
-            >
+            <Button variant="outline" onClick={handleClearFilters} fullWidth>
               Clear All Filters
             </Button>
           </Grid.Col>
         </Grid>
 
         <Box mt="lg">
-          <Text size="sm" fw={500} mb="xs">Filter by Position:</Text>
+          <Text size="sm" fw={500} mb="xs">
+            Filter by Position:
+          </Text>
           <MultiSelect
             data={positionOrder.map(pos => ({ label: pos, value: pos }))}
             value={activePositions}
-            onChange={(value) => setActivePositions(value as Position[])}
+            onChange={value => setActivePositions(value as Position[])}
             placeholder="Filter by position..."
             clearable
           />
@@ -162,13 +188,21 @@ const PlayersView = () => {
 
         <Box mt="xl">
           {isPlayersFetching ? (
-            <Center className="h-64"><Loader color="blue" /></Center>
+            <Center className="h-64">
+              <Loader color="blue" />
+            </Center>
           ) : playersError ? (
-            <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red">
+            <Alert
+              icon={<IconAlertCircle size="1rem" />}
+              title="Error"
+              color="red"
+            >
               Failed to load players: {playersError.message}
             </Alert>
           ) : players.length === 0 ? (
-            <Center className="h-64"><Text>No players found matching your criteria.</Text></Center>
+            <Center className="h-64">
+              <Text>No players found matching your criteria.</Text>
+            </Center>
           ) : (
             <>
               <PlayerTable
