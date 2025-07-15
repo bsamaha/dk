@@ -336,6 +336,29 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         return result_df.to_dicts()
 
     # ------------------------------------------------------------------
+    # Public alias for draft slot correlation – kept for API compatibility
+    # ------------------------------------------------------------------
+    @staticmethod
+    def get_draft_slot_correlation(
+        slot: int,
+        metric: str = "percent",
+        top_n: int = 25,
+        min_teams: int = 10,
+    ) -> List[Dict[str, Any]]:
+        """Wrapper that delegates to the internal ``get__slot_correlation`` method.
+
+        This alias exists to maintain backward-compatibility with the FastAPI
+        router which expects a ``get_draft_slot_correlation`` attribute on the
+        global ``analytics_service`` instance.
+        """
+        return AnalyticsService.get__slot_correlation(
+            slot=slot,
+            metric=metric,
+            top_n=top_n,
+            min_teams=min_teams,
+        )
+
+    # ------------------------------------------------------------------
     # Heat Map (draft round x position counts)
     # ------------------------------------------------------------------
     @staticmethod

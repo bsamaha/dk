@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 from app.main import create_app  # Import the FastAPI app
+from app.services.analytics_service import AnalyticsService
 from fastapi.testclient import TestClient
 
 
@@ -106,6 +107,51 @@ def test_get_heat_map(client):
     data = response.json()
     assert "cells" in data  # nosec B101
     assert isinstance(data["cells"], list)  # nosec B101
+
+
+# ---------------------------------------------------------------------------
+# Analytics endpoint tests
+# ---------------------------------------------------------------------------
+
+
+def test_get_draft_slot_endpoint(client):
+    """Ensure the draft-slot analytics endpoint responds successfully.
+
+    We stub the underlying service call so the test remains fast and
+    independent of DuckDB/parquet data, focusing only on the routing & schema.
+    """
+    sample_rows = [
+        {
+            "player": "PlayerA",
+            "slot": 1,
+            "overall": 100,
+            "p_slot": 0.10,
+            "p_overall": 0.05,
+            "score": 0.20,
+        }
+    ]
+    with patch(
+        "app.api.analytics.analytics_service.get_draft_slot_correlation",
+        return_value=sample_rows,
+    ):
+        response = client.get(
+            "/api/analytics/draft-slot",
+            params={"slot": 1, "metric": "percent", "top_n": 25},
+        )
+    assert response.status_code == 200  # nosec B101
+    data = response.json()
+    assert data["slot"] == 1  # nosec B101
+    assert len(data["rows"]) == len(sample_rows)  # nosec B101
+
+
+# ---------------------------------------------------------------------------
+# Service-level sanity check
+# ---------------------------------------------------------------------------
+
+
+def test_analytics_service_has_draft_slot_correlation():
+    """Quick guard to ensure the public alias exists on the service."""
+    assert hasattr(AnalyticsService, "get_draft_slot_correlation")  # nosec B101
 
 
 # Similarly for other routers

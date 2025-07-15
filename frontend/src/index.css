@@ -1,5 +1,6 @@
 /* Import Google Fonts first */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,6 +10,16 @@
 
 :root {
   font-family: 'Inter', system-ui, sans-serif;
+  /* Brand Design Tokens */
+  --color-signal-green: #00a86b;
+  --color-audible-gold: #ffc300;
+  --color-turf-dark: #016140;
+  --color-gridiron-graphite: #1e1e1e;
+  --color-white: #ffffff;
+
+  --radius-card: 12px;
+  --space-m: 16px;
+  --elev-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -22,13 +33,32 @@ body {
   color: #334155;
 }
 
+/* Dark-mode base styles */
+.dark body {
+  background-color: var(--color-gridiron-graphite);
+  color: var(--color-white);
+}
+
 /* Custom component styles */
 .gradient-bg {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+  /* Placeholder gradient using brand colors until official gradient defined */
+  background: linear-gradient(
+    135deg,
+    var(--color-signal-green) 0%,
+    var(--color-turf-dark) 100%
+  );
 }
 
 .card-shadow {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dark .card-shadow {
+  box-shadow:
+    0 4px 6px -1px rgba(255, 255, 255, 0.05),
+    0 2px 4px -1px rgba(255, 255, 255, 0.03);
 }
 
 .card-shadow-hover {
@@ -36,7 +66,9 @@ body {
 }
 
 .card-shadow-hover:hover {
-  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 25px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Custom scrollbar */

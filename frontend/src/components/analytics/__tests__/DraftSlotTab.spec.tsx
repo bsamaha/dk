@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import DraftSlotTab from '../DraftSlotTab';
 import { useDraftSlotCorrelation } from '../../../hooks/useDraftSlotCorrelation';
+import { ColorSchemeContext } from '../../../contexts/ColorSchemeContext';
 
 // Mock the custom hook
 vi.mock('../../../hooks/useDraftSlotCorrelation');
@@ -15,9 +16,15 @@ const mockData = [
     overall: 100,
     p_slot: 0.5,
     p_overall: 0.3,
-    score: 0.8
-  }
+    score: 0.8,
+  },
 ];
+
+// Mock color scheme context value
+const mockColorSchemeContext = {
+  colorScheme: 'light' as const,
+  toggleColorScheme: vi.fn(),
+};
 
 describe('DraftSlotTab', () => {
   beforeEach(() => {
@@ -36,13 +43,13 @@ describe('DraftSlotTab', () => {
       data: {
         slot: 10,
         metric: 'percent',
-        rows: mockData
+        rows: mockData,
       },
       isLoading: false,
       isError: false,
       error: null,
       isFetching: false,
-      refetch: vi.fn()
+      refetch: vi.fn(),
     } as unknown as ReturnType<typeof useDraftSlotCorrelation>);
   });
 
@@ -52,9 +59,11 @@ describe('DraftSlotTab', () => {
 
   it('renders controls and table', () => {
     render(
-      <MantineProvider>
-        <DraftSlotTab />
-      </MantineProvider>
+      <ColorSchemeContext.Provider value={mockColorSchemeContext}>
+        <MantineProvider>
+          <DraftSlotTab />
+        </MantineProvider>
+      </ColorSchemeContext.Provider>
     );
     expect(screen.getByText('Draft Slot')).toBeInTheDocument();
     expect(screen.getByText('Player A')).toBeInTheDocument();
@@ -62,11 +71,19 @@ describe('DraftSlotTab', () => {
 
   it('updates on control change', () => {
     render(
-      <MantineProvider>
-        <DraftSlotTab />
-      </MantineProvider>
+      <ColorSchemeContext.Provider value={mockColorSchemeContext}>
+        <MantineProvider>
+          <DraftSlotTab />
+        </MantineProvider>
+      </ColorSchemeContext.Provider>
     );
-    fireEvent.change(screen.getByLabelText('Draft Slot'), { target: { value: '5' } });
-    expect(useDraftSlotCorrelation).toHaveBeenCalledWith({ slot: 5, metric: 'percent', topN: 25 });
+    fireEvent.change(screen.getByLabelText('Draft Slot'), {
+      target: { value: '5' },
+    });
+    expect(useDraftSlotCorrelation).toHaveBeenCalledWith({
+      slot: 5,
+      metric: 'percent',
+      topN: 25,
+    });
   });
 });

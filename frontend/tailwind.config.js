@@ -1,10 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  darkMode: 'class',
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -32,9 +30,24 @@ export default {
           800: '#9a3412',
           900: '#7c2d12',
         },
+        'signal-green': '#00A86B',
+        'audible-gold': '#FFC300',
+        'turf-dark': '#016140',
+        'gridiron-graphite': '#1E1E1E',
+        'gridiron-graphite-light': '#2B2B2B',
+        'surface-dark': '#262626',
+        'surface-dark-elev': '#2F2F2F',
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        heading: ['Space Grotesk', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        code: ['IBM Plex Mono', 'monospace'],
+      },
+      borderRadius: {
+        card: '12px',
+      },
+      boxShadow: {
+        card: '0 4px 4px rgba(0,0,0,0.04)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in',
@@ -52,5 +65,5 @@ export default {
       },
     },
   },
-  plugins: []
-}
+  plugins: [],
+};

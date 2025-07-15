@@ -1,7 +1,8 @@
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { MantineProvider } from '@mantine/core';
+import { ColorSchemeContext } from './contexts/ColorSchemeContext';
+import { useLocalStorage } from '@mantine/hooks';
 import { Notifications } from '@mantine/notifications';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
@@ -24,21 +25,105 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const currentView = useAppStore((state) => state.currentView);
+  const currentView = useAppStore(state => state.currentView);
+
+  const [colorScheme, setColorScheme] = useLocalStorage<'light' | 'dark'>({
+    key: 'sc-color-scheme',
+    defaultValue: 'dark',
+  });
+
+  const toggleColorScheme = (value?: 'light' | 'dark') =>
+    setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
+
+  // Sync Tailwind dark class
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.toggle('dark', colorScheme === 'dark');
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MantineProvider>
-        <Notifications position="top-right" />
-        <div className="min-h-screen bg-gray-50">
-          <Header />
-          <div className="flex h-[calc(100vh-64px)]">
-            <Sidebar />
-            <MainContent view={currentView} />
+      <ColorSchemeContext.Provider value={{ colorScheme, toggleColorScheme }}>
+        <MantineProvider
+          forceColorScheme={colorScheme}
+          theme={{
+            fontFamily: 'Inter, system-ui, sans-serif',
+            headings: {
+              fontFamily: 'Space Grotesk, ui-sans-serif, system-ui, sans-serif',
+              fontWeight: '600',
+            },
+            colors: {
+              brand: [
+                '#e6f9f2',
+                '#c1f0df',
+                '#99e6cc',
+                '#66d9b8',
+                '#33cca3',
+                '#00A86B',
+                '#008d5a',
+                '#00734b',
+                '#005c3b',
+                '#00452c',
+              ],
+              gold: [
+                '#fffbe6',
+                '#fff5c2',
+                '#ffef99',
+                '#ffe966',
+                '#ffe333',
+                '#FFC300',
+                '#d9a000',
+                '#b38000',
+                '#8c6000',
+                '#664500',
+              ],
+            },
+            primaryColor: 'brand',
+            defaultRadius: 'md',
+            components: {
+              MultiSelect: {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                styles: (theme: any) => ({
+                  dropdown: {
+                    backgroundColor:
+                      theme.colorScheme === 'dark'
+                        ? theme.colors.dark[7]
+                        : theme.white,
+                  },
+                  option: {
+                    color:
+                      theme.colorScheme === 'dark' ? theme.white : theme.black,
+                  },
+                }),
+              },
+              Select: {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                styles: (theme: any) => ({
+                  dropdown: {
+                    backgroundColor:
+                      theme.colorScheme === 'dark'
+                        ? theme.colors.dark[7]
+                        : theme.white,
+                  },
+                  option: {
+                    color:
+                      theme.colorScheme === 'dark' ? theme.white : theme.black,
+                  },
+                }),
+              },
+            },
+          }}
+        >
+          <Notifications position="top-right" />
+          <div className="min-h-screen bg-gray-50 dark:bg-gridiron-graphite-light">
+            <Header />
+            <div className="flex h-[calc(100vh-64px)]">
+              <Sidebar />
+              <MainContent view={currentView} />
+            </div>
           </div>
-        </div>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </MantineProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </MantineProvider>
+      </ColorSchemeContext.Provider>
     </QueryClientProvider>
   );
 }
