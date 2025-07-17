@@ -253,8 +253,10 @@ const PlayerTable = ({
                                 return [value, name];
                               }}
                               labelFormatter={label => `Pick Range: ${label}`}
-                              wrapperStyle={{
-                                className: 'tooltip-content',
+                              contentStyle={{
+                                backgroundColor: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '8px',
                               }}
                             />
                             <Legend />
