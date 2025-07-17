@@ -19,6 +19,10 @@ services:
   # Optional health check (Render pings / on port $PORT by default)
   # healthCheckPath: /
 
+  # Environment variables
+  envVars:
+    - key: ENVIRONMENT
+      value: production
   # If your parquet file grows beyond repo limits, switch to an external bucket
   # and expose credentials here via envVars.
   # envVars:
