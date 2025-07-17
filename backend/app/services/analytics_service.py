@@ -54,14 +54,18 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         # Build dynamic WHERE clause based on optional filters.
         # --------------------------------------------------------------
         where_clauses: List[str] = []
+        params: List[Any] = []
 
         if positions:
-            pos_sql = ", ".join([f"'{p.value}'" for p in positions])
-            where_clauses.append(f"Position IN ({pos_sql})")
+            # Use parameterized query for positions
+            placeholders = ", ".join(["?" for _ in positions])
+            where_clauses.append(f"Position IN ({placeholders})")
+            params.extend([p.value for p in positions])
 
         if search_term:
-            sanitized = search_term.lower().replace("'", "''")
-            where_clauses.append(f"lower(player) LIKE '%{sanitized}%'")
+            # Use parameterized query for search term
+            where_clauses.append("lower(player) LIKE ?")
+            params.append(f"%{search_term.lower()}%")
 
         where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
 
@@ -80,11 +84,12 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         FROM picks
         {where_sql}
         GROUP BY player, Position, Team
-        """  # nosec B608
+        """  # nosec B608  # Safe: total_drafts is computed from database, where_sql uses parameterized queries
 
         # Total count BEFORE pagination
         total_count_df = get_duckdb_service().query(
-            f"SELECT COUNT(*) AS cnt FROM ({base_sql})"  # nosec B608
+            f"SELECT COUNT(*) AS cnt FROM ({base_sql})",  # nosec B608  # Safe: base_sql uses parameterized queries
+            params,
         )
         total_count: int = (
             int(total_count_df["cnt"][0]) if not total_count_df.is_empty() else 0
@@ -100,7 +105,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
 
         logger.info("Running DuckDB players query: limit=%d offset=%d", limit, offset)
         t0 = time.perf_counter()
-        df: pl.DataFrame = get_duckdb_service().query(final_sql)
+        df: pl.DataFrame = get_duckdb_service().query(final_sql, params)
         dur_duck = time.perf_counter() - t0
 
         if df.is_empty():
@@ -149,10 +154,8 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         if not required_players:
             return []
 
-        # Sanitize and build SQL IN list
-        # Escape single quotes by doubling them (SQL standard)
-        sanitized_players = [p.replace("'", "''") for p in required_players]
-        players_sql_list = ", ".join([f"'{p}'" for p in sanitized_players])
+        # Use parameterized query for player names
+        placeholders = ", ".join(["?" for _ in required_players])
         num_required = len(required_players)
 
         sql = f"""
@@ -164,19 +167,22 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
                    round,
                    draft_position
             FROM picks
-            WHERE round <= {n_rounds}
+            WHERE round <= ?
         ), target_teams AS (
             SELECT team_id
             FROM filtered
-            WHERE player IN ({players_sql_list})
+            WHERE player IN ({placeholders})
             GROUP BY team_id
-            HAVING COUNT(DISTINCT player) = {num_required}
+            HAVING COUNT(DISTINCT player) = ?
         )
         SELECT *
         FROM filtered
         WHERE team_id IN (SELECT team_id FROM target_teams)
         ORDER BY draft, draft_position, team_id, round;
-        """  # nosec B608
+        """  # nosec B608  # Safe: placeholders is generated from parameterized query
+
+        # Build parameters list: [n_rounds, *required_players, num_required]
+        params = [n_rounds] + required_players + [num_required]
 
         logger.info(
             "Running DuckDB combination query for %d required players (<= round %d)",
@@ -184,7 +190,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             n_rounds,
         )
         t0 = time.perf_counter()
-        df: pl.DataFrame = get_duckdb_service().query(sql)
+        df: pl.DataFrame = get_duckdb_service().query(sql, params)
         dur_duck = time.perf_counter() - t0
 
         if df.is_empty():
@@ -234,7 +240,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             .group_by(["team_id", "positions"])
             .agg(pl.len().alias("count"))
             .collect()
-            .pivot(index="team_id", columns="positions", values="count")
+            .pivot(values="count", index="team_id", columns="positions")
             .fill_null(0)
         )
 
@@ -284,17 +290,17 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         # --------------------------------------------------------------
         # Pre-compute unique team counts overall and for the slot.
         # --------------------------------------------------------------
-        totals_sql = f"""
+        totals_sql = """
         WITH uniq AS (
             SELECT DISTINCT draft, team_id, draft_position
             FROM picks
         )
         SELECT
             COUNT(*)                            AS total_overall,
-            SUM(CASE WHEN draft_position = {slot} THEN 1 ELSE 0 END) AS total_slot
+            SUM(CASE WHEN draft_position = ? THEN 1 ELSE 0 END) AS total_slot
         FROM uniq;
-        """  # nosec B608
-        totals_df: pl.DataFrame = get_duckdb_service().query(totals_sql)
+        """
+        totals_df: pl.DataFrame = get_duckdb_service().query(totals_sql, [slot])
         if totals_df.is_empty():
             return []
         total_overall = int(totals_df["total_overall"][0])
@@ -303,7 +309,7 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         # --------------------------------------------------------------
         # Compute counts per player.
         # --------------------------------------------------------------
-        query_sql = f"""
+        query_sql = """
         WITH uniq AS (
             SELECT DISTINCT draft, team_id, draft_position, player
             FROM picks
@@ -312,27 +318,41 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
             SELECT
                 player,
                 COUNT(*)                         AS overall,
-                SUM(CASE WHEN draft_position = {slot} THEN 1 ELSE 0 END) AS slot
+                SUM(CASE WHEN draft_position = ? THEN 1 ELSE 0 END) AS slot
             FROM uniq
             GROUP BY player
-            HAVING SUM(CASE WHEN draft_position = {slot} THEN 1 ELSE 0 END) >= {min_teams}
+            HAVING SUM(CASE WHEN draft_position = ? THEN 1 ELSE 0 END) >= ?
         )
         SELECT
             player,
             slot,
             overall,
-            CAST(slot AS DOUBLE) / {total_slot}  AS p_slot,
-            CAST(overall AS DOUBLE) / {total_overall} AS p_overall,
+            CAST(slot AS DOUBLE) / ?  AS p_slot,
+            CAST(overall AS DOUBLE) / ? AS p_overall,
             CASE
-                WHEN '{metric}' = 'count'   THEN slot
-                WHEN '{metric}' = 'percent' THEN CAST(slot AS DOUBLE) / {total_slot}
-                ELSE (CAST(slot AS DOUBLE) / {total_slot}) / (CAST(overall AS DOUBLE) / {total_overall})
+                WHEN ? = 'count'   THEN slot
+                WHEN ? = 'percent' THEN CAST(slot AS DOUBLE) / ?
+                ELSE (CAST(slot AS DOUBLE) / ?) / (CAST(overall AS DOUBLE) / ?)
             END                           AS score
         FROM counts
         ORDER BY score DESC
-        LIMIT {top_n};
-        """  # nosec B608
-        result_df: pl.DataFrame = get_duckdb_service().query(query_sql)
+        LIMIT ?;
+        """
+        # Parameters: [slot, slot, min_teams, total_slot, total_overall, metric, metric, total_slot, total_slot, total_overall, top_n]
+        params = [
+            slot,
+            slot,
+            min_teams,
+            total_slot,
+            total_overall,
+            metric,
+            metric,
+            total_slot,
+            total_slot,
+            total_overall,
+            top_n,
+        ]
+        result_df: pl.DataFrame = get_duckdb_service().query(query_sql, params)
         return result_df.to_dicts()
 
     # ------------------------------------------------------------------
@@ -379,11 +399,11 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
     @staticmethod
     def get_stacks(n_rounds: int = 10, limit: int = 100) -> List[Dict[str, Any]]:
         """Find basic QB/receiver stacks drafted within first `n_rounds`."""
-        sql = f"""
+        sql = """
         WITH early AS (
             SELECT draft, team_id, player, Position, Team AS nfl_team, round
             FROM picks
-            WHERE round <= {n_rounds}
+            WHERE round <= ?
         ),
         qbs AS (
             SELECT draft, team_id, player AS qb, nfl_team, round AS round_qb
@@ -404,9 +424,9 @@ class AnalyticsService:  # pylint: disable=too-few-public-methods
         SELECT *
         FROM combos
         ORDER BY draft, team_id
-        LIMIT {limit};
-        """  # nosec B608
-        return get_duckdb_service().query(sql).to_dicts()
+        LIMIT ?;
+        """
+        return get_duckdb_service().query(sql, [n_rounds, limit]).to_dicts()
 
     # ------------------------------------------------------------------
     # ADP Drift (compare first half vs second half drafts)

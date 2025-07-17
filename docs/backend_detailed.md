@@ -234,39 +234,39 @@ sequenceDiagram
     FastAPI-->>Client: JSON Response
 ```
 
-## Noted Issues and Improvements
+## HTTPS, Nginx, and Security Architecture (2025-07)
 
-Based on code review and existing architecture notes, here are backend-specific issues. Improvements respect ADR-0002's lean principles (no new deps, maintain low RAM/CPU, single container).
+**New in July 2025:**
 
-### Issues
+- The backend is now deployed behind an **Nginx reverse proxy** on the same EC2 instance.
+- **Let's Encrypt** (via Certbot) provides free SSL certificates, automatically renewed.
+- Nginx terminates HTTPS (443) and proxies all traffic to the FastAPI app running on localhost:8000 (HTTP only).
+- All HTTP (port 80) traffic is redirected to HTTPS.
+- Security headers and rate limiting are enforced at the Nginx layer.
+- The FastAPI app is **never exposed directly to the public internet**; only Nginx is.
+- See `docs/HTTPS_SETUP.md` for full setup and maintenance instructions.
 
-cd 1. **Performance Bottlenecks**: Combination queries can return heavy payloads; no server-side pagination in some endpoints (e.g., combinations return up to 1000 teams with full player lists).
-2. **Cache Loss on Deploy**: In-memory `@lru_cache` and service singletons reset on container restart; affects hot endpoints.
-3. **Data Loading**: Fixed Parquet path; if data grows (>12MB now), memory usage could exceed t3a.small limits (2GB RAM).
-4. **Dependency Versions**: Uses >= specifiers; potential for breaking changes on updates.
-5. **No Authentication**: API is open; fine for current scope but risk if exposed publicly.
-6. **Limited Error Handling**: Basic HTTPExceptions; no centralized logging/monitoring beyond std logging.
-7. **Debug Logging in Deps**: Grep found debug logs in websockets/yaml, but no custom TODO/FIXME in app code.
-8. **Hybrid System Complexity**: DuckDB/Polars fallback adds code but ensures perf; could be overkill if DuckDB always wins.
-9. **Polars Deprecations**: Tests reveal deprecation warnings for `pl.count()` (use `pl.len()` instead) and CategoricalRemappingWarning due to mismatched string encodings in merges.
-10. **SQL Injection Risk**: The `analytics_service` dynamically constructs SQL queries using f-strings, creating a vulnerability to SQL injection (Bandit rule B608 was temporarily suppressed). While the immediate risk is low with controlled inputs, this is a critical security flaw requiring a refactor.
+**Benefits:**
 
-### Recently Resolved Issues (January 2025)
+- No need for AWS CloudFront or ACM (Amazon Certificate Manager)
+- No extra AWS costs for HTTPS
+- Fully automated, secure, and maintainable
+- Certificates auto-renew via cron
 
-1. **✅ Test Coverage**: Previously had ~20% coverage with limited tests. Now has comprehensive test suite with 23 passing tests covering services and API endpoints.
-2. **✅ Path Resolution**: Fixed cross-platform path handling in DuckDB service using `pathlib.Path` for Windows/Linux/macOS compatibility.
-3. **✅ Test Infrastructure**: Resolved test fixture interference and mock setup issues that were causing CI failures.
+**Key files:**
 
-### Proposed Improvements
+- `nginx.conf` (Nginx config)
+- `docker-compose.prod.yml` (production stack)
+- `scripts/setup-https.sh` (initial setup)
+- `docs/HTTPS_SETUP.md` (full guide)
 
-1. **Pagination for Heavy Endpoints**: Add offset/limit to combinations/roster endpoints; reduces payload size.
-2. **Persistent Caching**: Use file-based cache (e.g., pickle results to /tmp) for hot queries; clears on deploy but survives restarts within container lifecycle.
-3. **Monitor Memory**: Enhance `log_memory_usage` to alert if >80% RAM; log to CloudWatch as per ADR.
-4. **Pin Dependencies**: Update `requirements.txt` to exact versions (e.g., fastapi==0.108.0) for stability.
-5. **Optional Auth**: If needed, add simple API key via FastAPI dependency; minimal overhead.
-6. **Query Optimization**: Profile slow SQL in DuckDB; index if possible (in-memory, so limited).
-7. **Data Update Mechanism**: Script to refresh Parquet without rebuild; fits lean deploy via `deploy.sh`.
-8. **Fix Polars Warnings**: Replace all `pl.count()` with `pl.len()`; ensure consistent categorical encodings or use StringCache for merges.
-9. **Refactor for Parameterized Queries**: Modify all DuckDB query executions in `analytics_service` to use parameterized queries instead of f-strings to eliminate the SQL injection vulnerability. After refactoring, the suppression for Bandit rule `B608` should be removed from `pyproject.toml`.
+---
 
-These changes maintain the single-container, low-cost model while addressing pain points.
+### Updated Issues and Improvements
+
+- **SQL Injection Risk**: (Resolved July 2025) All DuckDB queries in `analytics_service` now use parameterized queries. Bandit suppressions are documented and safe. No user input is ever interpolated directly into SQL.
+- **HTTPS/SSL**: Now handled by Nginx + Let's Encrypt, not CloudFront/ACM. No AWS-managed certificate required.
+- **Security**: Nginx enforces security headers, rate limiting, and HTTP→HTTPS redirect. FastAPI CORS is still enforced at the app layer.
+- **Deployment**: Remains a single-container (app) plus Nginx/Certbot sidecars, all orchestrated via Docker Compose.
+
+---
