@@ -2,7 +2,7 @@ import React from 'react';
 
 interface LogoProps {
   variant?: 'mark' | 'horizontal';
-  size?: number; // height in px for mark variant
+  size?: number; // width in px for mark variant
   className?: string;
 }
 
@@ -27,12 +27,7 @@ const Logo: React.FC<LogoProps> = ({
       src={src}
       alt="TheSignalCaller logo"
       className={`${variant === 'mark' ? 'logo-mark' : ''} ${className}`}
-      style={
-        {
-          height: variant === 'mark' ? size : undefined,
-          '--logo-size': variant === 'mark' ? `${size}px` : undefined,
-        } as React.CSSProperties
-      }
+      style={variant === 'mark' ? { width: size } : undefined}
     />
   );
 };

@@ -97,8 +97,8 @@ body {
 /* Logo styles */
 .logo-mark {
   /* Square aspect ratio for mark variant */
-  width: var(--logo-size, 40px);
-  height: var(--logo-size, 40px);
+  width: 40px;
+  aspect-ratio: 1;
 }
 
 .logo-placeholder {

@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import field_validator
+from pydantic import FieldValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -21,25 +21,26 @@ class Settings(BaseSettings):
     # Data Settings
     DATA_PATH: str = "/app/data/bestball.parquet"
 
+    @staticmethod
+    def _parse_csv_list(value: str) -> List[str]:
+        if value and value.strip():
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return []
+
     @field_validator("ALLOWED_ORIGINS", mode="after")
     @classmethod
-    def parse_allowed_origins(cls, v: str) -> List[str]:
-        """Parse ALLOWED_ORIGINS from string to list."""
-        if v and v.strip():
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-
-        # Return defaults based on environment
-        import os
-
-        env = os.getenv("ENVIRONMENT", "development")
-
+    def parse_allowed_origins(cls, v: str, info: FieldValidationInfo) -> List[str]:
+        items = cls._parse_csv_list(v)
+        if items:
+            return items
+        # Use the ENVIRONMENT value from the settings instance
+        env = info.data.get("ENVIRONMENT", "development")
         if env == "production":
             return [
                 "https://thesignalcallers.com",
                 "https://www.thesignalcallers.com",
             ]
         else:
-            # Default development origins
             return [
                 "http://localhost:3000",  # React dev server
                 "http://localhost:5173",  # Vite dev server
@@ -53,23 +54,17 @@ class Settings(BaseSettings):
 
     @field_validator("ALLOWED_HOSTS", mode="after")
     @classmethod
-    def parse_allowed_hosts(cls, v: str) -> List[str]:
-        """Parse ALLOWED_HOSTS from string to list."""
-        if v and v.strip():
-            return [host.strip() for host in v.split(",") if host.strip()]
-
-        # Return defaults based on environment
-        import os
-
-        env = os.getenv("ENVIRONMENT", "development")
-
+    def parse_allowed_hosts(cls, v: str, info: FieldValidationInfo) -> List[str]:
+        items = cls._parse_csv_list(v)
+        if items:
+            return items
+        env = info.data.get("ENVIRONMENT", "development")
         if env == "production":
             return [
                 "thesignalcallers.com",
                 "www.thesignalcallers.com",
             ]
         else:
-            # Default development hosts
             return [
                 "localhost",
                 "127.0.0.1",
