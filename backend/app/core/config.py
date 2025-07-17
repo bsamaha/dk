@@ -20,6 +20,10 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5174",
         "http://localhost:8080",  # Docker-hosted UI
         "http://127.0.0.1:8080",
+        "https://thesignalcallers.com",  # Production domain
+        "http://thesignalcallers.com",  # Production domain (HTTP fallback)
+        "https://www.thesignalcallers.com",  # Production domain with www
+        "http://www.thesignalcallers.com",  # Production domain with www (HTTP fallback)
     ]
 
     # Data Settings
