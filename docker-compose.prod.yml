@@ -47,7 +47,8 @@ services:
     env_file:
       - env.production
     entrypoint: ["/bin/sh", "-c"]
-    command: ["certbot certonly --webroot --webroot-path=/var/www/certbot --email $$SSL_EMAIL --agree-tos --no-eff-email -d thesignalcallers.com -d www.thesignalcallers.com"]
+    # Use single $ so that /bin/sh expands the SSL_EMAIL variable correctly.
+    command: ["certbot certonly --webroot --webroot-path=/var/www/certbot --email $SSL_EMAIL --agree-tos --no-eff-email -d thesignalcallers.com -d www.thesignalcallers.com"]
     depends_on:
       - nginx
     networks:
