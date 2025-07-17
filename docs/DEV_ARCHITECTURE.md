@@ -139,12 +139,44 @@ AnalyticsView (Tabs)
 
 ## 5. Deployment & Ops (Lean Stack)
 
-- **Runtime**: Single Docker container (FastAPI + Uvicorn) sized for ≤ 400 MiB RAM on EC2 `t3a.small` Spot.
-- **Build**: Multi-stage Dockerfile (python:3.12-slim → final) ~110 MB image.
-- **CI/CD**: GitHub Action – lint → test → build → push.  Post-push `deploy.sh` (below) SSHs into the instance and pulls the latest tag.
-- **Resilience**: `docker run --restart=always`; Auto Scaling Group desired = 1 to auto-replace on pre-emption.
-- **Observability**: Structured `uvicorn` JSON logs shipped via CloudWatch Agent.
-- **Security**: Inbound 443/80 only; API served behind CloudFront, CORS allowlist enforced.
+### 5.1 Runtime Topology
+
+| Container | Responsibility | Ports |
+|-----------|----------------|-------|
+| `app`     | FastAPI + built React assets | `8000` (loop-back only) |
+| `nginx`   | Reverse-proxy, TLS termination, static cache | `80` / `443` |
+
+`docker-compose.yml` contains **only these two long-running services**. The `certbot` service is defined in the same file under the `certbot` profile for manual / cron-driven issuance and renewal.
+
+### 5.2 HTTPS Lifecycle (Let’s Encrypt, Webroot)
+
+Step | Tool | File | Notes
+------|------|------|------
+Bootstrap (one-time) | `scripts/bootstrap-cert.sh` | – | Spins up nginx (HTTP-only), calls `certbot/certbot certonly …`, then reloads nginx with the new certs. Requires `LETSENCRYPT_EMAIL` env var.
+Renew (every 60 days) | `docker-compose.yml` (`certbot` profile) | – | Cron job runs `docker compose --profile certbot run --rm certbot renew --webroot -w /var/www/certbot && docker compose exec nginx nginx -s reload`.
+
+Why this design?
+
+• **Separation of concerns** – runtime stack stays untouched by one-off tasks.
+• **No variable-escaping hacks** – email is supplied by the caller shell, not Compose.
+• **Stateless** – renewal container is ephemeral; only certs persist on host volume `./certbot/conf`.
+
+### 5.3 Build & Release Pipeline
+
+– Multi-stage Dockerfile (python:3.12-slim) ⇒ ~110 MB final image.<br/>
+– GitHub Actions workflow: lint → test → build → push 🔜 run `scripts/deploy.sh` (SSH + `docker compose pull && up -d`).
+
+### 5.4 Resilience & Observability
+
+– Containers started with `restart: unless-stopped`.<br/>
+– CloudWatch Agent ships structured logs from both FastAPI (JSON) and nginx (access + error).<br/>
+– Auto Scaling Group desired = 1 ensures automatic replacement on Spot interruption.
+
+### 5.5 Security Posture
+
+– Security Group ingress: **80, 443** from `0.0.0.0/0`.<br/>
+– CORS allow-list enforced in FastAPI based on `ALLOWED_ORIGINS` env var.<br/>
+– HSTS, X-Frame-Options, CSP headers set in `nginx.conf`.
 
 ---
 
