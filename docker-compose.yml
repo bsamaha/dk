@@ -12,7 +12,8 @@ services:
       - ./data:/app/data:ro
     env_file:
       # Supply environment variables (CORS list, secrets, etc.)
-      - .env.production
+      - env.production
     environment:
       - ENVIRONMENT=production
+      - ALLOWED_HOSTS=thesignalcallers.com,www.thesignalcallers.com
     restart: unless-stopped

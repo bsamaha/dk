@@ -50,8 +50,8 @@ class Settings(BaseSettings):
         return self
 
     class Config:
-        # Load from .env file (will be overridden by environment variables)
-        env_file = ".env"
+        # Load from env file (will be overridden by environment variables)
+        env_file = "env"
         env_file_encoding = "utf-8"
         case_sensitive = False
 
