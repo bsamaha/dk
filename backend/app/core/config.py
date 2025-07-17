@@ -43,8 +43,8 @@ class Settings(BaseSettings):
                 "https://www.thesignalcallers.com",
                 "http://www.thesignalcallers.com",
             ]
-            # Add production domains to existing origins
-            self.ALLOWED_ORIGINS.extend(production_domains)
+            # Replace the default list with the production-specific domains
+            self.ALLOWED_ORIGINS = production_domains
 
 
 settings = Settings()
