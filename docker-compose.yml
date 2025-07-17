@@ -13,4 +13,6 @@ services:
     env_file:
       # Supply environment variables (CORS list, secrets, etc.)
       - .env.production
+    environment:
+      - ENVIRONMENT=production
     restart: unless-stopped

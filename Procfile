@@ -1,1 +1,1 @@
-web: waitress-serve --host=0.0.0.0 --port=$PORT app:server
+web: gunicorn -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT backend.app.main:app
