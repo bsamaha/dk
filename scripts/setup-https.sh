@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 DOMAIN="thesignalcallers.com"
-EMAIL="your-email@example.com"  # Replace with your email
+EMAIL="blake.samaha16@gmail.com"  # Replace with your email
 CERTBOT_CONF_DIR="./certbot/conf"
 CERTBOT_WWW_DIR="./certbot/www"
 
