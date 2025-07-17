@@ -31,11 +31,13 @@ graph LR
 
 ### 1. Update Configuration
 
-Edit `scripts/setup-https.sh` and replace:
+Edit `env.production` and set your email address:
 
 ```bash
-EMAIL="your-email@example.com"  # Replace with your actual email
+SSL_EMAIL=your-actual-email@example.com
 ```
+
+**Important**: Replace `your-actual-email@example.com` with your real email address for Let's Encrypt notifications.
 
 ### 2. Run the Setup Script
 

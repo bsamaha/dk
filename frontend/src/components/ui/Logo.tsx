@@ -26,11 +26,10 @@ const Logo: React.FC<LogoProps> = ({
     <img
       src={src}
       alt="TheSignalCaller logo"
+      className={`${variant === 'mark' ? 'logo-mark' : ''} ${className}`}
       style={{
         height: variant === 'mark' ? size : undefined,
-        width: variant === 'mark' ? size : 'auto',
       }}
-      className={className}
     />
   );
 };

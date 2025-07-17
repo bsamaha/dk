@@ -23,6 +23,39 @@ def test_get_players(mock_duckdb_service, mock_data_service):
     df_players = pl.DataFrame(
         [
             {
+                "player": "Test",  # original SQL output
+                "Position": "QB",
+                "Team": "TM",
+                "avg_pick": 10.0,
+                "min_pick": 5,
+                "max_pick": 15,
+                "draft_percentage": 50.0,
+            }
+        ]
+    )
+
+    def query_side_effect(sql: str, params=None):
+        if "COUNT(DISTINCT draft)" in sql:
+            return df_total_drafts
+        if "COUNT(*)" in sql and "AS cnt" in sql:
+            return df_total_count
+        if "GROUP BY player" in sql:
+            return df_players
+        # Default fallback: empty DataFrame
+        return pl.DataFrame()
+
+    mock_duckdb_service.return_value.query.side_effect = query_side_effect
+    players, total = AnalyticsService.get_players(limit=1)
+    assert total == 1  # nosec B101
+    assert len(players) == 1  # nosec B101
+    assert players[0].name == "Test"  # nosec B101
+
+
+def test_dataframe_structure():
+    """Test that DataFrame structure is correct."""
+    df = pl.DataFrame(
+        [
+            {
                 "player": "Test",
                 "Position": "QB",
                 "Team": "TM",
@@ -33,20 +66,21 @@ def test_get_players(mock_duckdb_service, mock_data_service):
             }
         ]
     )
-    mock_duckdb_service.return_value.query.side_effect = [
-        df_total_drafts,
-        df_total_count,
-        df_players,
-    ]
-    players, total = AnalyticsService.get_players(limit=1)
-    assert total == 1  # nosec B101
-    assert len(players) == 1  # nosec B101
-    assert players[0].name == "Test"  # nosec B101
+    print(f"DataFrame type: {type(df)}")
+    print(f"DataFrame columns: {df.columns}")
+    print(f"DataFrame shape: {df.shape}")
+
+    # Test rename operation
+    df_renamed = df.rename({"player": "name", "Position": "position", "Team": "team"})
+    print(f"Renamed columns: {df_renamed.columns}")
+
+    assert "player" in df.columns  # nosec B101 - Test assertion
+    assert "name" in df_renamed.columns  # nosec B101 - Test assertion
 
 
 # Add tests for fallback logic
 def test_get_players_fallback(mock_duckdb_service, mock_data_service):
-    def query_side_effect(sql: str):
+    def query_side_effect(sql: str, params=None):
         if "COUNT(DISTINCT draft)" in sql:
             return pl.DataFrame({"n": [100]})
         if "COUNT(*)" in sql:

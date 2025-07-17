@@ -10,8 +10,7 @@ interface LogoPlaceholderProps {
 const LogoPlaceholder: React.FC<LogoPlaceholderProps> = ({ size = '10' }) => {
   return (
     <div
-      className={`w-${size} h-${size} bg-signal-green rounded-lg flex items-center justify-center select-none`}
-      style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+      className={`w-${size} h-${size} bg-signal-green rounded-lg flex items-center justify-center select-none logo-placeholder`}
     >
       <span className="text-white font-bold">SC</span>
     </div>

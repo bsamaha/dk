@@ -34,7 +34,7 @@ def create_app():
     # Security middleware
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["*"],  # Configure with your actual domain in production
+        allowed_hosts=settings.ALLOWED_HOSTS,
     )
 
     # Rate limiting and security headers middleware

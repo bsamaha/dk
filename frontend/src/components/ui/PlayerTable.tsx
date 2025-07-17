@@ -1,6 +1,26 @@
 import React from 'react';
-import { Table, Anchor, Collapse, Paper, Title, Text, Center, Loader, Grid, Stack } from '@mantine/core';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  Table,
+  Anchor,
+  Collapse,
+  Paper,
+  Title,
+  Text,
+  Center,
+  Loader,
+  Grid,
+  Stack,
+} from '@mantine/core';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import type { Player, PlayerDetails } from '../../types';
 
 interface PlayerTableProps {
@@ -16,7 +36,7 @@ const PlayerTable = ({
   selectedPlayer,
   playerDetailsData,
   isPlayerDetailsLoading,
-  onPlayerClick
+  onPlayerClick,
 }: PlayerTableProps) => {
   const createHistogramData = (picks: number[]) => {
     if (!picks || picks.length === 0) return [];
@@ -56,8 +76,8 @@ const PlayerTable = ({
     const binLabels: string[] = [];
 
     for (let i = 0; i < numBuckets; i++) {
-      const binStart = minPick + (i * bucketSize);
-      const binEnd = Math.min(minPick + ((i + 1) * bucketSize) - 1, maxPick);
+      const binStart = minPick + i * bucketSize;
+      const binEnd = Math.min(minPick + (i + 1) * bucketSize - 1, maxPick);
 
       bins.push(binStart);
 
@@ -69,19 +89,23 @@ const PlayerTable = ({
     }
 
     // Create histogram with dynamic bins
-    const histogram = binLabels.map((label, index) => {
-      const binStart = bins[index];
-      const binEnd = index < bins.length - 1 ? bins[index + 1] - 1 : maxPick;
+    const histogram = binLabels
+      .map((label, index) => {
+        const binStart = bins[index];
+        const binEnd = index < bins.length - 1 ? bins[index + 1] - 1 : maxPick;
 
-      const count = picks.filter(pick => pick >= binStart && pick <= binEnd).length;
-      const percentage = ((count / totalPicks) * 100).toFixed(1);
+        const count = picks.filter(
+          pick => pick >= binStart && pick <= binEnd
+        ).length;
+        const percentage = ((count / totalPicks) * 100).toFixed(1);
 
-      return {
-        range: label,
-        count,
-        percentage: parseFloat(percentage)
-      };
-    }).filter(bin => bin.count > 0); // Only show bins with data
+        return {
+          range: label,
+          count,
+          percentage: parseFloat(percentage),
+        };
+      })
+      .filter(bin => bin.count > 0); // Only show bins with data
 
     return histogram;
   };
@@ -105,7 +129,9 @@ const PlayerTable = ({
         <Table.Td>{player.team}</Table.Td>
         <Table.Td>{player.draft_percentage.toFixed(2)}%</Table.Td>
         <Table.Td>{player.avg_pick?.toFixed(1) ?? 'N/A'}</Table.Td>
-        <Table.Td>{player.avg_pick ? Math.ceil(player.avg_pick / 12) : 'N/A'}</Table.Td>
+        <Table.Td>
+          {player.avg_pick ? Math.ceil(player.avg_pick / 12) : 'N/A'}
+        </Table.Td>
       </Table.Tr>
     );
 
@@ -114,7 +140,10 @@ const PlayerTable = ({
       rows.push(
         <Table.Tr key={`${player.name}-expansion-${index}`}>
           <Table.Td colSpan={6} p={0}>
-            <Collapse in={selectedPlayer?.name === player.name} transitionDuration={300}>
+            <Collapse
+              in={selectedPlayer?.name === player.name}
+              transitionDuration={300}
+            >
               <Paper p="md" m="md" withBorder>
                 <Title order={4} mb="md">
                   {selectedPlayer.name} - Draft Analysis
@@ -128,44 +157,85 @@ const PlayerTable = ({
                   <Stack gap="md">
                     <Grid>
                       <Grid.Col span={3}>
-                        <Text size="sm" fw={500}>Position</Text>
-                        <Text size="sm" c="dimmed">{playerDetailsData.position}</Text>
+                        <Text size="sm" fw={500}>
+                          Position
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {playerDetailsData.position}
+                        </Text>
                       </Grid.Col>
                       <Grid.Col span={3}>
-                        <Text size="sm" fw={500}>Team</Text>
-                        <Text size="sm" c="dimmed">{playerDetailsData.team}</Text>
+                        <Text size="sm" fw={500}>
+                          Team
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {playerDetailsData.team}
+                        </Text>
                       </Grid.Col>
                       <Grid.Col span={3}>
-                        <Text size="sm" fw={500}>Total Drafts</Text>
-                        <Text size="sm" c="dimmed">{playerDetailsData.total_drafts}</Text>
+                        <Text size="sm" fw={500}>
+                          Total Drafts
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {playerDetailsData.total_drafts}
+                        </Text>
                       </Grid.Col>
                       <Grid.Col span={3}>
-                        <Text size="sm" fw={500}>Avg Pick</Text>
-                        <Text size="sm" c="dimmed">{playerDetailsData.avg_pick?.toFixed(1) ?? 'N/A'}</Text>
+                        <Text size="sm" fw={500}>
+                          Avg Pick
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {playerDetailsData.avg_pick?.toFixed(1) ?? 'N/A'}
+                        </Text>
                       </Grid.Col>
                       <Grid.Col span={3}>
-                        <Text size="sm" fw={500}>Earliest Pick</Text>
-                        <Text size="sm" c="dimmed">{Math.min(...(playerDetailsData.picks || []))}</Text>
+                        <Text size="sm" fw={500}>
+                          Earliest Pick
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {Math.min(...(playerDetailsData.picks || []))}
+                        </Text>
                       </Grid.Col>
                       <Grid.Col span={3}>
-                        <Text size="sm" fw={500}>Latest Pick</Text>
-                        <Text size="sm" c="dimmed">{Math.max(...(playerDetailsData.picks || []))}</Text>
+                        <Text size="sm" fw={500}>
+                          Latest Pick
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {Math.max(...(playerDetailsData.picks || []))}
+                        </Text>
                       </Grid.Col>
                       <Grid.Col span={3}>
-                        <Text size="sm" fw={500}>Pick Range</Text>
-                        <Text size="sm" c="dimmed">{Math.max(...(playerDetailsData.picks || [])) - Math.min(...(playerDetailsData.picks || []))}</Text>
+                        <Text size="sm" fw={500}>
+                          Pick Range
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {Math.max(...(playerDetailsData.picks || [])) -
+                            Math.min(...(playerDetailsData.picks || []))}
+                        </Text>
                       </Grid.Col>
                       <Grid.Col span={3}>
-                        <Text size="sm" fw={500}>Avg Round</Text>
-                        <Text size="sm" c="dimmed">{playerDetailsData.avg_pick ? Math.ceil(playerDetailsData.avg_pick / 12) : 'N/A'}</Text>
+                        <Text size="sm" fw={500}>
+                          Avg Round
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          {playerDetailsData.avg_pick
+                            ? Math.ceil(playerDetailsData.avg_pick / 12)
+                            : 'N/A'}
+                        </Text>
                       </Grid.Col>
                     </Grid>
 
                     <div>
-                      <Text size="sm" fw={500} mb="xs">Draft Pick Distribution (Dynamic Bucketing)</Text>
-                      <div style={{ height: 300 }}>
+                      <Text size="sm" fw={500} mb="xs">
+                        Draft Pick Distribution (Dynamic Bucketing)
+                      </Text>
+                      <div className="chart-container">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={createHistogramData(playerDetailsData.picks || [])}>
+                          <BarChart
+                            data={createHistogramData(
+                              playerDetailsData.picks || []
+                            )}
+                          >
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis
                               dataKey="range"
@@ -182,11 +252,9 @@ const PlayerTable = ({
                                 }
                                 return [value, name];
                               }}
-                              labelFormatter={(label) => `Pick Range: ${label}`}
-                              contentStyle={{
-                                backgroundColor: '#f8fafc',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '8px'
+                              labelFormatter={label => `Pick Range: ${label}`}
+                              wrapperStyle={{
+                                className: 'tooltip-content',
                               }}
                             />
                             <Legend />
@@ -200,7 +268,8 @@ const PlayerTable = ({
                         </ResponsiveContainer>
                       </div>
                       <Text size="xs" c="dimmed" mt="xs">
-                        Dynamic bucketing adapts to player distribution. Tighter ranges for early-round players.
+                        Dynamic bucketing adapts to player distribution. Tighter
+                        ranges for early-round players.
                       </Text>
                     </div>
                   </Stack>
