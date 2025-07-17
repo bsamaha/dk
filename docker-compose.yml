@@ -3,17 +3,55 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fantasy-analytics
-    ports:
-      # Expose the FastAPI+React app on host port 80
-      - "80:8000"
+    container_name: fantasy-analytics-app
+    # No public ports; nginx handles external traffic
     volumes:
       # Mount dataset / any runtime-writable space
       - ./data:/app/data:ro
     env_file:
       # Supply environment variables (CORS list, secrets, etc.)
-      - env.production
+      - .env.production
     environment:
       - ENVIRONMENT=production
       - ALLOWED_HOSTS=thesignalcallers.com,www.thesignalcallers.com
     restart: unless-stopped
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: fantasy-analytics-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Certbot is defined for manual/cron invocation; it is not started automatically.
+  certbot:
+    image: certbot/certbot
+    container_name: fantasy-analytics-certbot
+    profiles: ["certbot"]
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh"
+    # Default command does nothing so that `docker compose up` doesn't run certbot.
+    command: ["-c", "echo 'Invoke with: docker compose --profile certbot run --rm certbot <args>' && sleep infinity"]
+    networks:
+      - app-network
+
+volumes:
+  nginx-logs:
+
+networks:
+  app-network:
+    driver: bridge
