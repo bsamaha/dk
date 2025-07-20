@@ -111,3 +111,13 @@ body {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
 }
+
+/* Custom SegmentedControl styles */
+.mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active="true"] {
+  background-color: var(--color-turf-dark) !important;
+  color: var(--color-signal-green) !important;
+}
+
+.mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active="true"] .mantine-SegmentedControl-label {
+  color: var(--color-signal-green) !important;
+}

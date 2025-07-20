@@ -179,7 +179,7 @@ export interface CombinationFilter {
 // UI State Types
 export interface AppState {
   selectedPlayers: string[];
-  currentView: 'overview' | 'players' | 'combinations' | 'analytics';
+  currentView: 'overview' | 'players' | 'combinations' | 'analytics' | 'about';
   filters: PlayerFilter;
 }
 

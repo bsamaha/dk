@@ -10,8 +10,8 @@ const Header = () => {
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'players', label: 'Players', icon: '👤' },
     { id: 'analytics', label: 'Analytics', icon: '📈' },
-
     { id: 'combinations', label: 'Combinations', icon: '🔗' },
+    { id: 'about', label: 'About', icon: 'ℹ️' },
   ] as const;
 
   const { colorScheme, toggleColorScheme } = useColorScheme();
@@ -22,7 +22,14 @@ const Header = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <Logo size={48} />
+              <a 
+                href="https://thesignalcallers.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:opacity-80 transition-opacity"
+              >
+                <Logo size={55} />
+              </a>
               <h1 className="text-xl font-heading font-semibold dark:text-white">
                 TheSignalCaller
               </h1>
