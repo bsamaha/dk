@@ -31,7 +31,7 @@ describe('Header', () => {
     expect(screen.getByText('Players')).toBeInTheDocument();
 
     // New brand logo should render as an <img> with alt text
-    const logoImg = screen.getByAltText('TheSignalCaller logo');
+    const logoImg = screen.getByAltText('TheSignalCallers logo');
     expect(logoImg).toBeInTheDocument();
   });
 

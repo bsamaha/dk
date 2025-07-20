@@ -25,7 +25,7 @@ const Logo: React.FC<LogoProps> = ({
   return (
     <img
       src={src}
-      alt="TheSignalCaller logo"
+      alt="TheSignalCallers logo"
       className={`${variant === 'mark' ? 'logo-mark' : ''} ${className}`}
       style={variant === 'mark' ? { width: size } : undefined}
     />

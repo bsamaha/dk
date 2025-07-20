@@ -115,9 +115,13 @@ body {
 /* Custom SegmentedControl styles */
 .mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active="true"] {
   background-color: var(--color-turf-dark) !important;
-  color: var(--color-signal-green) !important;
+  color: var(--color-audible-gold) !important;
 }
 
 .mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active="true"] .mantine-SegmentedControl-label {
-  color: var(--color-signal-green) !important;
+  color: var(--color-audible-gold) !important;
+}
+
+.mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active="true"] .mantine-SegmentedControl-innerLabel {
+  color: var(--color-audible-gold) !important;
 }

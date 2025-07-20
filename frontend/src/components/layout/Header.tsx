@@ -31,7 +31,7 @@ const Header = () => {
                 <Logo size={55} />
               </a>
               <h1 className="text-xl font-heading font-semibold dark:text-white">
-                TheSignalCaller
+                TheSignalCallers
               </h1>
             </div>
           </div>
