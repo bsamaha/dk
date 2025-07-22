@@ -8,6 +8,7 @@ import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import MainContent from './components/layout/MainContent';
 import { useAppStore } from './store/appStore';
+import { useResponsive } from './hooks/useResponsive';
 
 // Import Mantine styles
 import '@mantine/core/styles.css';
@@ -25,7 +26,8 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const currentView = useAppStore(state => state.currentView);
+  const { currentView, isMobileMenuOpen } = useAppStore();
+  const { isMobile } = useResponsive();
 
   const [colorScheme, setColorScheme] = useLocalStorage<'light' | 'dark'>({
     key: 'sc-color-scheme',
@@ -116,7 +118,14 @@ function App() {
           <Notifications position="top-right" />
           <div className="min-h-screen bg-gray-50 dark:bg-gridiron-graphite-light flex flex-col">
             <Header />
-            <div className="flex flex-1 min-h-0">
+            <div className="flex flex-1 min-h-0 relative">
+              {/* Mobile overlay when menu is open */}
+              {isMobile && isMobileMenuOpen && (
+                <div
+                  className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                  onClick={() => useAppStore.getState().toggleMobileMenu()}
+                />
+              )}
               <Sidebar />
               <MainContent view={currentView} />
             </div>

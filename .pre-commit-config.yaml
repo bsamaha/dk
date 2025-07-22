@@ -49,16 +49,35 @@ repos:
         # No 'args' needed; bandit will use pyproject.toml
 
   # ===== FRONTEND =====
-  # Note: Frontend hooks disabled due to Windows PATH issues
-  # Run manually with: cd frontend && pnpm run lint && pnpm run format
-  # - repo: local
-  #   hooks:
-  #     - id: frontend-lint
-  #       name: "ESLint (frontend)"
-  #       entry: cmd /c "cd frontend && pnpm install --silent && pnpm run lint"
-  #       language: system
-  #       files: ^frontend/.*\.(ts|tsx|js|jsx)$
-  #       pass_filenames: false
+  - repo: local
+    hooks:
+      - id: frontend-lint
+        name: "ESLint (frontend)"
+        entry: bash -c "cd frontend && pnpm run lint"
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|jsx)$
+        pass_filenames: false
+
+      - id: frontend-format
+        name: "Prettier (frontend)"
+        entry: bash -c "cd frontend && pnpm run format"
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|md)$
+        pass_filenames: false
+
+      - id: frontend-test
+        name: "Frontend Tests"
+        entry: bash -c "cd frontend && pnpm run test --run"
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|jsx)$
+        pass_filenames: false
+
+      - id: frontend-build
+        name: "Frontend Build"
+        entry: bash -c "cd frontend && pnpm run build"
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|jsx)$
+        pass_filenames: false
 
   # ===== PACKAGE MANAGEMENT =====
   - repo: https://github.com/pre-commit/mirrors-prettier

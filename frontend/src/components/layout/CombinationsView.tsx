@@ -236,7 +236,10 @@ const CombinationsView = () => {
             radius="md"
             className="bg-white dark:bg-surface-dark-elev"
           >
-            <Title order={2} className="text-gridiron-graphite dark:text-white font-heading">
+            <Title
+              order={2}
+              className="text-gridiron-graphite dark:text-white font-heading"
+            >
               Player Combinations
             </Title>
             <Text c="dimmed" mb="xl">
@@ -349,7 +352,11 @@ const CombinationsView = () => {
           withBorder
           className="bg-white dark:bg-surface-dark-elev max-w-full overflow-hidden"
         >
-          <Title order={3} mb="md" className="text-gridiron-graphite dark:text-white">
+          <Title
+            order={3}
+            mb="md"
+            className="text-gridiron-graphite dark:text-white"
+          >
             Roster Construction Counts
           </Title>
 

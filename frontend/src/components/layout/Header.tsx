@@ -1,10 +1,12 @@
 import { useAppStore } from '../../store/appStore';
 import Logo from '../ui/Logo';
-import { IconSun, IconMoon } from '@tabler/icons-react';
+import { IconSun, IconMoon, IconMenu2 } from '@tabler/icons-react';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import { useResponsive } from '../../hooks/useResponsive';
 
 const Header = () => {
-  const { currentView, setCurrentView } = useAppStore();
+  const { currentView, setCurrentView, toggleMobileMenu } = useAppStore();
+  const { isMobile, responsive } = useResponsive();
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '📊' },
@@ -21,6 +23,16 @@ const Header = () => {
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
+            {/* Mobile hamburger menu */}
+            {isMobile && (
+              <button
+                onClick={toggleMobileMenu}
+                className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gridiron-graphite/20 transition"
+                aria-label="Toggle menu"
+              >
+                <IconMenu2 size={20} />
+              </button>
+            )}
             <div className="flex items-center space-x-2">
               <a
                 href="https://thesignalcallers.com"
@@ -28,22 +40,24 @@ const Header = () => {
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition-opacity"
               >
-                <Logo size={55} />
+                <Logo size={responsive.logoSize} />
               </a>
-              <h1 className="text-xl font-heading font-semibold dark:text-white">
+              <h1
+                className={`font-heading font-semibold dark:text-white ${responsive.title}`}
+              >
                 TheSignalCallers
               </h1>
             </div>
           </div>
 
-          <nav className="flex items-center space-x-1">
+          <nav className={`flex items-center ${responsive.navSpacing}`}>
             {navItems.map(item => (
               <button
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
                 className={`
-                  px-4 py-2 rounded-lg font-medium transition-colors duration-200
-                  flex items-center space-x-2
+                  ${responsive.navPadding} rounded-lg font-medium transition-colors duration-200
+                  flex items-center space-x-2 min-h-[44px]
                   ${
                     currentView === item.id
                       ? 'bg-signal-green/10 text-signal-green border border-signal-green/30'
