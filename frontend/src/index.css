@@ -101,7 +101,9 @@ body {
 /* Mobile-specific improvements */
 @media (max-width: 768px) {
   /* Ensure touch targets are at least 44px */
-  button, [role="button"], .mantine-Button-root {
+  button,
+  [role='button'],
+  .mantine-Button-root {
     min-height: 44px;
     min-width: 44px;
   }

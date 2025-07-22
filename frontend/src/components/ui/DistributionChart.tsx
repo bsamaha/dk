@@ -49,7 +49,11 @@ const DistributionChart = ({
       className="bg-white dark:bg-gray-900"
       style={{ height: '400px' }}
     >
-      <Title order={4} mb="md" className="text-gridiron-graphite dark:text-white font-heading text-center">
+      <Title
+        order={4}
+        mb="md"
+        className="text-gridiron-graphite dark:text-white font-heading text-center"
+      >
         {title}
       </Title>
       {chartData.length > 0 ? (
@@ -100,10 +104,16 @@ const DistributionChart = ({
             </ResponsiveContainer>
           </div>
           <div className="mt-3 space-y-1">
-            <Text size="sm" className="text-gridiron-graphite dark:text-white text-center font-medium">
+            <Text
+              size="sm"
+              className="text-gridiron-graphite dark:text-white text-center font-medium"
+            >
               X-Axis: Number of {position}s
             </Text>
-            <Text size="xs" className="text-gridiron-graphite/70 dark:text-gray-300 text-center">
+            <Text
+              size="xs"
+              className="text-gridiron-graphite/70 dark:text-gray-300 text-center"
+            >
               Chart shows distribution of team roster constructions
             </Text>
           </div>

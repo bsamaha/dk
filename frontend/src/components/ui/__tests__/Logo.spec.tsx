@@ -28,11 +28,25 @@ describe('Logo', () => {
     renderWithContext(<Logo />);
     const img = screen.getByAltText('TheSignalCallers logo');
     expect(img).toBeInTheDocument();
-    expect(img.getAttribute('src')).toContain('/brand/logo_embedded.svg');
+    expect(img.getAttribute('src')).toContain('/brand/logo_white_embedded.svg');
   });
 
   it('renders the horizontal variant in dark mode', () => {
     renderWithContext(<Logo variant="horizontal" />, 'dark');
+    const img = screen.getByAltText('TheSignalCallers logo');
+    expect(img).toBeInTheDocument();
+    expect(img.getAttribute('src')).toContain('/brand/logo_embedded.svg');
+  });
+
+  it('renders the mark variant in dark mode', () => {
+    renderWithContext(<Logo variant="mark" />, 'dark');
+    const img = screen.getByAltText('TheSignalCallers logo');
+    expect(img).toBeInTheDocument();
+    expect(img.getAttribute('src')).toContain('/brand/logo_embedded.svg');
+  });
+
+  it('renders the horizontal variant in light mode', () => {
+    renderWithContext(<Logo variant="horizontal" />, 'light');
     const img = screen.getByAltText('TheSignalCallers logo');
     expect(img).toBeInTheDocument();
     expect(img.getAttribute('src')).toContain('/brand/logo_white_embedded.svg');

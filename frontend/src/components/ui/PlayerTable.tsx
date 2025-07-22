@@ -294,7 +294,7 @@ const PlayerTable = ({
   return (
     <ScrollArea>
       <Table.ScrollContainer minWidth={isMobile ? 600 : 800}>
-                 <Table verticalSpacing="sm">
+        <Table verticalSpacing="sm">
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Player</Table.Th>

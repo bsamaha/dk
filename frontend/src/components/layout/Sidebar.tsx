@@ -12,14 +12,16 @@ const Sidebar = () => {
   });
 
   return (
-    <aside className={`
+    <aside
+      className={`
       ${isMobile ? 'fixed inset-y-0 left-0 z-50' : 'relative'}
       ${isMobile && !isMobileMenuOpen ? '-translate-x-full' : 'translate-x-0'}
       w-80 bg-white dark:bg-surface-dark text-gridiron-graphite dark:text-white
       border-r border-gray-200 dark:border-white/10 overflow-y-auto
       transition-transform duration-300 ease-in-out
       ${isMobile ? 'shadow-lg' : ''}
-    `}>
+    `}
+    >
       <div className="p-6">
         {/* Dataset Overview */}
         <div className="mb-8">

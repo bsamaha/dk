@@ -113,7 +113,9 @@ const OverviewView = () => {
       </div>
 
       {/* Key Metrics */}
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-4 gap-6'}`}>
+      <div
+        className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-4 gap-6'}`}
+      >
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-signal-green/20">
@@ -177,7 +179,9 @@ const OverviewView = () => {
       </div>
 
       {/* Charts */}
-      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-2 gap-6'}`}>
+      <div
+        className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-2 gap-6'}`}
+      >
         {/* Position Distribution Pie Chart */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
@@ -190,8 +194,15 @@ const OverviewView = () => {
                   data={pieData}
                   cx="50%"
                   cy="50%"
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  label={({ name, value, cx, cy, midAngle, outerRadius }: any) => {
+                  label={({
+                    name,
+                    value,
+                    cx,
+                    cy,
+                    midAngle,
+                    outerRadius,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  }: any) => {
                     const RADIAN = Math.PI / 180;
                     const radius = outerRadius + (isMobile ? 15 : 25);
                     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -208,7 +219,9 @@ const OverviewView = () => {
                         fontSize={isMobile ? '11px' : '13px'}
                         fontWeight="600"
                       >
-                        {isMobile ? `${(value ?? 0).toFixed(1)}%` : `${name}: ${(value ?? 0).toFixed(1)}%`}
+                        {isMobile
+                          ? `${(value ?? 0).toFixed(1)}%`
+                          : `${name}: ${(value ?? 0).toFixed(1)}%`}
                       </text>
                     );
                   }}
@@ -243,10 +256,7 @@ const OverviewView = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="position"
-                  fontSize={isMobile ? 12 : 14}
-                />
+                <XAxis dataKey="position" fontSize={isMobile ? 12 : 14} />
                 <YAxis fontSize={isMobile ? 12 : 14} />
                 <Tooltip />
                 <Bar dataKey="medianDraftCount" fill="#00A86B" />
@@ -263,7 +273,9 @@ const OverviewView = () => {
         </h4>
 
         {/* Quick Stats */}
-        <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4'} mb-6`}>
+        <div
+          className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4'} mb-6`}
+        >
           {positionStats?.position_stats.map(stat => (
             <div
               key={stat.position}
@@ -272,7 +284,9 @@ const OverviewView = () => {
               <p className="uppercase text-xs font-semibold text-gray-500">
                 {stat.position} Drafted
               </p>
-              <p className={`text-signal-green mt-1 font-bold ${isMobile ? 'text-lg' : 'text-xl'}`}>
+              <p
+                className={`text-signal-green mt-1 font-bold ${isMobile ? 'text-lg' : 'text-xl'}`}
+              >
                 {stat.total_drafted.toLocaleString()}
               </p>
             </div>
@@ -280,7 +294,9 @@ const OverviewView = () => {
         </div>
 
         {/* Bar Chart & Controls */}
-        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-4 gap-6'} items-end`}>
+        <div
+          className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-4 gap-6'} items-end`}
+        >
           <div className={isMobile ? 'col-span-1' : 'lg:col-span-3'}>
             <h5 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">
               Position Stats by Round

@@ -124,7 +124,10 @@ const PlayersView = () => {
 
   return (
     <div className="w-full p-4 text-gridiron-graphite dark:text-white">
-      <Title order={2} className="mb-6 text-gridiron-graphite dark:text-white font-heading">
+      <Title
+        order={2}
+        className="mb-6 text-gridiron-graphite dark:text-white font-heading"
+      >
         Player Analysis
       </Title>
 
@@ -143,7 +146,11 @@ const PlayersView = () => {
           <Grid.Col span={{ base: 12, md: 6 }}>
             <TextInput
               leftSection={<IconSearch size={16} />}
-              placeholder={isMobile ? "Search players..." : "Search by player name (e.g., Dobbins)..."}
+              placeholder={
+                isMobile
+                  ? 'Search players...'
+                  : 'Search by player name (e.g., Dobbins)...'
+              }
               value={searchTerm}
               onChange={event => setSearchTerm(event.currentTarget.value)}
               size={isMobile ? 'md' : 'sm'}

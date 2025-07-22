@@ -4,7 +4,8 @@ import { IconSun, IconMoon, IconMenu2 } from '@tabler/icons-react';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
 
 const Header = () => {
-  const { currentView, setCurrentView, isMobile, toggleMobileMenu } = useAppStore();
+  const { currentView, setCurrentView, isMobile, toggleMobileMenu } =
+    useAppStore();
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '📊' },
@@ -40,13 +41,17 @@ const Header = () => {
               >
                 <Logo size={isMobile ? 40 : 55} />
               </a>
-              <h1 className={`font-heading font-semibold dark:text-white ${isMobile ? 'text-lg' : 'text-xl'}`}>
+              <h1
+                className={`font-heading font-semibold dark:text-white ${isMobile ? 'text-lg' : 'text-xl'}`}
+              >
                 TheSignalCallers
               </h1>
             </div>
           </div>
 
-          <nav className={`flex items-center ${isMobile ? 'space-x-0' : 'space-x-1'}`}>
+          <nav
+            className={`flex items-center ${isMobile ? 'space-x-0' : 'space-x-1'}`}
+          >
             {navItems.map(item => (
               <button
                 key={item.id}
@@ -62,7 +67,9 @@ const Header = () => {
                 `}
               >
                 <span>{item.icon}</span>
-                <span className={`${isMobile ? 'hidden' : 'hidden sm:inline'}`}>{item.label}</span>
+                <span className={`${isMobile ? 'hidden' : 'hidden sm:inline'}`}>
+                  {item.label}
+                </span>
               </button>
             ))}
             <button
