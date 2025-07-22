@@ -19,6 +19,54 @@ import {
 import { Select, SegmentedControl, Loader } from '@mantine/core';
 import type { Position } from '../../types';
 
+// Custom tooltip component for better styling
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ value: number; name: string }>;
+  label?: string;
+}) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3">
+        <p className="text-gray-900 dark:text-white font-medium mb-1">
+          {label}
+        </p>
+        <p className="text-signal-green font-semibold">
+          {payload[0].value} players
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+// Custom tooltip for pie chart (shows percentages)
+const PieTooltip = ({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ value: number; name: string }>;
+}) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3">
+        <p className="text-gray-900 dark:text-white font-medium mb-1">
+          {payload[0].name}
+        </p>
+        <p className="text-signal-green font-semibold">
+          {payload[0].value.toFixed(1)}%
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const OverviewView = () => {
   const { isMobile, responsive } = useResponsive();
 
@@ -214,6 +262,7 @@ const OverviewView = () => {
                 </Pie>
                 <Tooltip
                   formatter={(value: number) => `${value.toFixed(1)}%`}
+                  content={<PieTooltip />}
                 />
                 <Legend
                   verticalAlign="bottom"
@@ -243,7 +292,10 @@ const OverviewView = () => {
                   fontSize={responsive.fontSize.medium}
                   tick={{ fill: 'white' }}
                 />
-                <Tooltip />
+                <Tooltip
+                  formatter={(v: number) => v.toFixed(2)}
+                  content={<CustomTooltip />}
+                />
                 <Bar dataKey="medianDraftCount" fill="#00A86B" />
               </BarChart>
             </ResponsiveContainer>
@@ -303,7 +355,10 @@ const OverviewView = () => {
                       fontSize={responsive.fontSize.small}
                       tick={{ fill: 'white' }}
                     />
-                    <Tooltip formatter={(v: number) => v.toFixed(2)} />
+                    <Tooltip
+                      formatter={(v: number) => v.toFixed(2)}
+                      content={<CustomTooltip />}
+                    />
                     <Bar dataKey="count" fill="#00A86B" />
                   </BarChart>
                 </ResponsiveContainer>
