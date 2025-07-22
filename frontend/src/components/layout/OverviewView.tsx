@@ -237,8 +237,12 @@ const OverviewView = () => {
                 <XAxis
                   dataKey="position"
                   fontSize={responsive.fontSize.medium}
+                  tick={{ fill: 'white' }}
                 />
-                <YAxis fontSize={responsive.fontSize.medium} />
+                <YAxis
+                  fontSize={responsive.fontSize.medium}
+                  tick={{ fill: 'white' }}
+                />
                 <Tooltip />
                 <Bar dataKey="medianDraftCount" fill="#00A86B" />
               </BarChart>
@@ -293,8 +297,12 @@ const OverviewView = () => {
                       angle={responsive.chartAngle}
                       textAnchor={responsive.chartTextAnchor}
                       height={responsive.chartAxisHeight}
+                      tick={{ fill: 'white' }}
                     />
-                    <YAxis fontSize={responsive.fontSize.small} />
+                    <YAxis
+                      fontSize={responsive.fontSize.small}
+                      tick={{ fill: 'white' }}
+                    />
                     <Tooltip formatter={(v: number) => v.toFixed(2)} />
                     <Bar dataKey="count" fill="#00A86B" />
                   </BarChart>
