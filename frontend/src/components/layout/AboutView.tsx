@@ -82,20 +82,20 @@ const AboutView: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            <textarea
-              value={suggestion}
-              onChange={e => setSuggestion(e.target.value)}
-              placeholder="Share your suggestions, feedback, or ideas for new features..."
-              className="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-surface-dark text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-signal-green focus:border-transparent resize-none"
-              rows={3}
-            />
-
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="Your email (optional - for follow-up questions)"
               className="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-surface-dark text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-signal-green focus:border-transparent"
+            />
+
+            <textarea
+              value={suggestion}
+              onChange={e => setSuggestion(e.target.value)}
+              placeholder="Share your suggestions, feedback, or ideas for new features..."
+              className="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-surface-dark text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-signal-green focus:border-transparent resize-none"
+              rows={3}
             />
 
             <div className="flex flex-col sm:flex-row gap-3">
