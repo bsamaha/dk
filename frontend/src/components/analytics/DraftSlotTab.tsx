@@ -79,13 +79,18 @@ const DraftSlotTab = () => {
           className="w-32"
         />
 
-        <SegmentedControl
-          aria-label="Metric selector"
-          data={metricOptions}
-          value={metric}
-          onChange={val => setMetric(val as DraftSlotMetric)}
-          color="brand"
-        />
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Metric
+          </label>
+          <SegmentedControl
+            aria-label="Metric selector"
+            data={metricOptions}
+            value={metric}
+            onChange={val => setMetric(val as DraftSlotMetric)}
+            color="brand"
+          />
+        </div>
 
         <Select
           aria-label="Top N selector"
@@ -236,25 +241,29 @@ const DraftSlotTab = () => {
           <Table striped highlightOnHover>
             <thead>
               <tr>
-                <th>#</th>
-                <th>Player</th>
-                <th>Slot Cnt</th>
-                <th>Overall Cnt</th>
-                <th>% Slot</th>
-                <th>% Overall</th>
-                <th>Score</th>
+                <th className="text-center">#</th>
+                <th className="text-center">Player</th>
+                <th className="text-center">Slot Cnt</th>
+                <th className="text-center">Overall Cnt</th>
+                <th className="text-center">% Slot</th>
+                <th className="text-center">% Overall</th>
+                <th className="text-center">Score</th>
               </tr>
             </thead>
             <tbody>
               {data?.rows.map((row: DraftSlotRow, idx: number) => (
                 <tr key={row.player}>
-                  <td>{idx + 1}</td>
-                  <td>{row.player}</td>
-                  <td>{row.slot}</td>
-                  <td>{row.overall}</td>
-                  <td>{(row.p_slot * 100).toFixed(1)}%</td>
-                  <td>{(row.p_overall * 100).toFixed(1)}%</td>
-                  <td>{row.score.toFixed(3)}</td>
+                  <td className="text-center">{idx + 1}</td>
+                  <td className="text-center">{row.player}</td>
+                  <td className="text-center">{row.slot}</td>
+                  <td className="text-center">{row.overall}</td>
+                  <td className="text-center">
+                    {(row.p_slot * 100).toFixed(1)}%
+                  </td>
+                  <td className="text-center">
+                    {(row.p_overall * 100).toFixed(1)}%
+                  </td>
+                  <td className="text-center">{row.score.toFixed(3)}</td>
                 </tr>
               ))}
             </tbody>
