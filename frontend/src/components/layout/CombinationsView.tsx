@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiService } from '../../services/api';
 import PlayerAutocomplete from '../ui/PlayerAutocomplete';
+import DistributionChart from '../ui/DistributionChart';
 import {
   Loader,
   Alert,
@@ -20,9 +21,10 @@ import { DataTable } from 'mantine-datatable';
 import type {
   TeamCombination,
   RosterConstructionCount,
-  Position,
 } from '../../types';
 import type { DataTableSortStatus, DataTableProps } from 'mantine-datatable';
+
+type CorePosition = 'QB' | 'RB' | 'WR' | 'TE';
 
 const CombinationsView = () => {
   const [view, setView] = useState<'players' | 'rosters'>('players');
@@ -33,18 +35,24 @@ const CombinationsView = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   // State for Roster Constructions
+  const [rosterView, setRosterView] = useState<'table' | 'chart'>('table');
   const [sortStatus, setSortStatus] = useState<
     DataTableSortStatus<RosterConstructionCount>
   >({ columnAccessor: 'count', direction: 'desc' });
   const [positionFilters, setPositionFilters] = useState<
-    Record<Position, { min?: number; max?: number }>
+    Record<CorePosition, { min?: number; max?: number }>
   >({
     QB: {},
     RB: {},
     WR: {},
     TE: {},
-    K: {},
-    DST: {},
+  });
+  const [rosterRequiredPlayers, setRosterRequiredPlayers] = useState<string[]>([]);
+  const [chartData, setChartData] = useState<Record<CorePosition, { count: number; teams: number }[]>>({
+    QB: [],
+    RB: [],
+    WR: [],
+    TE: [],
   });
 
   const { data, isLoading, error, isFetching } = useQuery({
@@ -64,8 +72,8 @@ const CombinationsView = () => {
     data: rosterConstructionCounts,
     isLoading: isRosterConstructionLoading,
   } = useQuery<RosterConstructionCount[], Error>({
-    queryKey: ['rosterConstructionCounts'],
-    queryFn: apiService.getRosterConstructionCounts,
+    queryKey: ['rosterConstructionCounts', rosterRequiredPlayers],
+    queryFn: () => apiService.getRosterConstructionCounts(rosterRequiredPlayers),
     enabled: view === 'rosters',
   });
 
@@ -74,7 +82,7 @@ const CombinationsView = () => {
   >([]);
 
   const handleFilterChange = (
-    position: Position,
+    position: CorePosition,
     type: 'min' | 'max',
     value: number | string | undefined
   ) => {
@@ -86,13 +94,13 @@ const CombinationsView = () => {
   };
 
   const clearFilters = () => {
-    setPositionFilters({ QB: {}, RB: {}, WR: {}, TE: {}, K: {}, DST: {} });
+    setPositionFilters({ QB: {}, RB: {}, WR: {}, TE: {} });
   };
 
   useEffect(() => {
     if (rosterConstructionCounts) {
       const filteredData = rosterConstructionCounts.filter(row => {
-        return (Object.keys(positionFilters) as Position[]).every(pos => {
+        return (Object.keys(positionFilters) as CorePosition[]).every(pos => {
           const { min, max } = positionFilters[pos];
           const value = row[pos] ?? 0;
           if (min !== undefined && value < min) return false;
@@ -117,6 +125,22 @@ const CombinationsView = () => {
       setProcessedRosterData(sortedData);
     }
   }, [rosterConstructionCounts, sortStatus, positionFilters]);
+
+  useEffect(() => {
+    if (processedRosterData) {
+      const positions: CorePosition[] = ['QB', 'RB', 'WR', 'TE'];
+      const newChartData = {} as Record<CorePosition, { count: number; teams: number }[]>;
+      positions.forEach(pos => {
+        const map = new Map<number, number>();
+        processedRosterData.forEach(row => {
+          const key = row[pos] ?? 0;
+          map.set(key, (map.get(key) ?? 0) + row.count);
+        });
+        newChartData[pos] = Array.from(map.entries()).map(([count, teams]) => ({ count, teams })).sort((a, b) => a.count - b.count);
+      });
+      setChartData(newChartData);
+    }
+  }, [processedRosterData]);
 
   const handleSearch = () => {
     if (selectedPlayers.length > 0) {
@@ -205,7 +229,7 @@ const CombinationsView = () => {
             radius="md"
             className="bg-white dark:bg-surface-dark-elev"
           >
-            <Title order={2} className="text-gridiron-graphite font-heading">
+            <Title order={2} className="text-white font-heading">
               Player Combinations
             </Title>
             <Text c="dimmed" mb="xl">
@@ -316,60 +340,151 @@ const CombinationsView = () => {
           shadow="sm"
           p="lg"
           withBorder
-          className="bg-white dark:bg-surface-dark-elev"
+          className="bg-white dark:bg-surface-dark-elev max-w-full overflow-hidden"
         >
-          <Title order={3} mb="md" className="text-gridiron-graphite">
+          <Title order={3} mb="md" className="text-white">
             Roster Construction Counts
           </Title>
+
+          <SegmentedControl
+            value={rosterView}
+            onChange={value => setRosterView(value as 'table' | 'chart')}
+            data={[
+              { label: 'Table View', value: 'table' },
+              { label: 'Chart View', value: 'chart' },
+            ]}
+            color="brand"
+            mb="lg"
+          />
 
           <Paper
             p="md"
             mb="md"
             withBorder
-            className="bg-white dark:bg-surface-dark-elev"
+            className="bg-white dark:bg-surface-dark-elev border-signal-green/20"
           >
+            <Text fw={500} mb="md" className="text-signal-green dark:text-audible-gold">
+              Filter Roster Combinations
+            </Text>
+            
+            <Group grow align="start" className="gap-8" mb="md">
+              <div className="flex-1 min-w-[300px]">
+                <Text fw={500} mb="xs" className="text-gridiron-graphite dark:text-white">
+                  Required Players
+                </Text>
+                <PlayerAutocomplete
+                  value={rosterRequiredPlayers}
+                  onChange={setRosterRequiredPlayers}
+                  placeholder="e.g., A.J. Brown, CeeDee Lamb"
+                />
+              </div>
+            </Group>
+            
             <Grid align="end">
-              {(['QB', 'RB', 'WR', 'TE'] as Position[]).map(pos => (
+              {(['QB', 'RB', 'WR', 'TE'] as CorePosition[]).map(pos => (
                 <Grid.Col span={{ base: 12, sm: 6, md: 3 }} key={pos}>
                   <Group grow preventGrowOverflow={false} wrap="nowrap">
                     <NumberInput
                       label={`${pos} Min`}
                       value={positionFilters[pos]?.min}
                       onChange={val => handleFilterChange(pos, 'min', val)}
-                      min={0}
+                      min={1}
+                      styles={{
+                        label: {
+                          color: 'var(--color-signal-green)',
+                          fontWeight: 500,
+                          fontFamily: 'Inter, sans-serif',
+                        },
+                        input: {
+                          borderColor: 'var(--color-signal-green)',
+                          fontFamily: 'Inter, sans-serif',
+                          '&:focus': {
+                            borderColor: 'var(--color-signal-green)',
+                            boxShadow: '0 0 0 1px var(--color-signal-green)',
+                          },
+                        },
+                      }}
                     />
                     <NumberInput
                       label={`${pos} Max`}
                       value={positionFilters[pos]?.max}
                       onChange={val => handleFilterChange(pos, 'max', val)}
-                      min={0}
+                      min={1}
+                      styles={{
+                        label: {
+                          color: 'var(--color-signal-green)',
+                          fontWeight: 500,
+                          fontFamily: 'Inter, sans-serif',
+                        },
+                        input: {
+                          borderColor: 'var(--color-signal-green)',
+                          fontFamily: 'Inter, sans-serif',
+                          '&:focus': {
+                            borderColor: 'var(--color-signal-green)',
+                            boxShadow: '0 0 0 1px var(--color-signal-green)',
+                          },
+                        },
+                      }}
                     />
                   </Group>
                 </Grid.Col>
               ))}
               <Grid.Col span={{ base: 12, sm: 'auto' }}>
-                <Button onClick={clearFilters} variant="outline">
+                <Button 
+                  onClick={clearFilters} 
+                  variant="outline"
+                  className="border-signal-green text-signal-green hover:bg-signal-green hover:text-white transition-colors"
+                >
                   Clear Filters
                 </Button>
               </Grid.Col>
             </Grid>
           </Paper>
 
-          <DataTable<RosterConstructionCount>
-            fetching={isRosterConstructionLoading}
-            withTableBorder
-            withColumnBorders
-            borderRadius="sm"
-            minHeight={200}
-            records={processedRosterData}
-            columns={rosterConstructionColumns}
-            idAccessor={record =>
-              `${record.QB}-${record.RB}-${record.WR}-${record.TE}`
-            }
-            sortStatus={sortStatus}
-            onSortStatusChange={setSortStatus}
-            noRecordsText="No roster data available."
-          />
+          {rosterView === 'table' && (
+            <div className="border border-signal-green/20 rounded-md overflow-hidden">
+              <DataTable<RosterConstructionCount>
+                fetching={isRosterConstructionLoading}
+                withTableBorder
+                withColumnBorders
+                borderRadius="sm"
+                minHeight={200}
+                records={processedRosterData}
+                columns={rosterConstructionColumns}
+                idAccessor={record =>
+                  `${record.QB}-${record.RB}-${record.WR}-${record.TE}`
+                }
+                sortStatus={sortStatus}
+                onSortStatusChange={setSortStatus}
+                noRecordsText="No roster data available."
+                styles={{
+                  table: {
+                    borderColor: 'var(--color-signal-green)',
+                  },
+                  header: {
+                    backgroundColor: 'rgba(0, 168, 107, 0.05)',
+                    borderBottom: '2px solid var(--color-signal-green)',
+                  },
+                }}
+              />
+            </div>
+          )}
+
+          {rosterView === 'chart' && (
+            <div className="w-full overflow-hidden">
+              <Grid gutter="lg" className="w-full">
+                {(['QB', 'RB', 'WR', 'TE'] as CorePosition[]).map(pos => (
+                  <Grid.Col span={{ base: 12, md: 6 }} key={pos}>
+                    <DistributionChart
+                      title={`${pos} Distribution`}
+                      data={chartData[pos]}
+                      position={pos}
+                    />
+                  </Grid.Col>
+                ))}
+              </Grid>
+            </div>
+          )}
         </Paper>
       )}
     </div>

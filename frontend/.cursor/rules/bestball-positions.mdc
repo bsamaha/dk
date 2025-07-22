@@ -1,0 +1,27 @@
+---
+alwaysApply: true
+---
+
+# DraftKings Bestball Position Rules
+
+This project is focused on **DraftKings bestball analysis**. Only use the following positions in all code, data models, and UI components:
+
+## Core Positions Only
+- **QB** (Quarterback)
+- **RB** (Running Back) 
+- **WR** (Wide Receiver)
+- **TE** (Tight End)
+
+## Excluded Positions
+Do NOT use or reference:
+- **K** (Kicker) - not used in bestball
+- **DST** (Defense/Special Teams) - not used in bestball
+
+## Implementation Guidelines
+- Use `CorePosition` type: `'QB' | 'RB' | 'WR' | 'TE'`
+- Filter out K and DST from any position arrays or enums
+- Update data models to exclude kicker and defense data
+- Ensure UI components only show the four core positions
+- When creating charts, filters, or analytics, focus only on QB, RB, WR, TE
+
+This rule applies to both frontend and backend code, ensuring consistency across the entire application for bestball analysis.

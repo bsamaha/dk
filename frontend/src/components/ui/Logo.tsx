@@ -1,4 +1,5 @@
 import React from 'react';
+import { useColorScheme } from '../../contexts/ColorSchemeContext';
 
 interface LogoProps {
   variant?: 'mark' | 'horizontal';
@@ -8,6 +9,7 @@ interface LogoProps {
 
 /**
  * Renders the official SignalCaller logo from /public/brand.
+ * Automatically switches between light and dark variants based on color scheme.
  * Variant:
  *  - mark: square icon (default)
  *  - horizontal: wider logotype
@@ -17,11 +19,12 @@ const Logo: React.FC<LogoProps> = ({
   size = 40,
   className = '',
 }) => {
-  const src =
-    variant === 'horizontal'
-      ? '/brand/logo_embedded.svg'
-      : '/brand/logo_embedded.svg';
-  // Using same file; mark variant sets size.
+  const { colorScheme } = useColorScheme();
+  
+  const src = colorScheme === 'light' 
+    ? (variant === 'horizontal' ? '/brand/logo_white_embedded.svg' : '/brand/logo_white_embedded.svg')
+    : (variant === 'horizontal' ? '/brand/logo_embedded.svg' : '/brand/logo_embedded.svg');
+  
   return (
     <img
       src={src}

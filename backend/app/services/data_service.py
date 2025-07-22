@@ -480,9 +480,36 @@ with pl.StringCache():
                 for row in roster_counts.to_dicts()
             ]
 
-        def get_roster_construction_counts(self) -> List[Dict[str, Any]]:
+        def get_roster_construction_counts(
+            self, required_players: Optional[List[str]] = None
+        ) -> List[Dict[str, Any]]:
             """Get aggregated counts of unique roster constructions, focusing on QB, RB, WR, TE."""
             df = self.get_dataframe()
+
+            # If required players are specified, filter for teams that have all of them
+            if required_players:
+                logger.info(
+                    f"Filtering roster constructions for teams with required players: {required_players}"
+                )
+                required_players_set = set(required_players)
+
+                # Filter for relevant drafts first
+                relevant_teams_df = (
+                    df.lazy()
+                    .filter(pl.col("player").is_in(pl.Series(required_players)))
+                    .group_by("team_id")
+                    .agg(pl.col("player").n_unique().alias("unique_players"))
+                    .filter(pl.col("unique_players") == len(required_players_set))
+                    .select("team_id")
+                    .collect()
+                )
+                relevant_team_ids = relevant_teams_df["team_id"]
+
+                if relevant_team_ids.is_empty():
+                    return []
+
+                # Filter the dataframe to only include teams with all required players
+                df = df.filter(pl.col("team_id").is_in(relevant_team_ids))
 
             # Pivot to get positions as columns for each team
             roster_df = (

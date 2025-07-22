@@ -143,6 +143,17 @@ class CombinationFilter(BaseModel):
     )
 
 
+class RosterConstructionFilter(BaseModel):
+    """Request model for roster construction filtering."""
+
+    required_players: Optional[List[str]] = Field(
+        None, description="Players that must be in roster constructions"
+    )
+    limit: Optional[int] = Field(
+        100, description="Maximum number of results", ge=1, le=1000
+    )
+
+
 class CombinationsResponse(BaseModel):
     """Response model for player combinations."""
 

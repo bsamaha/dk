@@ -114,9 +114,9 @@ function App() {
           }}
         >
           <Notifications position="top-right" />
-          <div className="min-h-screen bg-gray-50 dark:bg-gridiron-graphite-light">
+          <div className="min-h-screen bg-gray-50 dark:bg-gridiron-graphite-light flex flex-col">
             <Header />
-            <div className="flex h-[calc(100vh-64px)]">
+            <div className="flex flex-1 min-h-0">
               <Sidebar />
               <MainContent view={currentView} />
             </div>

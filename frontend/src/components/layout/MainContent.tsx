@@ -27,8 +27,8 @@ const MainContent = ({ view }: MainContentProps) => {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gridiron-graphite-light">
-      <div className="p-6">{renderView()}</div>
+    <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gridiron-graphite-light min-h-0">
+      <div className="p-6 max-w-full">{renderView()}</div>
     </main>
   );
 };

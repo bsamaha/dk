@@ -1,5 +1,11 @@
 {
   "dependencies": {
-    "frontend": "file:.."
+    "@mantine/charts": "^8.2.1",
+    "@mantine/core": "^8.2.1",
+    "@mantine/hooks": "^8.2.1",
+    "@mantine/notifications": "^8.2.1",
+    "@mantine/spotlight": "^8.2.1",
+    "frontend": "file:..",
+    "mantine-datatable": "^8.1.3"
   }
 }

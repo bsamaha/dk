@@ -1,26 +1,24 @@
 import { useState, useMemo } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
-  Container,
+  Title,
+  TextInput,
   Grid,
   Paper,
-  Title,
-  Text,
   Button,
-  Pagination,
+  Text,
   Box,
+  MultiSelect,
   Center,
   Loader,
   Alert,
-  MultiSelect,
-  TextInput,
+  Pagination,
 } from '@mantine/core';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
-
+import { IconSearch, IconAlertCircle } from '@tabler/icons-react';
 import { apiService } from '../../services/api';
-import type { Position, Player } from '../../types';
-import PlayerTable from '../ui/PlayerTable';
 import PlayerAutocomplete from '../ui/PlayerAutocomplete';
-import { IconAlertCircle, IconSearch } from '@tabler/icons-react';
+import PlayerTable from '../ui/PlayerTable';
+import type { Player, Position } from '../../types';
 
 // Custom hook for fetching player data
 const usePlayers = (
@@ -122,8 +120,8 @@ const PlayersView = () => {
   };
 
   return (
-    <Container fluid className="p-4 text-gridiron-graphite dark:text-white">
-      <Title order={2} className="mb-6 text-gridiron-graphite font-heading">
+    <div className="w-full text-gridiron-graphite dark:text-white">
+      <Title order={2} className="mb-6 text-white font-heading">
         Player Analysis
       </Title>
 
@@ -135,7 +133,7 @@ const PlayersView = () => {
         radius="md"
         className="mb-8 bg-white dark:bg-surface-dark-elev"
       >
-        <Title order={4} className="mb-4 text-gridiron-graphite">
+        <Title order={4} className="mb-4 text-white">
           Player Search & Filters
         </Title>
         <Grid align="flex-end">
@@ -225,7 +223,7 @@ const PlayersView = () => {
           )}
         </Box>
       </Paper>
-    </Container>
+    </div>
   );
 };
 

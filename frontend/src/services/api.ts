@@ -151,8 +151,12 @@ export const apiService = {
   },
 
   // Get aggregated roster construction counts
-  async getRosterConstructionCounts(): Promise<RosterConstructionCount[]> {
-    const response = await api.get('/positions/roster-construction/counts');
+  async getRosterConstructionCounts(required_players?: string[]): Promise<RosterConstructionCount[]> {
+    const params = new URLSearchParams();
+    if (required_players && required_players.length > 0) {
+      required_players.forEach(p => params.append('required_players', p));
+    }
+    const response = await api.get(`/positions/roster-construction/counts?${params.toString()}`);
     return response.data;
   },
 
