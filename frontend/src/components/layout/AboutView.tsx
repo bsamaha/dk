@@ -13,9 +13,13 @@ const AboutView: React.FC = () => {
     const body = encodeURIComponent(
       `Hi Signal Callers team,\n\nI have a suggestion/feedback:\n\n${suggestion}\n\n${email ? `Please reply to: ${email}` : ''}\n\nThanks!`
     );
-    window.open(
-      `mailto:team@thesignalcallers.com?subject=${subject}&body=${body}`
-    );
+    const mailtoLink = `mailto:team@thesignalcallers.com?subject=${subject}&body=${body}`;
+    const a = document.createElement('a');
+    a.href = mailtoLink;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const handleXDM = () => {

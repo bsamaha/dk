@@ -252,7 +252,7 @@ const DraftSlotTab = () => {
             <thead>
               <tr>
                 <th className="text-center">#</th>
-                <th className="text-center">Player</th>
+                <th className="text-left">Player</th>
                 <th className="text-center">Slot Cnt</th>
                 <th className="text-center">Overall Cnt</th>
                 <th className="text-center">% Slot</th>
@@ -264,7 +264,7 @@ const DraftSlotTab = () => {
               {data?.rows.map((row: DraftSlotRow, idx: number) => (
                 <tr key={row.player}>
                   <td className="text-center">{idx + 1}</td>
-                  <td className="text-center">{row.player}</td>
+                  <td className="text-left">{row.player}</td>
                   <td className="text-center">{row.slot}</td>
                   <td className="text-center">{row.overall}</td>
                   <td className="text-center">
