@@ -206,6 +206,16 @@ const DraftSlotTab = () => {
                 domain={[0, 'auto']}
                 tickFormatter={v => (v as number).toFixed(2)}
                 tick={{ fill: axisTickColor }}
+                label={{
+                  value: 'Count Drafted in Draft Slot',
+                  position: 'insideBottom',
+                  offset: -10,
+                  style: {
+                    textAnchor: 'middle',
+                    fill: axisTickColor,
+                    fontSize: '12px',
+                  },
+                }}
               />
               <YAxis
                 type="category"
