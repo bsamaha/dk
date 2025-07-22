@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiService } from '../../services/api';
 import { useAppStore } from '../../store/appStore';
+import { useResponsive } from '../../hooks/useResponsive';
 
 const Sidebar = () => {
-  const { isMobile, isMobileMenuOpen } = useAppStore();
+  const { isMobileMenuOpen } = useAppStore();
+  const { isMobile, responsive } = useResponsive();
 
   // Get metadata for sidebar stats
   const { data: metadata, isLoading } = useQuery({
@@ -14,12 +16,12 @@ const Sidebar = () => {
   return (
     <aside
       className={`
-      ${isMobile ? 'fixed inset-y-0 left-0 z-50' : 'relative'}
+      ${responsive.sidebarPosition}
       ${isMobile && !isMobileMenuOpen ? '-translate-x-full' : 'translate-x-0'}
       w-80 bg-white dark:bg-surface-dark text-gridiron-graphite dark:text-white
       border-r border-gray-200 dark:border-white/10 overflow-y-auto
       transition-transform duration-300 ease-in-out
-      ${isMobile ? 'shadow-lg' : ''}
+      ${responsive.sidebarShadow}
     `}
     >
       <div className="p-6">

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { useAppStore } from '../../store/appStore';
+import { useResponsive } from '../../hooks/useResponsive';
 import {
   Title,
   TextInput,
@@ -57,7 +57,7 @@ const usePlayers = (
 const positionOrder: Position[] = ['QB', 'RB', 'WR', 'TE'];
 
 const PlayersView = () => {
-  const { isMobile } = useAppStore();
+  const { isMobile, responsive } = useResponsive();
 
   // State for filters
   const [activePage, setActivePage] = useState(1);
@@ -153,7 +153,7 @@ const PlayersView = () => {
               }
               value={searchTerm}
               onChange={event => setSearchTerm(event.currentTarget.value)}
-              size={isMobile ? 'md' : 'sm'}
+              size={responsive.inputSize}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 12, md: 6 }}>

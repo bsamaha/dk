@@ -10,9 +10,8 @@ import {
   Loader,
   Grid,
   Stack,
-  ScrollArea,
 } from '@mantine/core';
-import { useAppStore } from '../../store/appStore';
+import { useResponsive } from '../../hooks/useResponsive';
 import {
   BarChart,
   Bar,
@@ -40,7 +39,7 @@ const PlayerTable = ({
   isPlayerDetailsLoading,
   onPlayerClick,
 }: PlayerTableProps) => {
-  const { isMobile } = useAppStore();
+  const { isMobile, responsive } = useResponsive();
   const createHistogramData = (picks: number[]) => {
     if (!picks || picks.length === 0) return [];
 
@@ -292,23 +291,21 @@ const PlayerTable = ({
   });
 
   return (
-    <ScrollArea>
-      <Table.ScrollContainer minWidth={isMobile ? 600 : 800}>
-        <Table verticalSpacing="sm">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Player</Table.Th>
-              <Table.Th>Position</Table.Th>
-              {!isMobile && <Table.Th>Team</Table.Th>}
-              <Table.Th>Draft %</Table.Th>
-              <Table.Th>Avg. Pick</Table.Th>
-              {!isMobile && <Table.Th>Avg. Round</Table.Th>}
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
-      </Table.ScrollContainer>
-    </ScrollArea>
+    <Table.ScrollContainer minWidth={responsive.tableMinWidth}>
+      <Table verticalSpacing="sm">
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Player</Table.Th>
+            <Table.Th>Position</Table.Th>
+            {!isMobile && <Table.Th>Team</Table.Th>}
+            <Table.Th>Draft %</Table.Th>
+            <Table.Th>Avg. Pick</Table.Th>
+            {!isMobile && <Table.Th>Avg. Round</Table.Th>}
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>{rows}</Table.Tbody>
+      </Table>
+    </Table.ScrollContainer>
   );
 };
 

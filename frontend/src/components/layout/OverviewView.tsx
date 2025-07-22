@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { apiService } from '../../services/api';
-import { useAppStore } from '../../store/appStore';
+import { useResponsive } from '../../hooks/useResponsive';
+import { ResponsivePieLabel } from '../ui/ResponsivePieLabel';
 import {
   BarChart,
   Bar,
@@ -19,7 +20,7 @@ import { Select, SegmentedControl, Loader } from '@mantine/core';
 import type { Position } from '../../types';
 
 const OverviewView = () => {
-  const { isMobile } = useAppStore();
+  const { isMobile, responsive } = useResponsive();
 
   const { data: metadata, isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
@@ -113,9 +114,7 @@ const OverviewView = () => {
       </div>
 
       {/* Key Metrics */}
-      <div
-        className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-4 gap-6'}`}
-      >
+      <div className={`grid ${responsive.singleColumnOnMobile} gap-6`}>
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-signal-green/20">
@@ -179,54 +178,33 @@ const OverviewView = () => {
       </div>
 
       {/* Charts */}
-      <div
-        className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-2 gap-6'}`}
-      >
+      <div className={`grid ${responsive.chartGrid}`}>
         {/* Position Distribution Pie Chart */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Position Draft Distribution
           </h3>
-          <div className={isMobile ? 'h-80' : 'h-96'}>
+          <div className={responsive.chartHeight}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%"
                   cy="50%"
-                  label={({
-                    name,
-                    value,
-                    cx,
-                    cy,
-                    midAngle,
-                    outerRadius,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  }: any) => {
-                    const RADIAN = Math.PI / 180;
-                    const radius = outerRadius + (isMobile ? 15 : 25);
-                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-                    return (
-                      <text
-                        x={x}
-                        y={y}
-                        fill="currentColor"
-                        className="text-gridiron-graphite dark:text-white"
-                        textAnchor={x > cx ? 'start' : 'end'}
-                        dominantBaseline="central"
-                        fontSize={isMobile ? '11px' : '13px'}
-                        fontWeight="600"
-                      >
-                        {isMobile
-                          ? `${(value ?? 0).toFixed(1)}%`
-                          : `${name}: ${(value ?? 0).toFixed(1)}%`}
-                      </text>
-                    );
-                  }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  label={(props: any) => (
+                    <ResponsivePieLabel
+                      name={props.name}
+                      value={props.value ?? 0}
+                      cx={props.cx}
+                      cy={props.cy}
+                      midAngle={props.midAngle}
+                      outerRadius={props.outerRadius}
+                      isMobile={isMobile}
+                    />
+                  )}
                   labelLine={false}
-                  outerRadius={isMobile ? 80 : 120}
+                  outerRadius={responsive.pieRadius}
                   fill="#8884d8"
                   dataKey="value"
                 >
@@ -239,8 +217,8 @@ const OverviewView = () => {
                 />
                 <Legend
                   verticalAlign="bottom"
-                  height={isMobile ? 50 : 36}
-                  wrapperStyle={{ fontSize: isMobile ? '12px' : '14px' }}
+                  height={responsive.pieLegendHeight}
+                  wrapperStyle={{ fontSize: responsive.fontSize.pieLegend }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -252,12 +230,15 @@ const OverviewView = () => {
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Median Players Drafted per Draft Lobby
           </h3>
-          <div className={isMobile ? 'h-80' : 'h-96'}>
+          <div className={responsive.chartHeight}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="position" fontSize={isMobile ? 12 : 14} />
-                <YAxis fontSize={isMobile ? 12 : 14} />
+                <XAxis
+                  dataKey="position"
+                  fontSize={responsive.fontSize.medium}
+                />
+                <YAxis fontSize={responsive.fontSize.medium} />
                 <Tooltip />
                 <Bar dataKey="medianDraftCount" fill="#00A86B" />
               </BarChart>
@@ -273,19 +254,17 @@ const OverviewView = () => {
         </h4>
 
         {/* Quick Stats */}
-        <div
-          className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4'} mb-6`}
-        >
+        <div className={`grid ${responsive.positionStatsGrid} mb-6`}>
           {positionStats?.position_stats.map(stat => (
             <div
               key={stat.position}
-              className={`text-center border rounded-md ${isMobile ? 'p-3' : 'p-4'}`}
+              className={`text-center border rounded-md ${responsive.positionStatsPadding}`}
             >
               <p className="uppercase text-xs font-semibold text-gray-500">
                 {stat.position} Drafted
               </p>
               <p
-                className={`text-signal-green mt-1 font-bold ${isMobile ? 'text-lg' : 'text-xl'}`}
+                className={`text-signal-green mt-1 font-bold ${responsive.statText}`}
               >
                 {stat.total_drafted.toLocaleString()}
               </p>
@@ -294,10 +273,8 @@ const OverviewView = () => {
         </div>
 
         {/* Bar Chart & Controls */}
-        <div
-          className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-4 gap-6'} items-end`}
-        >
-          <div className={isMobile ? 'col-span-1' : 'lg:col-span-3'}>
+        <div className={`grid ${responsive.controlsGrid} items-end`}>
+          <div className={responsive.controlsColumn}>
             <h5 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">
               Position Stats by Round
             </h5>
@@ -312,12 +289,12 @@ const OverviewView = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="round"
-                      fontSize={isMobile ? 11 : 14}
-                      angle={isMobile ? -45 : 0}
-                      textAnchor={isMobile ? 'end' : 'middle'}
-                      height={isMobile ? 60 : 30}
+                      fontSize={responsive.fontSize.small}
+                      angle={responsive.chartAngle}
+                      textAnchor={responsive.chartTextAnchor}
+                      height={responsive.chartAxisHeight}
                     />
-                    <YAxis fontSize={isMobile ? 11 : 14} />
+                    <YAxis fontSize={responsive.fontSize.small} />
                     <Tooltip formatter={(v: number) => v.toFixed(2)} />
                     <Bar dataKey="count" fill="#00A86B" />
                   </BarChart>
@@ -327,7 +304,7 @@ const OverviewView = () => {
           </div>
 
           {/* Controls */}
-          <div className={isMobile ? 'mt-4' : ''}>
+          <div className={responsive.controlsMargin}>
             <Select
               label="Position"
               data={['QB', 'RB', 'WR', 'TE'].map(p => ({ value: p, label: p }))}
@@ -335,7 +312,7 @@ const OverviewView = () => {
               onChange={v =>
                 v && setSelectedPosition(v as 'QB' | 'RB' | 'WR' | 'TE')
               }
-              size={isMobile ? 'md' : 'sm'}
+              size={responsive.inputSize}
             />
             <SegmentedControl
               fullWidth
@@ -346,7 +323,7 @@ const OverviewView = () => {
               ]}
               value={aggregation}
               onChange={val => setAggregation(val as 'mean' | 'median')}
-              size={isMobile ? 'md' : 'sm'}
+              size={responsive.inputSize}
             />
           </div>
         </div>

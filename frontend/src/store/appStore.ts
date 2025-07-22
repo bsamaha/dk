@@ -5,7 +5,6 @@ import type { AppState, PlayerFilter } from '../types';
 interface AppStore extends AppState {
   // Mobile state
   isMobileMenuOpen: boolean;
-  isMobile: boolean;
 
   // Actions
   setSelectedPlayers: (players: string[]) => void;
@@ -15,7 +14,6 @@ interface AppStore extends AppState {
   setFilters: (filters: Partial<PlayerFilter>) => void;
   clearFilters: () => void;
   toggleMobileMenu: () => void;
-  setIsMobile: (isMobile: boolean) => void;
 }
 
 const initialFilters: PlayerFilter = {
@@ -33,7 +31,6 @@ export const useAppStore = create<AppStore>()(
       currentView: 'overview',
       filters: initialFilters,
       isMobileMenuOpen: false,
-      isMobile: false,
 
       // Actions
       setSelectedPlayers: players =>
@@ -78,9 +75,6 @@ export const useAppStore = create<AppStore>()(
           false,
           'toggleMobileMenu'
         ),
-
-      setIsMobile: (isMobile: boolean) =>
-        set({ isMobile }, false, 'setIsMobile'),
     }),
     {
       name: 'fantasy-analytics-store',

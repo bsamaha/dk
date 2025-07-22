@@ -2,10 +2,11 @@ import { useAppStore } from '../../store/appStore';
 import Logo from '../ui/Logo';
 import { IconSun, IconMoon, IconMenu2 } from '@tabler/icons-react';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import { useResponsive } from '../../hooks/useResponsive';
 
 const Header = () => {
-  const { currentView, setCurrentView, isMobile, toggleMobileMenu } =
-    useAppStore();
+  const { currentView, setCurrentView, toggleMobileMenu } = useAppStore();
+  const { isMobile, responsive } = useResponsive();
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: '📊' },
@@ -39,25 +40,23 @@ const Header = () => {
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition-opacity"
               >
-                <Logo size={isMobile ? 40 : 55} />
+                <Logo size={responsive.logoSize} />
               </a>
               <h1
-                className={`font-heading font-semibold dark:text-white ${isMobile ? 'text-lg' : 'text-xl'}`}
+                className={`font-heading font-semibold dark:text-white ${responsive.title}`}
               >
                 TheSignalCallers
               </h1>
             </div>
           </div>
 
-          <nav
-            className={`flex items-center ${isMobile ? 'space-x-0' : 'space-x-1'}`}
-          >
+          <nav className={`flex items-center ${responsive.navSpacing}`}>
             {navItems.map(item => (
               <button
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
                 className={`
-                  ${isMobile ? 'px-2 py-2' : 'px-4 py-2'} rounded-lg font-medium transition-colors duration-200
+                  ${responsive.navPadding} rounded-lg font-medium transition-colors duration-200
                   flex items-center space-x-2 min-h-[44px]
                   ${
                     currentView === item.id
@@ -67,9 +66,7 @@ const Header = () => {
                 `}
               >
                 <span>{item.icon}</span>
-                <span className={`${isMobile ? 'hidden' : 'hidden sm:inline'}`}>
-                  {item.label}
-                </span>
+                <span className="hidden sm:inline">{item.label}</span>
               </button>
             ))}
             <button

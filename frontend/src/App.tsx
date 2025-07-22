@@ -2,13 +2,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { MantineProvider } from '@mantine/core';
 import { ColorSchemeContext } from './contexts/ColorSchemeContext';
-import { useLocalStorage, useMediaQuery } from '@mantine/hooks';
+import { useLocalStorage } from '@mantine/hooks';
 import { Notifications } from '@mantine/notifications';
-import { useEffect } from 'react';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import MainContent from './components/layout/MainContent';
 import { useAppStore } from './store/appStore';
+import { useResponsive } from './hooks/useResponsive';
 
 // Import Mantine styles
 import '@mantine/core/styles.css';
@@ -26,8 +26,8 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { currentView, isMobileMenuOpen, setIsMobile } = useAppStore();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const { currentView, isMobileMenuOpen } = useAppStore();
+  const { isMobile } = useResponsive();
 
   const [colorScheme, setColorScheme] = useLocalStorage<'light' | 'dark'>({
     key: 'sc-color-scheme',
@@ -36,11 +36,6 @@ function App() {
 
   const toggleColorScheme = (value?: 'light' | 'dark') =>
     setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
-
-  // Update mobile state when screen size changes
-  useEffect(() => {
-    setIsMobile(isMobile);
-  }, [isMobile, setIsMobile]);
 
   // Sync Tailwind dark class
   if (typeof document !== 'undefined') {
