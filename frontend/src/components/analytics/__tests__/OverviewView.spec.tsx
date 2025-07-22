@@ -34,8 +34,10 @@ describe('OverviewView', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     // Mock useQuery with proper return values
-    vi.mocked(useQuery).mockImplementation((options) => {
-      const queryKey = Array.isArray(options.queryKey) ? options.queryKey[0] : options.queryKey;
+    vi.mocked(useQuery).mockImplementation(options => {
+      const queryKey = Array.isArray(options.queryKey)
+        ? options.queryKey[0]
+        : options.queryKey;
 
       if (queryKey === 'metadata') {
         return {
@@ -45,19 +47,23 @@ describe('OverviewView', () => {
           error: null,
           isFetching: false,
           refetch: vi.fn(),
-          isSuccess: true
+          isSuccess: true,
         } as unknown as UseQueryResult;
       }
 
       if (queryKey === 'positionStats') {
         return {
-          data: { position_stats: [{ position: 'QB', total_drafted: 10, median_draft_count: 2 }] },
+          data: {
+            position_stats: [
+              { position: 'QB', total_drafted: 10, median_draft_count: 2 },
+            ],
+          },
           isLoading: false,
           isError: false,
           error: null,
           isFetching: false,
           refetch: vi.fn(),
-          isSuccess: true
+          isSuccess: true,
         } as unknown as UseQueryResult;
       }
 
@@ -69,7 +75,7 @@ describe('OverviewView', () => {
           error: null,
           isFetching: false,
           refetch: vi.fn(),
-          isSuccess: true
+          isSuccess: true,
         } as unknown as UseQueryResult;
       }
 
@@ -80,7 +86,7 @@ describe('OverviewView', () => {
         error: null,
         isFetching: false,
         refetch: vi.fn(),
-        isSuccess: false
+        isSuccess: false,
       } as unknown as UseQueryResult;
     });
   });
@@ -97,15 +103,23 @@ describe('OverviewView', () => {
       error: null,
       isFetching: true,
       refetch: vi.fn(),
-      isSuccess: false
+      isSuccess: false,
     } as unknown as UseQueryResult);
 
-    render(<MantineProvider><OverviewView /></MantineProvider>);
+    render(
+      <MantineProvider>
+        <OverviewView />
+      </MantineProvider>
+    );
     expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   it('renders position stats', () => {
-    render(<MantineProvider><OverviewView /></MantineProvider>);
+    render(
+      <MantineProvider>
+        <OverviewView />
+      </MantineProvider>
+    );
     expect(screen.getByText('100')).toBeInTheDocument();
   });
 });

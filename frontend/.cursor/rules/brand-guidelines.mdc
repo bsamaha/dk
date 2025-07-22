@@ -10,7 +10,7 @@ When working on frontend components and UI improvements, always reference and fo
 
 ### Color Palette
 - **Signal Green** (`#00A86B`) - Primary UI, links, CTAs
-- **Audible Gold** (`#FFC300`) - Buttons, KPI highlights  
+- **Audible Gold** (`#FFC300`) - Buttons, KPI highlights
 - **Turf Dark Green** (`#016140`) - Dark-mode panels, hover states
 - **Gridiron Graphite** (`#1E1E1E`) - Text, shadow overlays
 - **White Space** (`#FFFFFF`) - Background, negative space
@@ -32,7 +32,7 @@ When working on frontend components and UI improvements, always reference and fo
 
 ### Design System Tokens
 - `--radius-card`: 12px
-- `--space-m`: 16px  
+- `--space-m`: 16px
 - `--elev-card`: 4px shadow
 
 ## Implementation Checklist

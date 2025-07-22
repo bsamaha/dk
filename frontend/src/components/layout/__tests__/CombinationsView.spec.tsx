@@ -18,16 +18,14 @@ describe('CombinationsView', () => {
   const mockMetadata = {
     all_players: [
       { name: 'Player A', position: 'QB', team: 'Team' },
-      { name: 'Player B', position: 'RB', team: 'Team' }
+      { name: 'Player B', position: 'RB', team: 'Team' },
     ],
     total_players: 2,
     total_drafts: 10,
-    total_teams: 12
+    total_teams: 12,
   };
 
-  const mockRosterData = [
-    { QB: 1, RB: 2, WR: 3, TE: 1, count: 10 }
-  ];
+  const mockRosterData = [{ QB: 1, RB: 2, WR: 3, TE: 1, count: 10 }];
 
   const mockCombinationsData = {
     combinations: [
@@ -35,16 +33,16 @@ describe('CombinationsView', () => {
         draft_id: '1',
         draft_position: 1,
         players: ['Player A', 'Player B'],
-        position_counts: { QB: 1, RB: 1 }
+        position_counts: { QB: 1, RB: 1 },
       },
       {
         draft_id: '2',
         draft_position: 2,
         players: ['Player C', 'Player D'],
-        position_counts: { WR: 2, TE: 1 }
-      }
+        position_counts: { WR: 2, TE: 1 },
+      },
     ],
-    total_combinations: 2
+    total_combinations: 2,
   };
 
   beforeEach(() => {
@@ -67,8 +65,10 @@ describe('CombinationsView', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
 
     // Mock useQuery with stable return values
-    vi.mocked(useQuery).mockImplementation((options) => {
-      const queryKey = Array.isArray(options.queryKey) ? options.queryKey[0] : options.queryKey;
+    vi.mocked(useQuery).mockImplementation(options => {
+      const queryKey = Array.isArray(options.queryKey)
+        ? options.queryKey[0]
+        : options.queryKey;
 
       if (queryKey === 'metadata') {
         return {
@@ -78,7 +78,7 @@ describe('CombinationsView', () => {
           isFetching: false,
           error: null,
           refetch: vi.fn(),
-          isSuccess: true
+          isSuccess: true,
         } as unknown as UseQueryResult;
       }
 
@@ -90,7 +90,7 @@ describe('CombinationsView', () => {
           isFetching: false,
           error: null,
           refetch: vi.fn(),
-          isSuccess: true
+          isSuccess: true,
         } as unknown as UseQueryResult;
       }
 
@@ -102,7 +102,7 @@ describe('CombinationsView', () => {
           isFetching: false,
           error: null,
           refetch: vi.fn(),
-          isSuccess: true
+          isSuccess: true,
         } as unknown as UseQueryResult;
       }
 
@@ -113,7 +113,7 @@ describe('CombinationsView', () => {
         isFetching: false,
         error: null,
         refetch: vi.fn(),
-        isSuccess: false
+        isSuccess: false,
       } as unknown as UseQueryResult;
     });
   });
@@ -124,15 +124,18 @@ describe('CombinationsView', () => {
 
   it('renders loading state', async () => {
     // Override the default mock to return loading state
-    vi.mocked(useQuery).mockImplementation(() => ({
-      data: undefined,
-      isLoading: true,
-      isError: false,
-      isFetching: true,
-      error: null,
-      refetch: vi.fn(),
-      isSuccess: false
-    } as unknown as UseQueryResult));
+    vi.mocked(useQuery).mockImplementation(
+      () =>
+        ({
+          data: undefined,
+          isLoading: true,
+          isError: false,
+          isFetching: true,
+          error: null,
+          refetch: vi.fn(),
+          isSuccess: false,
+        }) as unknown as UseQueryResult
+    );
 
     await act(async () => {
       render(
@@ -142,7 +145,9 @@ describe('CombinationsView', () => {
       );
     });
 
-    expect(screen.getByText('Searching for combinations...')).toBeInTheDocument();
+    expect(
+      screen.getByText('Searching for combinations...')
+    ).toBeInTheDocument();
   });
 
   it('renders combinations table', async () => {
@@ -156,10 +161,16 @@ describe('CombinationsView', () => {
 
     // Check for the segmented control tabs
     expect(screen.getByRole('radiogroup')).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /player combinations/i })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /roster constructions/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('radio', { name: /player combinations/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('radio', { name: /roster constructions/i })
+    ).toBeInTheDocument();
 
     // Check for the main heading
-    expect(screen.getByRole('heading', { name: /player combinations/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /player combinations/i })
+    ).toBeInTheDocument();
   });
 });

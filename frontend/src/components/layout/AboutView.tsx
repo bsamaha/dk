@@ -18,9 +18,13 @@ const AboutView: React.FC = () => {
       <div className="bg-white dark:bg-surface-dark-elev p-8 rounded-lg card-shadow max-w-4xl mx-auto">
         <div className="text-center">
           <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-            We are DFS diehards who want dig into the data and share our knowledge with our degenerate brethren. 
-            This is currently a side project we are testing out, so please feel free to give us some feedback{' '}
-            <span className="text-signal-green font-semibold">[PLACEHOLD FOR CONTACT INFO]</span>
+            We are DFS diehards who want dig into the data and share our
+            knowledge with our degenerate brethren. This is currently a side
+            project we are testing out, so please feel free to give us some
+            feedback{' '}
+            <span className="text-signal-green font-semibold">
+              [PLACEHOLD FOR CONTACT INFO]
+            </span>
           </p>
         </div>
       </div>
@@ -35,4 +39,4 @@ const AboutView: React.FC = () => {
   );
 };
 
-export default AboutView; 
+export default AboutView;

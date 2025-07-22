@@ -21,10 +21,14 @@ const AnalyticsView = () => {
         <DraftSlotTab />
       </Tabs.Panel>
       <Tabs.Panel value="stacks" pt="sm">
-        <div className="text-center text-gray-500 mt-20">Stacks analysis coming soon.</div>
+        <div className="text-center text-gray-500 mt-20">
+          Stacks analysis coming soon.
+        </div>
       </Tabs.Panel>
       <Tabs.Panel value="drift" pt="sm">
-        <div className="text-center text-gray-500 mt-20">ADP drift analysis coming soon.</div>
+        <div className="text-center text-gray-500 mt-20">
+          ADP drift analysis coming soon.
+        </div>
       </Tabs.Panel>
     </Tabs>
   );

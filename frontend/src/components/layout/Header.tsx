@@ -22,9 +22,9 @@ const Header = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <a 
-                href="https://thesignalcallers.com" 
-                target="_blank" 
+              <a
+                href="https://thesignalcallers.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition-opacity"
               >

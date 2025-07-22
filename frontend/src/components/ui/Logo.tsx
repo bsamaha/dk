@@ -20,11 +20,16 @@ const Logo: React.FC<LogoProps> = ({
   className = '',
 }) => {
   const { colorScheme } = useColorScheme();
-  
-  const src = colorScheme === 'light' 
-    ? (variant === 'horizontal' ? '/brand/logo_white_embedded.svg' : '/brand/logo_white_embedded.svg')
-    : (variant === 'horizontal' ? '/brand/logo_embedded.svg' : '/brand/logo_embedded.svg');
-  
+
+  const src =
+    colorScheme === 'light'
+      ? variant === 'horizontal'
+        ? '/brand/logo_embedded.svg'
+        : '/brand/logo_embedded.svg'
+      : variant === 'horizontal'
+        ? '/brand/logo_white_embedded.svg'
+        : '/brand/logo_white_embedded.svg';
+
   return (
     <img
       src={src}

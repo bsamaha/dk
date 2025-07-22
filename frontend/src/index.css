@@ -18,6 +18,11 @@
   --color-gridiron-graphite: #1e1e1e;
   --color-white: #ffffff;
 
+  /* Theme-adaptive text colors */
+  --color-text-primary: #1e1e1e;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+
   --radius-card: 12px;
   --space-m: 16px;
   --elev-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -38,6 +43,13 @@ body {
 .dark body {
   background-color: var(--color-gridiron-graphite);
   color: var(--color-white);
+}
+
+/* Dark mode text color overrides */
+.dark {
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #9ca3af;
 }
 
 /* Custom component styles */
@@ -142,12 +154,17 @@ body {
 }
 
 /* Ensure proper spacing for outside positioned labels */
-.mantine-BarChart-root .recharts-cartesian-axis-y .recharts-label[text-anchor="start"] {
+.mantine-BarChart-root
+  .recharts-cartesian-axis-y
+  .recharts-label[text-anchor='start'] {
   margin-left: 50px !important;
   padding-left: 25px !important;
 }
 
-.dark .mantine-BarChart-root .recharts-cartesian-axis-y .recharts-label[text-anchor="start"] {
+.dark
+  .mantine-BarChart-root
+  .recharts-cartesian-axis-y
+  .recharts-label[text-anchor='start'] {
   margin-left: 60px !important;
   padding-left: 30px !important;
 }
@@ -196,13 +213,13 @@ body {
 }
 
 .dark .mantine-BarChart-root .mantine-BarChart-axisLabel {
-  fill: #FFFFFF !important;
+  fill: #ffffff !important;
   font-weight: 600 !important;
   font-size: 14px !important;
 }
 
 .dark .mantine-BarChart-root .mantine-BarChart-tick {
-  fill: #FFFFFF !important;
+  fill: #ffffff !important;
   font-weight: 500 !important;
   font-size: 12px !important;
 }
@@ -213,75 +230,85 @@ body {
 
 /* Target specific tick values that use currentColor */
 .dark .mantine-BarChart-root .recharts-cartesian-axis-tick-value {
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 /* Target X-axis tick values specifically */
-.dark .mantine-BarChart-root .recharts-cartesian-axis-x .recharts-cartesian-axis-tick-value {
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+.dark
+  .mantine-BarChart-root
+  .recharts-cartesian-axis-x
+  .recharts-cartesian-axis-tick-value {
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 /* Target Y-axis tick values specifically */
-.dark .mantine-BarChart-root .recharts-cartesian-axis-y .recharts-cartesian-axis-tick-value {
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+.dark
+  .mantine-BarChart-root
+  .recharts-cartesian-axis-y
+  .recharts-cartesian-axis-tick-value {
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 .dark .mantine-BarChart-root .recharts-text {
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 .dark .mantine-BarChart-root .recharts-cartesian-axis-tick-value tspan {
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 /* Ensure all text elements in charts are white in dark mode */
 .dark .mantine-BarChart-root text {
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 /* Override any inline styles on tick values */
-.dark .mantine-BarChart-root .recharts-cartesian-axis-tick-value[fill*="gridiron-graphite"] {
-  fill: #FFFFFF !important;
+.dark
+  .mantine-BarChart-root
+  .recharts-cartesian-axis-tick-value[fill*='gridiron-graphite'] {
+  fill: #ffffff !important;
 }
 
-.dark .mantine-BarChart-root .recharts-cartesian-axis-tick-value[style*="gridiron-graphite"] {
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+.dark
+  .mantine-BarChart-root
+  .recharts-cartesian-axis-tick-value[style*='gridiron-graphite'] {
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 /* Target SVG text elements specifically */
 .dark .mantine-BarChart-root svg text {
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 /* Target any remaining chart text elements */
 .dark .mantine-BarChart-root .recharts-wrapper text {
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 /* Final override for any remaining inline styles */
-.dark .mantine-BarChart-root *[fill*="gridiron-graphite"] {
-  fill: #FFFFFF !important;
+.dark .mantine-BarChart-root *[fill*='gridiron-graphite'] {
+  fill: #ffffff !important;
 }
 
-.dark .mantine-BarChart-root *[style*="gridiron-graphite"] {
-  fill: #FFFFFF !important;
-  color: #FFFFFF !important;
+.dark .mantine-BarChart-root *[style*='gridiron-graphite'] {
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 /* Ensure axis labels are white in dark mode */
 .dark .mantine-BarChart-root .mantine-BarChart-axisLabel,
 .dark .mantine-BarChart-root .mantine-BarChart-tick {
-  color: #FFFFFF !important;
-  fill: #FFFFFF !important;
+  color: #ffffff !important;
+  fill: #ffffff !important;
 }
 
 /* Light mode improvements */
@@ -329,16 +356,21 @@ body {
 }
 
 /* Custom SegmentedControl styles */
-.mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active="true"] {
+.mantine-SegmentedControl-root
+  .mantine-SegmentedControl-control[data-active='true'] {
   background-color: var(--color-turf-dark) !important;
   color: var(--color-audible-gold) !important;
 }
 
-.mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active="true"] .mantine-SegmentedControl-label {
+.mantine-SegmentedControl-root
+  .mantine-SegmentedControl-control[data-active='true']
+  .mantine-SegmentedControl-label {
   color: var(--color-audible-gold) !important;
 }
 
-.mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active="true"] .mantine-SegmentedControl-innerLabel {
+.mantine-SegmentedControl-root
+  .mantine-SegmentedControl-control[data-active='true']
+  .mantine-SegmentedControl-innerLabel {
   color: var(--color-audible-gold) !important;
 }
 
@@ -380,26 +412,26 @@ body {
   background-color: rgba(255, 195, 0, 0.1);
 }
 
-.mantine-Tabs-root .mantine-Tabs-tab[data-active="true"] {
+.mantine-Tabs-root .mantine-Tabs-tab[data-active='true'] {
   color: var(--color-signal-green);
   background-color: rgba(0, 168, 107, 0.1);
   border-bottom: 3px solid var(--color-signal-green);
   font-weight: 600;
 }
 
-.dark .mantine-Tabs-root .mantine-Tabs-tab[data-active="true"] {
+.dark .mantine-Tabs-root .mantine-Tabs-tab[data-active='true'] {
   color: var(--color-audible-gold);
   background-color: rgba(255, 195, 0, 0.15);
   border-bottom: 3px solid var(--color-audible-gold);
 }
 
-.mantine-Tabs-root .mantine-Tabs-tab[data-disabled="true"] {
+.mantine-Tabs-root .mantine-Tabs-tab[data-disabled='true'] {
   color: #9ca3af;
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-.dark .mantine-Tabs-root .mantine-Tabs-tab[data-disabled="true"] {
+.dark .mantine-Tabs-root .mantine-Tabs-tab[data-disabled='true'] {
   color: #6b7280;
 }
 
@@ -418,7 +450,9 @@ body {
   border-bottom: 2px solid var(--color-signal-green);
 }
 
-.mantine-DataTable-root .mantine-DataTable-header .mantine-DataTable-header-cell {
+.mantine-DataTable-root
+  .mantine-DataTable-header
+  .mantine-DataTable-header-cell {
   color: var(--color-signal-green);
   font-weight: 600;
   font-size: 14px;
@@ -435,4 +469,3 @@ body {
 .mantine-DataTable-root .mantine-DataTable-table .mantine-DataTable-cell {
   border-color: rgba(0, 168, 107, 0.1);
 }
-

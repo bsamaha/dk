@@ -16,7 +16,11 @@ type DistributionChartProps = {
   position: 'QB' | 'RB' | 'WR' | 'TE';
 };
 
-const DistributionChart = ({ title, data, position }: DistributionChartProps) => {
+const DistributionChart = ({
+  title,
+  data,
+  position,
+}: DistributionChartProps) => {
   const chartData = useMemo(() => {
     return data.map(item => ({
       count: item.count,
@@ -38,18 +42,14 @@ const DistributionChart = ({ title, data, position }: DistributionChartProps) =>
   }, [chartData]);
 
   return (
-    <Paper 
-      withBorder 
-      p="lg" 
-      radius="md" 
+    <Paper
+      withBorder
+      p="lg"
+      radius="md"
       className="bg-white dark:bg-gray-900"
       style={{ height: '400px' }}
     >
-      <Title 
-        order={4} 
-        mb="md" 
-        className="text-white font-heading text-center"
-      >
+      <Title order={4} mb="md" className="text-gridiron-graphite dark:text-white font-heading text-center">
         {title}
       </Title>
       {chartData.length > 0 ? (
@@ -65,21 +65,28 @@ const DistributionChart = ({ title, data, position }: DistributionChartProps) =>
                   bottom: 5,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" strokeOpacity={0.5} />
-                <XAxis 
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#E5E7EB"
+                  strokeOpacity={0.5}
+                />
+                <XAxis
                   dataKey="count"
-                  tick={{ fontSize: 12, fill: '#FFFFFF' }}
+                  tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
                   axisLine={{ stroke: '#9CA3AF' }}
                 />
-                <YAxis 
+                <YAxis
                   tickFormatter={yAxisTickFormatter}
-                  tick={{ fontSize: 12, fill: '#FFFFFF' }}
+                  tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
                   axisLine={{ stroke: '#9CA3AF' }}
                   domain={[0, maxValue]}
                 />
-                <Tooltip 
-                  formatter={(value: number) => [`${value.toLocaleString()} teams`, 'Teams']}
-                  labelFormatter={(label) => `Number of ${position}s: ${label}`}
+                <Tooltip
+                  formatter={(value: number) => [
+                    `${value.toLocaleString()} teams`,
+                    'Teams',
+                  ]}
+                  labelFormatter={label => `Number of ${position}s: ${label}`}
                   contentStyle={{
                     backgroundColor: '#1E1E1E',
                     border: '1px solid #016140',
@@ -88,25 +95,24 @@ const DistributionChart = ({ title, data, position }: DistributionChartProps) =>
                     color: '#FFFFFF',
                   }}
                 />
-                <Bar 
-                  dataKey="teams" 
-                  fill="#00A86B"
-                  radius={[4, 4, 0, 0]}
-                />
+                <Bar dataKey="teams" fill="#00A86B" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="mt-3 space-y-1">
-            <Text size="sm" className="text-white text-center font-medium">
+            <Text size="sm" className="text-gridiron-graphite dark:text-white text-center font-medium">
               X-Axis: Number of {position}s
             </Text>
-            <Text size="xs" className="text-gray-300 text-center">
+            <Text size="xs" className="text-gridiron-graphite/70 dark:text-gray-300 text-center">
               Chart shows distribution of team roster constructions
             </Text>
           </div>
         </>
       ) : (
-        <div className="flex items-center justify-center" style={{ height: '320px' }}>
+        <div
+          className="flex items-center justify-center"
+          style={{ height: '320px' }}
+        >
           <Text className="text-gray-400">
             No data available for {position}
           </Text>
@@ -116,4 +122,4 @@ const DistributionChart = ({ title, data, position }: DistributionChartProps) =>
   );
 };
 
-export default DistributionChart; 
+export default DistributionChart;

@@ -18,10 +18,7 @@ import {
   Grid,
 } from '@mantine/core';
 import { DataTable } from 'mantine-datatable';
-import type {
-  TeamCombination,
-  RosterConstructionCount,
-} from '../../types';
+import type { TeamCombination, RosterConstructionCount } from '../../types';
 import type { DataTableSortStatus, DataTableProps } from 'mantine-datatable';
 
 type CorePosition = 'QB' | 'RB' | 'WR' | 'TE';
@@ -47,8 +44,12 @@ const CombinationsView = () => {
     WR: {},
     TE: {},
   });
-  const [rosterRequiredPlayers, setRosterRequiredPlayers] = useState<string[]>([]);
-  const [chartData, setChartData] = useState<Record<CorePosition, { count: number; teams: number }[]>>({
+  const [rosterRequiredPlayers, setRosterRequiredPlayers] = useState<string[]>(
+    []
+  );
+  const [chartData, setChartData] = useState<
+    Record<CorePosition, { count: number; teams: number }[]>
+  >({
     QB: [],
     RB: [],
     WR: [],
@@ -73,7 +74,8 @@ const CombinationsView = () => {
     isLoading: isRosterConstructionLoading,
   } = useQuery<RosterConstructionCount[], Error>({
     queryKey: ['rosterConstructionCounts', rosterRequiredPlayers],
-    queryFn: () => apiService.getRosterConstructionCounts(rosterRequiredPlayers),
+    queryFn: () =>
+      apiService.getRosterConstructionCounts(rosterRequiredPlayers),
     enabled: view === 'rosters',
   });
 
@@ -129,14 +131,19 @@ const CombinationsView = () => {
   useEffect(() => {
     if (processedRosterData) {
       const positions: CorePosition[] = ['QB', 'RB', 'WR', 'TE'];
-      const newChartData = {} as Record<CorePosition, { count: number; teams: number }[]>;
+      const newChartData = {} as Record<
+        CorePosition,
+        { count: number; teams: number }[]
+      >;
       positions.forEach(pos => {
         const map = new Map<number, number>();
         processedRosterData.forEach(row => {
           const key = row[pos] ?? 0;
           map.set(key, (map.get(key) ?? 0) + row.count);
         });
-        newChartData[pos] = Array.from(map.entries()).map(([count, teams]) => ({ count, teams })).sort((a, b) => a.count - b.count);
+        newChartData[pos] = Array.from(map.entries())
+          .map(([count, teams]) => ({ count, teams }))
+          .sort((a, b) => a.count - b.count);
       });
       setChartData(newChartData);
     }
@@ -363,13 +370,21 @@ const CombinationsView = () => {
             withBorder
             className="bg-white dark:bg-surface-dark-elev border-signal-green/20"
           >
-            <Text fw={500} mb="md" className="text-signal-green dark:text-audible-gold">
+            <Text
+              fw={500}
+              mb="md"
+              className="text-signal-green dark:text-audible-gold"
+            >
               Filter Roster Combinations
             </Text>
-            
+
             <Group grow align="start" className="gap-8" mb="md">
               <div className="flex-1 min-w-[300px]">
-                <Text fw={500} mb="xs" className="text-gridiron-graphite dark:text-white">
+                <Text
+                  fw={500}
+                  mb="xs"
+                  className="text-gridiron-graphite dark:text-white"
+                >
                   Required Players
                 </Text>
                 <PlayerAutocomplete
@@ -379,7 +394,7 @@ const CombinationsView = () => {
                 />
               </div>
             </Group>
-            
+
             <Grid align="end">
               {(['QB', 'RB', 'WR', 'TE'] as CorePosition[]).map(pos => (
                 <Grid.Col span={{ base: 12, sm: 6, md: 3 }} key={pos}>
@@ -430,8 +445,8 @@ const CombinationsView = () => {
                 </Grid.Col>
               ))}
               <Grid.Col span={{ base: 12, sm: 'auto' }}>
-                <Button 
-                  onClick={clearFilters} 
+                <Button
+                  onClick={clearFilters}
                   variant="outline"
                   className="border-signal-green text-signal-green hover:bg-signal-green hover:text-white transition-colors"
                 >

@@ -93,8 +93,12 @@ async def get_roster_construction_counts(
 ):
     """Get aggregated counts of unique roster constructions."""
     try:
-        logger.info(f"Fetching aggregated roster construction counts with required players: {required_players}")
-        counts = data_service.get_roster_construction_counts(required_players=required_players)
+        logger.info(
+            f"Fetching aggregated roster construction counts with required players: {required_players}"
+        )
+        counts = data_service.get_roster_construction_counts(
+            required_players=required_players
+        )
         return counts
     except Exception as e:
         logger.error(f"Error fetching roster construction counts: {e}")

@@ -21,40 +21,40 @@ const initialFilters: PlayerFilter = {
 
 export const useAppStore = create<AppStore>()(
   devtools(
-    (set) => ({
+    set => ({
       // Initial state
       selectedPlayers: [],
       currentView: 'overview',
       filters: initialFilters,
 
       // Actions
-      setSelectedPlayers: (players) =>
+      setSelectedPlayers: players =>
         set({ selectedPlayers: players }, false, 'setSelectedPlayers'),
 
-      addSelectedPlayer: (player) =>
+      addSelectedPlayer: player =>
         set(
-          (state) => ({
+          state => ({
             selectedPlayers: [...state.selectedPlayers, player],
           }),
           false,
           'addSelectedPlayer'
         ),
 
-      removeSelectedPlayer: (player) =>
+      removeSelectedPlayer: player =>
         set(
-          (state) => ({
-            selectedPlayers: state.selectedPlayers.filter((p) => p !== player),
+          state => ({
+            selectedPlayers: state.selectedPlayers.filter(p => p !== player),
           }),
           false,
           'removeSelectedPlayer'
         ),
 
-      setCurrentView: (view) =>
+      setCurrentView: view =>
         set({ currentView: view }, false, 'setCurrentView'),
 
-      setFilters: (newFilters) =>
+      setFilters: newFilters =>
         set(
-          (state) => ({
+          state => ({
             filters: { ...state.filters, ...newFilters },
           }),
           false,

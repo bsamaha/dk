@@ -13,15 +13,17 @@ import type {
   DraftSlotResponse,
   RosterConstructionResponse,
   Player,
-  RosterConstructionCount
+  RosterConstructionCount,
 } from '../types';
-
 
 // Create axios instance with base configuration
 // Determine API base URL dynamically
 // Determine whether we're running under a local Vite/React dev server.
-const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const isDevServerPort = window.location.port === '5173' || window.location.port === '3000';
+const isLocalhost =
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1';
+const isDevServerPort =
+  window.location.port === '5173' || window.location.port === '3000';
 
 // 1) Prefer explicit build-time environment variable (defined in .env or CI)
 const baseURL =
@@ -42,11 +44,11 @@ const api = axios.create({
 
 // Add request interceptor for logging
 api.interceptors.request.use(
-  (config) => {
+  config => {
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
-  (error) => {
+  error => {
     console.error('API Request Error:', error);
     return Promise.reject(error);
   }
@@ -54,12 +56,16 @@ api.interceptors.request.use(
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
-  (response) => {
+  response => {
     console.log(`API Response: ${response.status} ${response.config.url}`);
     return response;
   },
-  (error) => {
-    console.error('API Response Error:', error.response?.status, error.response?.data);
+  error => {
+    console.error(
+      'API Response Error:',
+      error.response?.status,
+      error.response?.data
+    );
     return Promise.reject(error);
   }
 );
@@ -105,12 +111,17 @@ export const apiService = {
   },
 
   // Search players by name
-  async searchPlayers(query: string, limit: number = 20): Promise<{
+  async searchPlayers(
+    query: string,
+    limit: number = 20
+  ): Promise<{
     query: string;
     results: Player[];
     total_found: number;
   }> {
-    const response = await api.get(`/players/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+    const response = await api.get(
+      `/players/search?q=${encodeURIComponent(query)}&limit=${limit}`
+    );
     return response.data;
   },
 
@@ -127,13 +138,20 @@ export const apiService = {
   },
 
   // Get position draft counts by round
-  async getPositionDraftCountsByRound(position: Position, aggregation: 'mean' | 'median' = 'mean'): Promise<PositionRoundCountsResponse> {
-    const response = await api.get(`/positions/stats/${position}/by_round?aggregation=${aggregation}`);
+  async getPositionDraftCountsByRound(
+    position: Position,
+    aggregation: 'mean' | 'median' = 'mean'
+  ): Promise<PositionRoundCountsResponse> {
+    const response = await api.get(
+      `/positions/stats/${position}/by_round?aggregation=${aggregation}`
+    );
     return response.data;
   },
 
   // Get player combinations
-  async getPlayerCombinations(filters: CombinationFilter): Promise<CombinationsResponse> {
+  async getPlayerCombinations(
+    filters: CombinationFilter
+  ): Promise<CombinationsResponse> {
     const params = new URLSearchParams();
     filters.required_players.forEach(p => params.append('required_players', p));
     params.append('n_rounds', filters.n_rounds.toString());
@@ -151,23 +169,33 @@ export const apiService = {
   },
 
   // Get aggregated roster construction counts
-  async getRosterConstructionCounts(required_players?: string[]): Promise<RosterConstructionCount[]> {
+  async getRosterConstructionCounts(
+    required_players?: string[]
+  ): Promise<RosterConstructionCount[]> {
     const params = new URLSearchParams();
     if (required_players && required_players.length > 0) {
       required_players.forEach(p => params.append('required_players', p));
     }
-    const response = await api.get(`/positions/roster-construction/counts?${params.toString()}`);
+    const response = await api.get(
+      `/positions/roster-construction/counts?${params.toString()}`
+    );
     return response.data;
   },
 
   // Get team data
-  async getTeams(limit: number = 100): Promise<{ teams: string[]; total_count: number }> {
+  async getTeams(
+    limit: number = 100
+  ): Promise<{ teams: string[]; total_count: number }> {
     const response = await api.get(`/teams/?limit=${limit}`);
     return response.data;
   },
 
   // Get player details
-  async getPlayerDetails(playerName: string, position: string, team: string): Promise<PlayerDetails> {
+  async getPlayerDetails(
+    playerName: string,
+    position: string,
+    team: string
+  ): Promise<PlayerDetails> {
     const params = new URLSearchParams({
       player_name: playerName,
       position: position,
@@ -178,13 +206,19 @@ export const apiService = {
   },
 
   // ---------------- Draft Slot Correlation ----------------
-  async getDraftSlotCorrelation(slot: number, metric: 'count' | 'percent' | 'ratio' = 'percent', top_n: number = 25): Promise<DraftSlotResponse> {
+  async getDraftSlotCorrelation(
+    slot: number,
+    metric: 'count' | 'percent' | 'ratio' = 'percent',
+    top_n: number = 25
+  ): Promise<DraftSlotResponse> {
     const params = new URLSearchParams({
       slot: slot.toString(),
       metric,
       top_n: top_n.toString(),
     });
-    const response = await api.get(`/analytics/draft-slot?${params.toString()}`);
+    const response = await api.get(
+      `/analytics/draft-slot?${params.toString()}`
+    );
     return response.data;
   },
 };

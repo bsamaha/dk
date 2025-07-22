@@ -120,8 +120,8 @@ const PlayersView = () => {
   };
 
   return (
-    <div className="w-full text-gridiron-graphite dark:text-white">
-      <Title order={2} className="mb-6 text-white font-heading">
+    <div className="w-full p-4 text-gridiron-graphite dark:text-white">
+      <Title order={2} className="mb-6 text-gridiron-graphite dark:text-white font-heading">
         Player Analysis
       </Title>
 

@@ -116,10 +116,10 @@ const DraftSlotTab = () => {
               </ActionIcon>
             </Tooltip>
           </Popover.Target>
-          <Popover.Dropdown 
+          <Popover.Dropdown
             className={`${
-              isDark 
-                ? 'bg-[#016140] text-white border-[#016140]' 
+              isDark
+                ? 'bg-[#016140] text-white border-[#016140]'
                 : 'bg-white text-[#016140] border-[#016140]'
             }`}
           >
@@ -177,7 +177,10 @@ const DraftSlotTab = () => {
       </div>
 
       {/* Chart */}
-      <div className="bg-white dark:bg-surface-dark p-4 rounded-lg card-shadow" style={{ height: '400px', minHeight: '300px' }}>
+      <div
+        className="bg-white dark:bg-surface-dark p-4 rounded-lg card-shadow"
+        style={{ height: '400px', minHeight: '300px' }}
+      >
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader />

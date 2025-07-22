@@ -33,6 +33,13 @@ describe('Header', () => {
     // New brand logo should render as an <img> with alt text
     const logoImg = screen.getByAltText('TheSignalCallers logo');
     expect(logoImg).toBeInTheDocument();
+
+    // Logo should be wrapped in an external link
+    const logoLink = logoImg.closest('a');
+    expect(logoLink).toBeInTheDocument();
+    expect(logoLink).toHaveAttribute('href', 'https://thesignalcallers.com');
+    expect(logoLink).toHaveAttribute('target', '_blank');
+    expect(logoLink).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   it('calls setCurrentView on button click', () => {
