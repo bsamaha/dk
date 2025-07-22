@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import {
   ColorSchemeContext,
@@ -11,44 +12,45 @@ const mockColorSchemeContext: ColorSchemeContextValue = {
   toggleColorScheme: () => {},
 };
 
+// Helper function to render with color scheme context
 const renderWithContext = (
-  ui: React.ReactElement,
+  component: React.ReactElement,
   colorScheme: 'light' | 'dark' = 'light'
 ) => {
   const contextValue = { ...mockColorSchemeContext, colorScheme };
   return render(
     <ColorSchemeContext.Provider value={contextValue}>
-      {ui}
+      {component}
     </ColorSchemeContext.Provider>
   );
 };
 
 describe('Logo', () => {
-  it('renders the default mark variant in light mode', () => {
+  it('renders with default props in light mode', () => {
     renderWithContext(<Logo />);
     const img = screen.getByAltText('TheSignalCallers logo');
     expect(img).toBeInTheDocument();
-    expect(img.getAttribute('src')).toContain('/brand/logo_white_embedded.svg');
+    expect(img.getAttribute('src')).toContain('/brand/white_embedded.svg');
   });
 
-  it('renders the horizontal variant in dark mode', () => {
+  it('renders horizontal variant in dark mode', () => {
     renderWithContext(<Logo variant="horizontal" />, 'dark');
     const img = screen.getByAltText('TheSignalCallers logo');
     expect(img).toBeInTheDocument();
-    expect(img.getAttribute('src')).toContain('/brand/logo_embedded.svg');
+    expect(img.getAttribute('src')).toContain('/brand/dark_embedded.svg');
   });
 
-  it('renders the mark variant in dark mode', () => {
+  it('renders mark variant in dark mode', () => {
     renderWithContext(<Logo variant="mark" />, 'dark');
     const img = screen.getByAltText('TheSignalCallers logo');
     expect(img).toBeInTheDocument();
-    expect(img.getAttribute('src')).toContain('/brand/logo_embedded.svg');
+    expect(img.getAttribute('src')).toContain('/brand/dark_embedded.svg');
   });
 
-  it('renders the horizontal variant in light mode', () => {
+  it('renders horizontal variant in light mode', () => {
     renderWithContext(<Logo variant="horizontal" />, 'light');
     const img = screen.getByAltText('TheSignalCallers logo');
     expect(img).toBeInTheDocument();
-    expect(img.getAttribute('src')).toContain('/brand/logo_white_embedded.svg');
+    expect(img.getAttribute('src')).toContain('/brand/white_embedded.svg');
   });
 });

@@ -24,11 +24,11 @@ const Logo: React.FC<LogoProps> = ({
   const src =
     colorScheme === 'dark'
       ? variant === 'horizontal'
-        ? '/brand/logo_embedded.svg'
-        : '/brand/logo_embedded.svg'
+        ? '/brand/dark_embedded.svg'
+        : '/brand/dark_embedded.svg'
       : variant === 'horizontal'
-        ? '/brand/logo_white_embedded.svg'
-        : '/brand/logo_white_embedded.svg';
+        ? '/brand/white_embedded.svg'
+        : '/brand/white_embedded.svg';
 
   return (
     <img
