@@ -2,10 +2,27 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
+import {
+  ColorSchemeContext,
+  type ColorSchemeContextValue,
+} from '../../../contexts/ColorSchemeContext';
 import OverviewView from '../../layout/OverviewView';
 import type { UseQueryResult } from '@tanstack/react-query';
 
 vi.mock('@tanstack/react-query');
+
+const mockColorSchemeContext: ColorSchemeContextValue = {
+  colorScheme: 'light',
+  toggleColorScheme: vi.fn(),
+};
+
+const renderWithContext = (component: React.ReactElement) => {
+  return render(
+    <ColorSchemeContext.Provider value={mockColorSchemeContext}>
+      <MantineProvider>{component}</MantineProvider>
+    </ColorSchemeContext.Provider>
+  );
+};
 
 describe('OverviewView', () => {
   beforeEach(() => {
@@ -106,20 +123,12 @@ describe('OverviewView', () => {
       isSuccess: false,
     } as unknown as UseQueryResult);
 
-    render(
-      <MantineProvider>
-        <OverviewView />
-      </MantineProvider>
-    );
+    renderWithContext(<OverviewView />);
     expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   it('renders position stats', () => {
-    render(
-      <MantineProvider>
-        <OverviewView />
-      </MantineProvider>
-    );
+    renderWithContext(<OverviewView />);
     expect(screen.getByText('100')).toBeInTheDocument();
   });
 });

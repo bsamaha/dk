@@ -18,9 +18,14 @@ import {
 } from 'recharts';
 import { Select, SegmentedControl, Loader } from '@mantine/core';
 import type { Position } from '../../types';
+import { useColorScheme } from '../../contexts/ColorSchemeContext';
 
 const OverviewView = () => {
   const { isMobile, responsive } = useResponsive();
+  const { colorScheme } = useColorScheme();
+
+  // Theme-aware tick color
+  const tickColor = colorScheme === 'dark' ? '#ffffff' : '#374151';
 
   const { data: metadata, isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
@@ -106,11 +111,13 @@ const OverviewView = () => {
         <h1 className="text-2xl font-heading font-bold mb-2">
           Draftkings Bestball Milly Maker Draft Analytics
         </h1>
-        <p className="text-gray-300 mb-2">
+        <p className="text-gridiron-graphite dark:text-gray-300 mb-2">
           Comprehensive analysis of DK fantasy football draft patterns and
           player selections
         </p>
-        <div className="text-xs text-gray-400">Last Updated: June 27, 2025</div>
+        <div className="text-xs text-gridiron-graphite/70 dark:text-gray-400">
+          Last Updated: June 27, 2025
+        </div>
       </div>
 
       {/* Key Metrics */}
@@ -121,10 +128,10 @@ const OverviewView = () => {
               <span className="text-signal-green text-xl">👤</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-300">
+              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
                 Unique Players Drafted
               </p>
-              <p className="text-2xl font-bold">
+              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
                 {metadata?.total_players.toLocaleString() || '0'}
               </p>
             </div>
@@ -137,8 +144,10 @@ const OverviewView = () => {
               <span className="text-audible-gold text-xl">🏈</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-300">Total Drafts</p>
-              <p className="text-2xl font-bold">
+              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
+                Total Drafts
+              </p>
+              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
                 {metadata?.total_drafts.toLocaleString() || '0'}
               </p>
             </div>
@@ -151,8 +160,10 @@ const OverviewView = () => {
               <span className="text-signal-green text-xl">🏆</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-300">Total Teams</p>
-              <p className="text-2xl font-bold">
+              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
+                Total Teams
+              </p>
+              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
                 {metadata?.total_teams.toLocaleString() || '0'}
               </p>
             </div>
@@ -165,8 +176,10 @@ const OverviewView = () => {
               <span className="text-turf-dark text-xl">📊</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-300">Total Picks</p>
-              <p className="text-2xl font-bold">
+              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
+                Total Picks
+              </p>
+              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
                 {(metadata?.total_teams
                   ? metadata.total_teams * 20
                   : 0
@@ -213,7 +226,7 @@ const OverviewView = () => {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => `${value.toFixed(1)}%`}
+                  formatter={(value: number) => `${value.toFixed(2)}%`}
                 />
                 <Legend
                   verticalAlign="bottom"
@@ -237,9 +250,13 @@ const OverviewView = () => {
                 <XAxis
                   dataKey="position"
                   fontSize={responsive.fontSize.medium}
+                  tick={{ fill: tickColor }}
                 />
-                <YAxis fontSize={responsive.fontSize.medium} />
-                <Tooltip />
+                <YAxis
+                  fontSize={responsive.fontSize.medium}
+                  tick={{ fill: tickColor }}
+                />
+                <Tooltip formatter={(v: number) => v.toFixed(2)} />
                 <Bar dataKey="medianDraftCount" fill="#00A86B" />
               </BarChart>
             </ResponsiveContainer>
@@ -293,8 +310,12 @@ const OverviewView = () => {
                       angle={responsive.chartAngle}
                       textAnchor={responsive.chartTextAnchor}
                       height={responsive.chartAxisHeight}
+                      tick={{ fill: tickColor }}
                     />
-                    <YAxis fontSize={responsive.fontSize.small} />
+                    <YAxis
+                      fontSize={responsive.fontSize.small}
+                      tick={{ fill: tickColor }}
+                    />
                     <Tooltip formatter={(v: number) => v.toFixed(2)} />
                     <Bar dataKey="count" fill="#00A86B" />
                   </BarChart>
