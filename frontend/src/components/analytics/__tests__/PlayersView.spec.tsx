@@ -7,16 +7,29 @@ import type { UseQueryResult, QueryClient } from '@tanstack/react-query';
 
 vi.mock('@tanstack/react-query');
 vi.mocked(useQuery).mockReturnValue({
-  data: { players: [{ name: 'Test', position: 'QB', team: 'Team', draft_percentage: 50, avg_pick: 10, round: 1, key: 'test-key' }], total_count: 1 },
+  data: {
+    players: [
+      {
+        name: 'Test',
+        position: 'QB',
+        team: 'Team',
+        draft_percentage: 50,
+        avg_pick: 10,
+        round: 1,
+        key: 'test-key',
+      },
+    ],
+    total_count: 1,
+  },
   isLoading: false,
   error: null,
   isError: false,
   isPending: false,
-  status: 'success'
+  status: 'success',
 } as UseQueryResult);
 
 vi.mocked(useQueryClient).mockReturnValue({
-  invalidateQueries: vi.fn()
+  invalidateQueries: vi.fn(),
 } as unknown as QueryClient);
 
 describe('PlayersView', () => {
@@ -30,8 +43,14 @@ describe('PlayersView', () => {
   });
 
   it('handles search', () => {
-    render(<MantineProvider><PlayersView /></MantineProvider>);
-    const searchInput = screen.getByPlaceholderText('Search by player name (e.g., Dobbins)...');
+    render(
+      <MantineProvider>
+        <PlayersView />
+      </MantineProvider>
+    );
+    const searchInput = screen.getByPlaceholderText(
+      'Search by player name (e.g., Dobbins)...'
+    );
     fireEvent.change(searchInput, { target: { value: 'Test' } });
     expect(searchInput).toHaveValue('Test');
   });

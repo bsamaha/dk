@@ -19,8 +19,8 @@ vi.mock('../api', () => {
     }),
     interceptors: {
       request: { use: vi.fn() },
-      response: { use: vi.fn() }
-    }
+      response: { use: vi.fn() },
+    },
   } as unknown as ExtendedAxiosInstance;
   return { default: mockApi };
 });
@@ -38,7 +38,9 @@ describe('api', () => {
   });
 
   it('fetches players successfully', async () => {
-    const mockResponse = { data: { players: [], page_info: { total_pages: 1 } } };
+    const mockResponse = {
+      data: { players: [], page_info: { total_pages: 1 } },
+    };
     vi.mocked(api.get).mockResolvedValue(mockResponse);
     const result = await (api as ExtendedAxiosInstance).getPlayers({});
     expect(result).toEqual(mockResponse.data);
@@ -46,8 +48,12 @@ describe('api', () => {
   });
 
   it('handles API errors', async () => {
-    vi.mocked((api as ExtendedAxiosInstance).getPlayers).mockRejectedValue(new Error('Network error'));
-    await expect((api as ExtendedAxiosInstance).getPlayers({})).rejects.toThrow('Network error');
+    vi.mocked((api as ExtendedAxiosInstance).getPlayers).mockRejectedValue(
+      new Error('Network error')
+    );
+    await expect((api as ExtendedAxiosInstance).getPlayers({})).rejects.toThrow(
+      'Network error'
+    );
   });
 
   // Add more endpoint tests similarly as needed

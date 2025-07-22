@@ -116,7 +116,13 @@ const DraftSlotTab = () => {
               </ActionIcon>
             </Tooltip>
           </Popover.Target>
-          <Popover.Dropdown>
+          <Popover.Dropdown
+            className={`${
+              isDark
+                ? 'bg-[#016140] text-white border-[#016140]'
+                : 'bg-white text-[#016140] border-[#016140]'
+            }`}
+          >
             <ul className="list-disc list-inside space-y-1 text-sm max-w-xs">
               <li>
                 <b>Draft Slot</b>: Select the draft position (1–12) you want to
@@ -171,7 +177,10 @@ const DraftSlotTab = () => {
       </div>
 
       {/* Chart */}
-      <div className="bg-white dark:bg-surface-dark p-4 rounded-lg card-shadow h-96">
+      <div
+        className="bg-white dark:bg-surface-dark p-4 rounded-lg card-shadow"
+        style={{ height: '400px', minHeight: '300px' }}
+      >
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader />

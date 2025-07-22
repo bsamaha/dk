@@ -14,8 +14,14 @@
   --color-signal-green: #00a86b;
   --color-audible-gold: #ffc300;
   --color-turf-dark: #016140;
+  --color-turf-dark-green: #016140;
   --color-gridiron-graphite: #1e1e1e;
   --color-white: #ffffff;
+
+  /* Theme-adaptive text colors */
+  --color-text-primary: #1e1e1e;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
 
   --radius-card: 12px;
   --space-m: 16px;
@@ -37,6 +43,13 @@ body {
 .dark body {
   background-color: var(--color-gridiron-graphite);
   color: var(--color-white);
+}
+
+/* Dark mode text color overrides */
+.dark {
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #9ca3af;
 }
 
 /* Custom component styles */
@@ -94,6 +107,236 @@ body {
   height: 300px;
 }
 
+/* Chart improvements for brand consistency */
+.mantine-BarChart-root {
+  font-family: 'Inter', sans-serif;
+}
+
+.mantine-BarChart-root .mantine-BarChart-bar {
+  transition: opacity 0.2s ease;
+}
+
+.mantine-BarChart-root .mantine-BarChart-bar:hover {
+  opacity: 0.8;
+}
+
+/* Ensure proper spacing for axis labels */
+.mantine-BarChart-root .mantine-BarChart-axisLabel {
+  margin: 8px !important;
+  padding: 4px !important;
+}
+
+/* Add left padding to chart containers to accommodate Y-axis labels */
+.mantine-BarChart-root {
+  padding-left: 20px !important;
+}
+
+.dark .mantine-BarChart-root {
+  padding-left: 25px !important;
+}
+
+/* Specific styling for Y-axis labels to prevent cutoff */
+.mantine-BarChart-root .recharts-label {
+  margin-left: 10px !important;
+  padding-left: 5px !important;
+}
+
+/* Ensure Y-axis labels have proper spacing from chart edge */
+.mantine-BarChart-root .recharts-cartesian-axis-y .recharts-label {
+  margin-left: 30px !important;
+  padding-left: 15px !important;
+}
+
+/* Additional spacing for Y-axis labels in dark mode */
+.dark .mantine-BarChart-root .recharts-cartesian-axis-y .recharts-label {
+  margin-left: 35px !important;
+  padding-left: 20px !important;
+}
+
+/* Ensure proper spacing for outside positioned labels */
+.mantine-BarChart-root
+  .recharts-cartesian-axis-y
+  .recharts-label[text-anchor='start'] {
+  margin-left: 50px !important;
+  padding-left: 25px !important;
+}
+
+.dark
+  .mantine-BarChart-root
+  .recharts-cartesian-axis-y
+  .recharts-label[text-anchor='start'] {
+  margin-left: 60px !important;
+  padding-left: 30px !important;
+}
+
+/* Ensure outside positioned labels are fully visible */
+.mantine-BarChart-root .recharts-cartesian-axis-y .recharts-label {
+  overflow: visible !important;
+  clip-path: none !important;
+}
+
+/* Optimize spacing for shorter tick values */
+.mantine-BarChart-root .recharts-cartesian-axis-tick-value {
+  min-width: auto !important;
+  padding: 2px !important;
+}
+
+/* Reduce excessive margins around chart area */
+.mantine-BarChart-root .recharts-wrapper {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Position Y-axis label higher to avoid tick values */
+.mantine-BarChart-root .recharts-cartesian-axis-y .recharts-label {
+  transform: none !important;
+}
+
+.dark .mantine-BarChart-root .recharts-cartesian-axis-y .recharts-label {
+  transform: none !important;
+}
+
+/* Ensure Y-axis label doesn't interfere with tick values */
+.mantine-BarChart-root .recharts-cartesian-axis-y .recharts-label {
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* Additional positioning for better visual separation */
+.mantine-BarChart-root .recharts-cartesian-axis-y .recharts-label tspan {
+  dominant-baseline: middle !important;
+}
+
+/* Dark mode chart improvements */
+.dark .mantine-BarChart-root .mantine-BarChart-axis {
+  stroke: rgba(255, 255, 255, 0.4);
+}
+
+.dark .mantine-BarChart-root .mantine-BarChart-axisLabel {
+  fill: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+.dark .mantine-BarChart-root .mantine-BarChart-tick {
+  fill: #ffffff !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+}
+
+.dark .mantine-BarChart-root .mantine-BarChart-grid {
+  stroke: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Target specific tick values that use currentColor */
+.dark .mantine-BarChart-root .recharts-cartesian-axis-tick-value {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Target X-axis tick values specifically */
+.dark
+  .mantine-BarChart-root
+  .recharts-cartesian-axis-x
+  .recharts-cartesian-axis-tick-value {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Target Y-axis tick values specifically */
+.dark
+  .mantine-BarChart-root
+  .recharts-cartesian-axis-y
+  .recharts-cartesian-axis-tick-value {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.dark .mantine-BarChart-root .recharts-text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.dark .mantine-BarChart-root .recharts-cartesian-axis-tick-value tspan {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Ensure all text elements in charts are white in dark mode */
+.dark .mantine-BarChart-root text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Override any inline styles on tick values */
+.dark
+  .mantine-BarChart-root
+  .recharts-cartesian-axis-tick-value[fill*='gridiron-graphite'] {
+  fill: #ffffff !important;
+}
+
+.dark
+  .mantine-BarChart-root
+  .recharts-cartesian-axis-tick-value[style*='gridiron-graphite'] {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Target SVG text elements specifically */
+.dark .mantine-BarChart-root svg text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Target any remaining chart text elements */
+.dark .mantine-BarChart-root .recharts-wrapper text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Final override for any remaining inline styles */
+.dark .mantine-BarChart-root *[fill*='gridiron-graphite'] {
+  fill: #ffffff !important;
+}
+
+.dark .mantine-BarChart-root *[style*='gridiron-graphite'] {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Ensure axis labels are white in dark mode */
+.dark .mantine-BarChart-root .mantine-BarChart-axisLabel,
+.dark .mantine-BarChart-root .mantine-BarChart-tick {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Light mode improvements */
+.mantine-BarChart-root .mantine-BarChart-axisLabel {
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+.mantine-BarChart-root .mantine-BarChart-tick {
+  font-weight: 500 !important;
+  font-size: 12px !important;
+}
+
+/* Chart tooltip improvements */
+.mantine-BarChart-tooltip {
+  background-color: var(--color-white) !important;
+  border: 1px solid var(--color-signal-green) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 168, 107, 0.15) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.dark .mantine-BarChart-tooltip {
+  background-color: var(--color-gridiron-graphite) !important;
+  border: 1px solid var(--color-audible-gold) !important;
+  color: var(--color-white) !important;
+}
+
 /* Logo styles */
 .logo-mark {
   /* Square aspect ratio for mark variant */
@@ -110,4 +353,119 @@ body {
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
+}
+
+/* Custom SegmentedControl styles */
+.mantine-SegmentedControl-root
+  .mantine-SegmentedControl-control[data-active='true'] {
+  background-color: var(--color-turf-dark) !important;
+  color: var(--color-audible-gold) !important;
+}
+
+.mantine-SegmentedControl-root
+  .mantine-SegmentedControl-control[data-active='true']
+  .mantine-SegmentedControl-label {
+  color: var(--color-audible-gold) !important;
+}
+
+.mantine-SegmentedControl-root
+  .mantine-SegmentedControl-control[data-active='true']
+  .mantine-SegmentedControl-innerLabel {
+  color: var(--color-audible-gold) !important;
+}
+
+/* Custom Tabs styles */
+.mantine-Tabs-root .mantine-Tabs-list {
+  border-bottom: 2px solid #e5e7eb;
+  background-color: transparent;
+}
+
+.dark .mantine-Tabs-root .mantine-Tabs-list {
+  border-bottom: 2px solid #374151;
+}
+
+.mantine-Tabs-root .mantine-Tabs-tab {
+  color: #6b7280;
+  background-color: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  padding: 12px 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.dark .mantine-Tabs-root .mantine-Tabs-tab {
+  color: #9ca3af;
+}
+
+.mantine-Tabs-root .mantine-Tabs-tab:hover {
+  color: var(--color-signal-green);
+  background-color: rgba(0, 168, 107, 0.05);
+  transform: translateY(-1px);
+}
+
+.dark .mantine-Tabs-root .mantine-Tabs-tab:hover {
+  color: var(--color-audible-gold);
+  background-color: rgba(255, 195, 0, 0.1);
+}
+
+.mantine-Tabs-root .mantine-Tabs-tab[data-active='true'] {
+  color: var(--color-signal-green);
+  background-color: rgba(0, 168, 107, 0.1);
+  border-bottom: 3px solid var(--color-signal-green);
+  font-weight: 600;
+}
+
+.dark .mantine-Tabs-root .mantine-Tabs-tab[data-active='true'] {
+  color: var(--color-audible-gold);
+  background-color: rgba(255, 195, 0, 0.15);
+  border-bottom: 3px solid var(--color-audible-gold);
+}
+
+.mantine-Tabs-root .mantine-Tabs-tab[data-disabled='true'] {
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.dark .mantine-Tabs-root .mantine-Tabs-tab[data-disabled='true'] {
+  color: #6b7280;
+}
+
+.mantine-Tabs-root .mantine-Tabs-tab .mantine-Tabs-tabSection {
+  color: inherit;
+}
+
+.mantine-Tabs-root .mantine-Tabs-tab .mantine-Tabs-tabLabel {
+  color: inherit;
+  font-weight: inherit;
+}
+
+/* Custom DataTable styles for brand consistency */
+.mantine-DataTable-root .mantine-DataTable-header {
+  background-color: rgba(0, 168, 107, 0.05);
+  border-bottom: 2px solid var(--color-signal-green);
+}
+
+.mantine-DataTable-root
+  .mantine-DataTable-header
+  .mantine-DataTable-header-cell {
+  color: var(--color-signal-green);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.mantine-DataTable-root .mantine-DataTable-table {
+  border-color: var(--color-signal-green);
+}
+
+.mantine-DataTable-root .mantine-DataTable-table .mantine-DataTable-row:hover {
+  background-color: rgba(0, 168, 107, 0.02);
+}
+
+.mantine-DataTable-root .mantine-DataTable-table .mantine-DataTable-cell {
+  border-color: rgba(0, 168, 107, 0.1);
 }

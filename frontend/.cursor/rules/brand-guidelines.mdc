@@ -1,0 +1,46 @@
+---
+globs: frontend/**/*
+---
+
+# Brand Guidelines for Frontend Development
+
+When working on frontend components and UI improvements, always reference and follow the brand guidelines from [docs/brand_book.md](mdc:docs/brand_book.md).
+
+## Key Brand Elements to Apply
+
+### Color Palette
+- **Signal Green** (`#00A86B`) - Primary UI, links, CTAs
+- **Audible Gold** (`#FFC300`) - Buttons, KPI highlights
+- **Turf Dark Green** (`#016140`) - Dark-mode panels, hover states
+- **Gridiron Graphite** (`#1E1E1E`) - Text, shadow overlays
+- **White Space** (`#FFFFFF`) - Background, negative space
+
+### Typography
+- **Primary**: Inter (variable; weight 300-700) for dashboards and mobile readability
+- **Secondary**: Space Grotesk for headlines and numeric data
+- **Code/Data**: IBM Plex Mono for snippets and API examples
+
+### UX Principles
+- **Insight at a glance** - default screen should show live ADP delta heat map
+- **One-hand mobile use** - thumb-zone compliant controls
+- **Accessibility First** - all interactive elements ≥ 44px; haptic feedback on tap; color-blind safe palette
+
+### Voice & Tone
+- **Authoritative but never condescending** - think Patrick Mahomes explaining a scatter-plot
+- **Conversational** - use contractions, rhetorical questions, vivid verbs
+- **Playful when appropriate** - puns okay in headlines but reserve analysis sections for straight talk
+
+### Design System Tokens
+- `--radius-card`: 12px
+- `--space-m`: 16px
+- `--elev-card`: 4px shadow
+
+## Implementation Checklist
+- [ ] Use brand colors for all UI elements
+- [ ] Apply proper typography hierarchy
+- [ ] Ensure mobile-first responsive design
+- [ ] Meet WCAG 2.2 AA contrast requirements
+- [ ] Follow the "clarity over clutter" principle
+- [ ] Design for both spreadsheet ninjas and casual phone drafters
+
+Reference the full brand book for complete guidelines on voice, visuals, and experience patterns.

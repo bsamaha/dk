@@ -1,7 +1,7 @@
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from ..models.schemas import (
     AggregationType,
@@ -86,11 +86,19 @@ async def get_roster_construction():
 
 
 @router.get("/roster-construction/counts", response_model=List[Dict[str, Any]])
-async def get_roster_construction_counts():
+async def get_roster_construction_counts(
+    required_players: Optional[List[str]] = Query(
+        None, description="List of players that must be in roster constructions"
+    ),
+):
     """Get aggregated counts of unique roster constructions."""
     try:
-        logger.info("Fetching aggregated roster construction counts")
-        counts = data_service.get_roster_construction_counts()
+        logger.info(
+            f"Fetching aggregated roster construction counts with required players: {required_players}"
+        )
+        counts = data_service.get_roster_construction_counts(
+            required_players=required_players
+        )
         return counts
     except Exception as e:
         logger.error(f"Error fetching roster construction counts: {e}")

@@ -132,34 +132,35 @@ export interface RosterConstructionCount {
 
 // Position type using const assertion
 export const Position = {
-  QB: "QB",
-  RB: "RB",
-  WR: "WR",
-  TE: "TE",
-  K: "K",
-  DST: "DST"
+  QB: 'QB',
+  RB: 'RB',
+  WR: 'WR',
+  TE: 'TE',
+  K: 'K',
+  DST: 'DST',
 } as const;
 
-export type Position = typeof Position[keyof typeof Position];
+export type Position = (typeof Position)[keyof typeof Position];
 
 // Filter Types
 export const SortableColumn = {
-  NAME: "name",
-  POSITION: "position",
-  TEAM: "team",
-  DRAFT_PERCENTAGE: "draft_percentage",
-  AVG_PICK: "avg_pick",
-  AVG_ROUND: "avg_round",
+  NAME: 'name',
+  POSITION: 'position',
+  TEAM: 'team',
+  DRAFT_PERCENTAGE: 'draft_percentage',
+  AVG_PICK: 'avg_pick',
+  AVG_ROUND: 'avg_round',
 } as const;
 
-export type SortableColumn = typeof SortableColumn[keyof typeof SortableColumn];
+export type SortableColumn =
+  (typeof SortableColumn)[keyof typeof SortableColumn];
 
 export const SortOrder = {
-  ASC: "asc",
-  DESC: "desc",
+  ASC: 'asc',
+  DESC: 'desc',
 } as const;
 
-export type SortOrder = typeof SortOrder[keyof typeof SortOrder];
+export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder];
 
 export interface PlayerFilter {
   positions?: Position[];
@@ -179,7 +180,7 @@ export interface CombinationFilter {
 // UI State Types
 export interface AppState {
   selectedPlayers: string[];
-  currentView: 'overview' | 'players' | 'combinations' | 'analytics';
+  currentView: 'overview' | 'players' | 'combinations' | 'analytics' | 'about';
   filters: PlayerFilter;
 }
 

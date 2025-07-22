@@ -1,6 +1,6 @@
 ## Executive Summary
 
-**TheSignalCaller** is a data‑driven best‑ball analytics brand that turns pre‑snap reads into post‑draft edges.  This brandbook lays out the core identity—voice, visuals, and experience patterns—so every touch‑point (app, podcast, blog, social) feels unmistakably ours while remaining flexible for future sports verticals.
+**TheSignalCallers** is a data‑driven best‑ball analytics brand that turns pre‑snap reads into post‑draft edges.  This brandbook lays out the core identity—voice, visuals, and experience patterns—so every touch‑point (app, podcast, blog, social) feels unmistakably ours while remaining flexible for future sports verticals.
 
 ---
 
@@ -64,7 +64,7 @@ Our voice blends **quarterback confidence** with **data‑scientist precision**�
 
 ### 4.1 Logo & Mark
 
-The primary mark is a stylized quarterback hand under center forming a "▶" play button—suggesting both **signal** and **go**.  A logotype variant (“TheSignalCaller”) uses the *Space Grotesk* font.
+The primary mark is a stylized quarterback hand under center forming a "▶" play button—suggesting both **signal** and **go**.  A logotype variant (“TheSignalCallers”) uses the *Space Grotesk* font.
 
 **Clear Space Rule:**  Maintain at least *1 ×* the height of the "S" around the mark on all sides to preserve legibility. ([kokolv.medium.com](https://kokolv.medium.com/how-to-design-clear-space-for-a-logo-291359020819?utm_source=chatgpt.com))  Minimum display size is 32 px tall for digital and 12 mm for print.
 
@@ -156,7 +156,7 @@ Components: StatCard, ADPChart, ExposureToggle, DraftTimer.
 
 ## 7. Legal & Governance
 
-* File intent‑to‑use trademark for **TheSignalCaller** under IC 042 (SaaS) and IC 041 (media/podcasts).  Search via USPTO TSDR for conflicts. ([tsdr.uspto.gov](https://tsdr.uspto.gov/?utm_source=chatgpt.com))
+* File intent‑to‑use trademark for **TheSignalCallers** under IC 042 (SaaS) and IC 041 (media/podcasts).  Search via USPTO TSDR for conflicts. ([tsdr.uspto.gov](https://tsdr.uspto.gov/?utm_source=chatgpt.com))
 * All third‑party data sources (Underdog ADP, NFL Next Gen Stats) require attribution in footer.
 * Contributors must follow the brandbook; changes routed through Creative Lead.
 

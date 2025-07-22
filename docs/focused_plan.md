@@ -1,6 +1,6 @@
-# TheSignalCaller: Focused Business & Product Plan
+# TheSignalCallers: Focused Business & Product Plan
 
-Below is a distilled, actionable plan synthesized from your key documents (`brand_book.md`, `brand_research.md`, `PRD.md`, and `DEV_ARCHITECTURE.md`). This plan positions TheSignalCaller as the cutting-edge fantasy sports analytics brand, starting with football/DFS, by leveraging your lean tech stack as the core differentiator. It creates a **flywheel** where the app drives content, content builds community, and community fuels growth and monetization.
+Below is a distilled, actionable plan synthesized from your key documents (`brand_book.md`, `brand_research.md`, `PRD.md`, and `DEV_ARCHITECTURE.md`). This plan positions TheSignalCallers as the cutting-edge fantasy sports analytics brand, starting with football/DFS, by leveraging your lean tech stack as the core differentiator. It creates a **flywheel** where the app drives content, content builds community, and community fuels growth and monetization.
 
 The plan emphasizes **focus** to avoid overextension: Start with product excellence and one content channel, validate with users, then expand. It incorporates your brand essence ("Read the coverage. Call the win."), research insights (e.g., community as a moat, gamification for retention), technical foundation (FastAPI + React for fast queries), and product roadmap (v1 features + vNext data-science enhancements).
 
