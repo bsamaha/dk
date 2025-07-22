@@ -36,7 +36,7 @@ const CustomTooltip = ({
           {label}
         </p>
         <p className="text-signal-green font-semibold">
-          {payload[0].value} players
+          {payload[0].value.toFixed(2)} players
         </p>
       </div>
     );
@@ -59,7 +59,7 @@ const PieTooltip = ({
           {payload[0].name}
         </p>
         <p className="text-signal-green font-semibold">
-          {payload[0].value.toFixed(1)}%
+          {payload[0].value.toFixed(2)}%
         </p>
       </div>
     );
