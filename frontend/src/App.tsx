@@ -2,8 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { MantineProvider } from '@mantine/core';
 import { ColorSchemeContext } from './contexts/ColorSchemeContext';
-import { useLocalStorage } from '@mantine/hooks';
+import { useLocalStorage, useMediaQuery } from '@mantine/hooks';
 import { Notifications } from '@mantine/notifications';
+import { useEffect } from 'react';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import MainContent from './components/layout/MainContent';
@@ -25,7 +26,8 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const currentView = useAppStore(state => state.currentView);
+  const { currentView, isMobileMenuOpen, setIsMobile } = useAppStore();
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const [colorScheme, setColorScheme] = useLocalStorage<'light' | 'dark'>({
     key: 'sc-color-scheme',
@@ -34,6 +36,11 @@ function App() {
 
   const toggleColorScheme = (value?: 'light' | 'dark') =>
     setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
+
+  // Update mobile state when screen size changes
+  useEffect(() => {
+    setIsMobile(isMobile);
+  }, [isMobile, setIsMobile]);
 
   // Sync Tailwind dark class
   if (typeof document !== 'undefined') {
@@ -116,7 +123,14 @@ function App() {
           <Notifications position="top-right" />
           <div className="min-h-screen bg-gray-50 dark:bg-gridiron-graphite-light flex flex-col">
             <Header />
-            <div className="flex flex-1 min-h-0">
+            <div className="flex flex-1 min-h-0 relative">
+              {/* Mobile overlay when menu is open */}
+              {isMobile && isMobileMenuOpen && (
+                <div
+                  className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                  onClick={() => useAppStore.getState().toggleMobileMenu()}
+                />
+              )}
               <Sidebar />
               <MainContent view={currentView} />
             </div>

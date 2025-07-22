@@ -3,12 +3,14 @@ import AnalyticsView from './AnalyticsView';
 import PlayersView from './PlayersView';
 import CombinationsView from './CombinationsView';
 import AboutView from './AboutView';
+import { useAppStore } from '../../store/appStore';
 
 interface MainContentProps {
   view: 'overview' | 'players' | 'combinations' | 'analytics' | 'about';
 }
 
 const MainContent = ({ view }: MainContentProps) => {
+  const { isMobile } = useAppStore();
   const renderView = () => {
     switch (view) {
       case 'overview':
@@ -28,7 +30,7 @@ const MainContent = ({ view }: MainContentProps) => {
 
   return (
     <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gridiron-graphite-light min-h-0">
-      <div className="p-6 max-w-full">{renderView()}</div>
+      <div className={`${isMobile ? 'p-4' : 'p-6'} max-w-full`}>{renderView()}</div>
     </main>
   );
 };

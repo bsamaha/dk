@@ -22,7 +22,7 @@ const Logo: React.FC<LogoProps> = ({
   const { colorScheme } = useColorScheme();
 
   const src =
-    colorScheme === 'light'
+    colorScheme === 'dark'
       ? variant === 'horizontal'
         ? '/brand/logo_embedded.svg'
         : '/brand/logo_embedded.svg'

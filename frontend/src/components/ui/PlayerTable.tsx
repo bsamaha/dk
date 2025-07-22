@@ -10,7 +10,9 @@ import {
   Loader,
   Grid,
   Stack,
+  ScrollArea,
 } from '@mantine/core';
+import { useAppStore } from '../../store/appStore';
 import {
   BarChart,
   Bar,
@@ -38,6 +40,7 @@ const PlayerTable = ({
   isPlayerDetailsLoading,
   onPlayerClick,
 }: PlayerTableProps) => {
+  const { isMobile } = useAppStore();
   const createHistogramData = (picks: number[]) => {
     if (!picks || picks.length === 0) return [];
 
@@ -126,12 +129,14 @@ const PlayerTable = ({
           </Anchor>
         </Table.Td>
         <Table.Td>{player.position}</Table.Td>
-        <Table.Td>{player.team}</Table.Td>
+        {!isMobile && <Table.Td>{player.team}</Table.Td>}
         <Table.Td>{player.draft_percentage.toFixed(2)}%</Table.Td>
         <Table.Td>{player.avg_pick?.toFixed(1) ?? 'N/A'}</Table.Td>
-        <Table.Td>
-          {player.avg_pick ? Math.ceil(player.avg_pick / 12) : 'N/A'}
-        </Table.Td>
+        {!isMobile && (
+          <Table.Td>
+            {player.avg_pick ? Math.ceil(player.avg_pick / 12) : 'N/A'}
+          </Table.Td>
+        )}
       </Table.Tr>
     );
 
@@ -139,7 +144,7 @@ const PlayerTable = ({
     if (selectedPlayer && selectedPlayer.name === player.name) {
       rows.push(
         <Table.Tr key={`${player.name}-expansion-${index}`}>
-          <Table.Td colSpan={6} p={0}>
+          <Table.Td colSpan={isMobile ? 4 : 6} p={0}>
             <Collapse
               in={selectedPlayer?.name === player.name}
               transitionDuration={300}
@@ -287,21 +292,23 @@ const PlayerTable = ({
   });
 
   return (
-    <Table.ScrollContainer minWidth={800}>
-      <Table verticalSpacing="sm">
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Player</Table.Th>
-            <Table.Th>Position</Table.Th>
-            <Table.Th>Team</Table.Th>
-            <Table.Th>Draft %</Table.Th>
-            <Table.Th>Avg. Pick</Table.Th>
-            <Table.Th>Avg. Round</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>{rows}</Table.Tbody>
-      </Table>
-    </Table.ScrollContainer>
+    <ScrollArea>
+      <Table.ScrollContainer minWidth={isMobile ? 600 : 800}>
+                 <Table verticalSpacing="sm">
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Player</Table.Th>
+              <Table.Th>Position</Table.Th>
+              {!isMobile && <Table.Th>Team</Table.Th>}
+              <Table.Th>Draft %</Table.Th>
+              <Table.Th>Avg. Pick</Table.Th>
+              {!isMobile && <Table.Th>Avg. Round</Table.Th>}
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>{rows}</Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
+    </ScrollArea>
   );
 };
 

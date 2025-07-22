@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { apiService } from '../../services/api';
+import { useAppStore } from '../../store/appStore';
 import {
   BarChart,
   Bar,
@@ -18,6 +19,8 @@ import { Select, SegmentedControl, Loader } from '@mantine/core';
 import type { Position } from '../../types';
 
 const OverviewView = () => {
+  const { isMobile } = useAppStore();
+
   const { data: metadata, isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
     queryFn: apiService.getMetadata,
@@ -110,7 +113,7 @@ const OverviewView = () => {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-4 gap-6'}`}>
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-signal-green/20">
@@ -174,13 +177,13 @@ const OverviewView = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-2 gap-6'}`}>
         {/* Position Distribution Pie Chart */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Position Draft Distribution
           </h3>
-          <div className="h-96">
+          <div className={isMobile ? 'h-80' : 'h-96'}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -188,11 +191,29 @@ const OverviewView = () => {
                   cx="50%"
                   cy="50%"
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  label={({ name, value }: any) =>
-                    `${name}: ${(value ?? 0).toFixed(1)}%`
-                  }
+                  label={({ name, value, cx, cy, midAngle, outerRadius }: any) => {
+                    const RADIAN = Math.PI / 180;
+                    const radius = outerRadius + (isMobile ? 15 : 25);
+                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="currentColor"
+                        className="text-gridiron-graphite dark:text-white"
+                        textAnchor={x > cx ? 'start' : 'end'}
+                        dominantBaseline="central"
+                        fontSize={isMobile ? '11px' : '13px'}
+                        fontWeight="600"
+                      >
+                        {isMobile ? `${(value ?? 0).toFixed(1)}%` : `${name}: ${(value ?? 0).toFixed(1)}%`}
+                      </text>
+                    );
+                  }}
                   labelLine={false}
-                  outerRadius={120}
+                  outerRadius={isMobile ? 80 : 120}
                   fill="#8884d8"
                   dataKey="value"
                 >
@@ -203,7 +224,11 @@ const OverviewView = () => {
                 <Tooltip
                   formatter={(value: number) => `${value.toFixed(1)}%`}
                 />
-                <Legend verticalAlign="bottom" height={36} />
+                <Legend
+                  verticalAlign="bottom"
+                  height={isMobile ? 50 : 36}
+                  wrapperStyle={{ fontSize: isMobile ? '12px' : '14px' }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -214,12 +239,15 @@ const OverviewView = () => {
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Median Players Drafted per Draft Lobby
           </h3>
-          <div className="h-96">
+          <div className={isMobile ? 'h-80' : 'h-96'}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="position" />
-                <YAxis />
+                <XAxis
+                  dataKey="position"
+                  fontSize={isMobile ? 12 : 14}
+                />
+                <YAxis fontSize={isMobile ? 12 : 14} />
                 <Tooltip />
                 <Bar dataKey="medianDraftCount" fill="#00A86B" />
               </BarChart>
@@ -235,16 +263,16 @@ const OverviewView = () => {
         </h4>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+        <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4'} mb-6`}>
           {positionStats?.position_stats.map(stat => (
             <div
               key={stat.position}
-              className="text-center border rounded-md p-4"
+              className={`text-center border rounded-md ${isMobile ? 'p-3' : 'p-4'}`}
             >
               <p className="uppercase text-xs font-semibold text-gray-500">
                 {stat.position} Drafted
               </p>
-              <p className="text-signal-green mt-1 text-xl font-bold">
+              <p className={`text-signal-green mt-1 font-bold ${isMobile ? 'text-lg' : 'text-xl'}`}>
                 {stat.total_drafted.toLocaleString()}
               </p>
             </div>
@@ -252,8 +280,8 @@ const OverviewView = () => {
         </div>
 
         {/* Bar Chart & Controls */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-end">
-          <div className="lg:col-span-3">
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-4 gap-6'} items-end`}>
+          <div className={isMobile ? 'col-span-1' : 'lg:col-span-3'}>
             <h5 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">
               Position Stats by Round
             </h5>
@@ -266,8 +294,14 @@ const OverviewView = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={roundBarData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="round" />
-                    <YAxis />
+                    <XAxis
+                      dataKey="round"
+                      fontSize={isMobile ? 11 : 14}
+                      angle={isMobile ? -45 : 0}
+                      textAnchor={isMobile ? 'end' : 'middle'}
+                      height={isMobile ? 60 : 30}
+                    />
+                    <YAxis fontSize={isMobile ? 11 : 14} />
                     <Tooltip formatter={(v: number) => v.toFixed(2)} />
                     <Bar dataKey="count" fill="#00A86B" />
                   </BarChart>
@@ -277,7 +311,7 @@ const OverviewView = () => {
           </div>
 
           {/* Controls */}
-          <div>
+          <div className={isMobile ? 'mt-4' : ''}>
             <Select
               label="Position"
               data={['QB', 'RB', 'WR', 'TE'].map(p => ({ value: p, label: p }))}
@@ -285,6 +319,7 @@ const OverviewView = () => {
               onChange={v =>
                 v && setSelectedPosition(v as 'QB' | 'RB' | 'WR' | 'TE')
               }
+              size={isMobile ? 'md' : 'sm'}
             />
             <SegmentedControl
               fullWidth
@@ -295,6 +330,7 @@ const OverviewView = () => {
               ]}
               value={aggregation}
               onChange={val => setAggregation(val as 'mean' | 'median')}
+              size={isMobile ? 'md' : 'sm'}
             />
           </div>
         </div>
