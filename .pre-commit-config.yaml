@@ -46,7 +46,8 @@ repos:
     hooks:
       - id: bandit
         files: ^backend/.*\.py$
-        # No 'args' needed; bandit will use pyproject.toml
+        args: ['--skip', 'B101', '--exclude', 'backend/tests']
+        # Skip B101 (assert_used) warnings and exclude test directories
 
   # ===== FRONTEND =====
   - repo: local

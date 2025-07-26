@@ -1,81 +1,59 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from ..models.schemas import (
-    CombinationFilter,
-    CombinationsResponse,
-    RosterConstructionResponse,
-)
-from ..services.analytics_service import analytics_service
-from ..services.data_service import data_service  # still used for roster construction
+from ..services.query_service import query_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/", response_model=CombinationsResponse, summary="Get Player Combinations")
+@router.get("/")
 async def get_player_combinations(
-    required_players: List[str] = Query(
-        ..., description="List of players that must be on the same team"
-    ),
-    n_rounds: int = Query(
-        20, description="Number of draft rounds to consider (1-20)", ge=1, le=20
-    ),
-    limit: int = Query(
-        100, description="Maximum number of team results to return", ge=1, le=1000
-    ),
+    required_players: List[str] = Query(...),
+    n_rounds: int = Query(20, ge=1, le=20),
+    limit: int = Query(100, ge=1, le=1000),
 ):
-    """
-    Find and return teams that have all of the `required_players` drafted within the first `n_rounds`.
-    """
+    """Get teams that drafted all specified players within the first n rounds."""
     try:
-        logger.info(
-            f"Fetching player combinations for players: {required_players} within {n_rounds} rounds"
+        combinations = query_service.get_player_combinations(
+            required_players=required_players,
+            n_rounds=n_rounds,
+            limit=limit,
         )
-
-        filter_params = CombinationFilter(
-            required_players=required_players, n_rounds=n_rounds, limit=limit
-        )
-
-        combinations_data = analytics_service.get_player_combinations(
-            required_players=required_players, n_rounds=n_rounds, limit=limit
-        )
-
-        return CombinationsResponse(
-            combinations=combinations_data,
-            total_combinations=len(combinations_data),
-            filter_applied=filter_params,
-        )
-
+        return {
+            "required_players": required_players,
+            "n_rounds": n_rounds,
+            "combinations": combinations,
+            "total_found": len(combinations),
+        }
     except Exception as e:
-        logger.exception(f"Error fetching player combinations: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="An unexpected error occurred while fetching player combinations.",
-        )
+        logger.error(f"Error getting player combinations: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get(
-    "/roster-construction/",
-    response_model=RosterConstructionResponse,
-    summary="Get Roster Construction Analysis",
-)
+@router.get("/roster-construction/")
 async def get_roster_construction():
-    """
-    Get the roster construction for every team, showing counts of players at each position.
-    """
+    """Get roster construction counts."""
     try:
-        logger.info("Fetching roster construction data for all teams")
-
-        roster_data = data_service.get_roster_construction()
-
-        return RosterConstructionResponse(roster_constructions=roster_data)
-
+        return {"roster_constructions": query_service.get_roster_construction()}
     except Exception as e:
-        logger.exception(f"Error fetching roster construction data: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="An unexpected error occurred while fetching roster construction data.",
-        )
+        logger.error(f"Error getting roster construction: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/roster-construction/counts/")
+async def get_roster_construction_counts(
+    required_players: Optional[List[str]] = Query(None),
+):
+    """Get aggregated counts of unique roster constructions."""
+    try:
+        return {
+            "roster_construction_counts": query_service.get_roster_construction_counts(
+                required_players=required_players
+            )
+        }
+    except Exception as e:
+        logger.error(f"Error getting roster construction counts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

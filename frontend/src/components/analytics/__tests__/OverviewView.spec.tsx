@@ -86,7 +86,7 @@ describe('OverviewView', () => {
 
       if (queryKey === 'roundCounts') {
         return {
-          data: { round_counts: [{ round: 1, count: 5 }] },
+          data: [{ round: 1, count: 5 }],
           isLoading: false,
           isError: false,
           error: null,

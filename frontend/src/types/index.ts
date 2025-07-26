@@ -69,10 +69,7 @@ export interface PositionRoundCount {
   count: number;
 }
 
-export interface PositionRoundCountsResponse {
-  position: Position;
-  round_counts: PositionRoundCount[];
-}
+export type PositionRoundCountsResponse = PositionRoundCount[];
 
 export interface TeamCombination {
   team_id: number;

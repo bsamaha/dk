@@ -12,6 +12,8 @@
 
 ```text
 backend/app/
+├─ __init__.py
+├─ main.py          # FastAPI app factory & CORS
 ├─ core/            # settings, logging
 │  ├─ __init__.py
 │  └─ config.py
@@ -20,17 +22,14 @@ backend/app/
 │  └─ schemas.py
 ├─ services/
 │  ├─ __init__.py
-│  ├─ data_service.py      # Polars queries (singleton)
-│  ├─ duckdb_service.py    # DuckDB SQL integration
-│  └─ analytics_service.py # Hybrid analytics with fallback
+│  └─ query_service.py     # Unified data operations (DuckDB)
 ├─ api/             # Thin routers only
 │  ├─ __init__.py   # aggregates routers with prefixes
+│  ├─ analytics.py  # /api/analytics/* (heat-map, stacks, etc.)
+│  ├─ combinations.py # /api/combinations/*
 │  ├─ metadata.py   # /api/metadata/*
 │  ├─ players.py    # /api/players/*
-│  ├─ positions.py  # /api/positions/*
-│  ├─ combinations.py # /api/combinations/*
-│  └─ analytics.py  # /api/analytics/* (heat-map, stacks, etc.)
-└─ main.py          # FastAPI app factory & CORS
+│  └─ positions.py  # /api/positions/*
 ```
 
 ### 1.2 Request Flow
@@ -39,24 +38,19 @@ backend/app/
 sequenceDiagram
     browser->>API: GET /api/players?search_term=Dobbins
     API->>players.router: get_players
-    players.router->>analytics_service: get_players()
-    alt Complex Query
-        analytics_service->>duckdb_service: SQL query
-    else Simple Query or Fallback
-        analytics_service->>data_service: Polars operations
-    end
-    duckdb_service-->>analytics_service: Polars DataFrame
-    analytics_service-->>players.router: List[Player]
+    players.router->>query_service: get_players()
+    query_service->>DuckDB: SQL query
+    DuckDB-->>query_service: Polars DataFrame
+    query_service-->>players.router: List[Player]
     players.router-->>API: PlayersResponse (JSON)
 ```
 
-*Routers remain thin (no heavy logic) and delegate to `analytics_service` or `data_service`.*
+*Routers remain thin (no heavy logic) and delegate to the unified `query_service`.*
 
 ### 1.3 Service Responsibilities
 
-- **DataService**: Handles Polars-based data loading, filtering, and basic aggregations. Loads Parquet at startup, provides methods like get_players, get_player_details.
-- **DuckDBService**: Embedded SQL engine for complex queries; creates views on Parquet, executes SQL, returns Polars DFs.
-- **AnalyticsService**: Orchestrates analytics; prefers DuckDB for efficiency, benchmarks and falls back to Polars if >20% faster and >50ms. Adds advanced features like draft slot correlation and ADP drift.
+- **QueryService**: Unified service handling all data operations via DuckDB. Loads Parquet data at startup, executes SQL queries, and provides all functionality including player lookups, analytics, and statistics. Replaces the previous DataService, AnalyticsService, and DuckDBService with a single, coherent interface.
+
 *No external services – ideal for stateless single-process deployment.*
 
 ---
@@ -310,7 +304,6 @@ For detailed backend test documentation, see [backend_tests.md](backend_tests.md
 - Tailwind 4 upgrade blocked by PostCSS plugin.
 - Potential memory pressure if dataset grows beyond current 12MB Parquet.
 - Dependency versions not pinned, risking updates.
-- **SQL Injection Risk**: `analytics_service` uses f-strings to build SQL queries, creating a security risk. This requires refactoring to use parameterized queries. The `B608` Bandit check is temporarily suppressed.
 
 For detailed backend issues and lean improvements, see [backend_detailed.md](backend_detailed.md).
 

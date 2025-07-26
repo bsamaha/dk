@@ -30,34 +30,42 @@ class Settings(BaseSettings):
     @field_validator("ALLOWED_ORIGINS", mode="after")
     @classmethod
     def parse_allowed_origins(cls, v: str, info: FieldValidationInfo) -> List[str]:
+        # Start with development defaults
+        default_origins = [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174",
+            "http://localhost:8080",
+            "http://127.0.0.1:8080",
+        ]
+
+        # If a value is provided via env var, parse and use it instead
         items = cls._parse_csv_list(v)
         if items:
             return items
-        # Use the ENVIRONMENT value from the settings instance
+
+        # For production, use a strict list
         env = info.data.get("ENVIRONMENT", "development")
         if env == "production":
             return [
                 "https://thesignalcallers.com",
                 "https://www.thesignalcallers.com",
             ]
-        else:
-            return [
-                "http://localhost:3000",  # React dev server
-                "http://localhost:5173",  # Vite dev server
-                "http://localhost:5174",  # Vite dev server (alt port)
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:5173",
-                "http://127.0.0.1:5174",
-                "http://localhost:8080",  # Docker-hosted UI
-                "http://127.0.0.1:8080",
-            ]
+
+        # Otherwise, return the development defaults
+        return default_origins
 
     @field_validator("ALLOWED_HOSTS", mode="after")
     @classmethod
     def parse_allowed_hosts(cls, v: str, info: FieldValidationInfo) -> List[str]:
+        # If a value is provided via env var, parse and use it instead
         items = cls._parse_csv_list(v)
         if items:
             return items
+
         env = info.data.get("ENVIRONMENT", "development")
         if env == "production":
             return [
@@ -73,9 +81,9 @@ class Settings(BaseSettings):
 
     class Config:
         # Load from env file (will be overridden by environment variables)
-        env_file = "env"
+        env_file = ".env"
         env_file_encoding = "utf-8"
-        case_sensitive = False
+        case_sensitive = True
 
 
 settings = Settings()

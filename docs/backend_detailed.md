@@ -8,36 +8,26 @@ This document provides an in-depth analysis of each module in the `backend/app/`
 
 ## Overall Architecture
 
-The backend is a FastAPI application using Polars for data manipulation and DuckDB for complex SQL-based analytics. Data is loaded from a Parquet file (`updated_bestball_data.parquet`) at startup. Services are singletons for efficiency. API routers delegate to services, which handle business logic. The app supports serving a static React frontend from the same container for a lean deployment.
+The backend is a FastAPI application using DuckDB for all data operations. Data is loaded from a Parquet file (`updated_bestball_data.parquet`) at startup into an in-memory DuckDB instance. A single `QueryService` provides all data access functionality through SQL queries. The app supports serving a static React frontend from the same container for a lean deployment.
 
 Key principles:
 
-- Stateless, in-memory data handling.
-- Hybrid Polars/DuckDB with performance-based fallback.
-- Minimal dependencies (see `requirements.txt`).
-- Logging and basic error handling via HTTPExceptions.
+- Single, unified data service for all operations
+- SQL-based queries via embedded DuckDB for optimal performance
+- Stateless, in-memory data handling
+- Minimal dependencies (see `requirements.txt`)
+- Logging and basic error handling via HTTPExceptions
 
 ```mermaid
 graph TD
     A[FastAPI App] --> B[API Routers]
-    B --> C[Analytics Service]
-    B --> D[Data Service]
-    C --> E[DuckDB Service]
-    C -. Fallback .-> D
-    D --> F[Polars In-Memory DF]
-    E --> G[DuckDB In-Memory DB]
-    F --> H[Parquet File]
-    G --> H
-    A --> I[Static Frontend]
-    subgraph Services
+    B --> C[QueryService]
+    C --> D[DuckDB In-Memory DB]
+    D --> E[Parquet File]
+    A --> F[Static Frontend]
+    subgraph Unified Data Layer
         C
         D
-        E
-    end
-    subgraph Data Layer
-        F
-        G
-        H
     end
 ```
 
@@ -99,41 +89,20 @@ graph TD
 
 - **Purpose**: Package initializer (empty).
 
-### `app/services/data_service.py`
+### `app/services/query_service.py`
 
-- **Purpose**: Core singleton service for Polars-based data operations. Loads and pre-processes the Parquet data, provides methods for querying players, stats, combinations, etc.
+- **Purpose**: Unified singleton service for all data operations using DuckDB. Replaces the previous three-service architecture with a single, coherent interface.
 - **Key Components**:
-  - `DataService` class (singleton via global `data_service`).
-  - Initialization: Loads Parquet, corrects pick values (handles signed/unsigned overflow), computes metadata (unique players, drafts, teams).
-  - Methods: `get_players` (filter, sort, paginate with draft percentage), `get_player_details` (stats and raw picks), `get_position_stats`, `get_first_player_draft_stats`, `get_position_draft_counts_by_round`, `get_player_combinations` (teams with required players in N rounds), `get_roster_construction` (position counts per team).
-  - Utility: `log_memory_usage` for monitoring.
+  - `QueryService` class (singleton via global `query_service`).
+  - Initialization: Creates in-memory DuckDB connection, enables object cache, creates a view on Parquet with pick correction and data type fixes.
+  - Core method: `query(sql, params)` – Executes parameterized SQL, returns Polars DF via Arrow.
+  - Data methods: `get_metadata`, `get_players`, `get_player_details`, `get_position_stats`, etc.
+  - Analytics methods: `get_heat_map`, `get_stacks`, `get_draft_slot_correlation`, `get_adp_drift`, `get_player_combinations`.
 - **Flow Control**:
-  - Startup: Load data into Polars LazyFrame, collect, cache metadata.
-  - Query: Use Polars expressions for grouping, filtering, aggregation. Example: `get_players` builds a lazy query, applies filters/sorts, collects, converts to Pydantic models.
-  - Memory-aware: Logs usage before/after init.
-- **Dependencies**: polars, psutil, logging, os.
-
-### `app/services/duckdb_service.py`
-
-- **Purpose**: Singleton for DuckDB integration, providing SQL query execution over the Parquet data, returning Polars DataFrames.
-- **Key Components**:
-  - `DuckDBService` class (singleton via `duckdb_service`).
-  - Initialization: Creates in-memory connection, enables object cache, creates a view on Parquet with pick correction, registers Polars DF for hybrid queries.
-  - Method: `query(sql, params)` – Executes SQL, returns Polars DF via Arrow.
-- **Flow**: Services like `analytics_service` use it for complex queries. Ensures read-only, lazy loading.
-- **Dependencies**: duckdb, polars, logging, os.
-
-### `app/services/analytics_service.py`
-
-- **Purpose**: Higher-level service using DuckDB for analytics, with performance fallback to `data_service` (Polars) if faster.
-- **Key Components**:
-  - `AnalyticsService` class (singleton).
-  - Methods: Optimized versions of `get_players`, `get_player_combinations`; new analytics like `get_draft_slot_correlation` (player correlation by slot), `get_heat_map` (round x position counts), `get_stacks` (QB/receiver stacks), `get_adp_drift` (ADP changes over time).
-  - Fallback logic: Times DuckDB query; if >50ms and Polars 20% faster, uses Polars.
-- **Flow Control**:
-  - For each method: Build SQL, query DuckDB, time it; optionally benchmark Polars and switch if better; shape results to dicts/models.
-  - Example: `get_players` dynamically builds SQL with filters, computes totals, paginates.
-- **Dependencies**: polars, time, logging; imports schemas and other services.
+  - Startup: Load data into DuckDB, create optimized views, cache connection.
+  - Query: Build parameterized SQL for security, execute via DuckDB, shape results to Pydantic models.
+  - All methods use the same underlying `query()` method for consistency.
+- **Dependencies**: duckdb, polars, pathlib, logging; imports schemas.
 
 ```mermaid
 flowchart TD
@@ -270,3 +239,9 @@ sequenceDiagram
 - **Deployment**: Remains a single-container (app) plus Nginx/Certbot sidecars, all orchestrated via Docker Compose.
 
 ---
+
+### 1.3 Service Responsibilities
+
+- **QueryService**: The unified service that handles all data operations. Manages the DuckDB connection, loads data from the Parquet file at startup, and provides all query methods including player lookups, analytics, combinations, and statistics. Uses SQL for optimal performance and returns data shaped for API responses.
+
+*No external services – ideal for stateless single-process deployment.*
