@@ -97,17 +97,8 @@ def test_get_player_details(query_service):
 def test_get_player_details_nonexistent(query_service):
     """Test player details for non-existent player."""
     details = query_service.get_player_details("NonExistentPlayer", "QB", "XXX")
-    # DuckDB returns NULL values for non-existent players, not an empty dict
-    # Check that at least the player_name was set correctly even if no data was found
-    assert details["player_name"] == "NonExistentPlayer"
-    assert details["position"] == "QB"
-    assert details["team"] == "XXX"
-    # The numeric/statistical fields should be None/null since no data exists
-    assert details["avg_pick"] is None
-    assert details.get("min_pick") is None
-    assert details.get("max_pick") is None
-    assert details.get("std_dev_pick") is None
-    assert details.get("total_drafts") is None
+    # Should return None for non-existent players (enables 404 in API)
+    assert details is None
 
 
 def test_get_position_stats(query_service):
