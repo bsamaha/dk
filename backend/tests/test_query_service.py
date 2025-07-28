@@ -97,8 +97,15 @@ def test_get_player_details(query_service):
 def test_get_player_details_nonexistent(query_service):
     """Test player details for non-existent player."""
     details = query_service.get_player_details("NonExistentPlayer", "QB", "XXX")
-    # Should return None for non-existent players (enables 404 in API)
-    assert details is None
+    # Should return dictionary with player identifiers and null statistical values
+    assert details is not None
+    assert details["player_name"] == "NonExistentPlayer"
+    assert details["position"] == "QB"
+    assert details["team"] == "XXX"
+    assert details["avg_pick"] is None
+    assert details["total_drafts"] == 0
+    assert details["picks"] == []
+    assert details["rounds"] == []
 
 
 def test_get_position_stats(query_service):

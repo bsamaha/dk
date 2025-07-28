@@ -76,10 +76,10 @@ async def search_players(
                 total_count=total_count,
                 limit=limit,
                 offset=0,
-                has_next=False,
+                has_next=total_count > limit,
                 has_previous=False,
                 current_page=1,
-                total_pages=1,
+                total_pages=(total_count + limit - 1) // limit if limit > 0 else 1,
             ),
         )
     except Exception:
@@ -97,7 +97,7 @@ async def get_player_details(
     try:
         details = query_service.get_player_details(player_name, position, team)
 
-        if not details:
+        if details["total_drafts"] == 0:
             raise HTTPException(status_code=404, detail="Player not found")
 
         return PlayerDetailsResponse(**details)
