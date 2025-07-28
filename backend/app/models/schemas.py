@@ -304,6 +304,30 @@ class RosterConstructionResponse(BaseModel):
     )
 
 
+class Week17BringBackPlayer(BaseModel):
+    """Model for Week 17 bring back player data."""
+
+    player: str = Field(..., description="Player name")
+    position: str = Field(..., description="Player position")
+    percentage: float = Field(..., description="Draft or co-occurrence percentage")
+    draft_count: Optional[int] = Field(None, description="Raw draft count (team view)")
+    co_occurrence_count: Optional[int] = Field(
+        None, description="Co-occurrence count (player view)"
+    )
+
+
+class Week17BringBackResponse(BaseModel):
+    """Response model for Week 17 bring back data."""
+
+    scope: str = Field(..., description="View scope: 'team' or 'player'")
+    entity: str = Field(..., description="Selected team or player name")
+    opponent: Optional[str] = Field(None, description="Week 17 opponent team")
+    total_drafts: int = Field(..., description="Total drafts in dataset")
+    players: List[Week17BringBackPlayer] = Field(
+        ..., description="Top bring back players"
+    )
+
+
 class ErrorResponse(BaseModel):
     """Error response model."""
 

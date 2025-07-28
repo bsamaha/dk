@@ -11,7 +11,7 @@ services:
       - ./data:/app/data:ro
       - ./frontend/dist:/app/backend/app/frontend_dist # let React build output drop here
     env_file:
-      - env.development
+      - .env.development
     ports:
       - "8000:8000"
 

@@ -14,6 +14,7 @@ import type {
   RosterConstructionResponse,
   Player,
   RosterConstructionCount,
+  Week17BringBackResponse,
 } from '../types';
 
 // Create axios instance with base configuration
@@ -218,6 +219,23 @@ export const apiService = {
     });
     const response = await api.get(
       `/analytics/draft-slot?${params.toString()}`
+    );
+    return response.data;
+  },
+
+  // ---------------- Week 17 Bring Back ----------------
+  async getWeek17Bringback(
+    scope: 'team' | 'player',
+    entity: string,
+    limit: number = 10
+  ): Promise<Week17BringBackResponse> {
+    const params = new URLSearchParams({
+      scope,
+      entity,
+      limit: limit.toString(),
+    });
+    const response = await api.get(
+      `/analytics/week17-bringback?${params.toString()}`
     );
     return response.data;
   },

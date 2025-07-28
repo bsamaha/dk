@@ -4,6 +4,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
+from ..models.schemas import Week17BringBackPlayer, Week17BringBackResponse
 from ..services.query_service import query_service
 
 logger = logging.getLogger(__name__)
@@ -62,4 +63,80 @@ async def get_adp_drift():
         return {"adp_drift": query_service.get_adp_drift()}
     except Exception:
         logger.exception("Error getting ADP drift")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
+
+
+@router.get("/week17-bringback", response_model=Week17BringBackResponse)
+async def get_week17_bringback(
+    scope: str = Query(
+        ..., pattern="^(team|player)$", description="View scope: 'team' or 'player'"
+    ),
+    entity: str = Query(
+        ..., description="Team abbreviation (e.g., 'BUF') or player name"
+    ),
+    limit: int = Query(10, ge=1, le=25, description="Number of top players to return"),
+):
+    """Get Week 17 bring back analytics data.
+
+    - Team view: Shows most-drafted players from the selected team's Week 17 opponent
+    - Player view: Shows opponent players most often drafted with the selected player
+    """
+    try:
+        if scope == "team":
+            # Team view - aggregate draft percentages
+            players_data = query_service.get_week17_bringback_team_view(entity, limit)
+            opponent = query_service.get_week17_opponent(entity)
+
+            players = [
+                Week17BringBackPlayer(
+                    player=row["player"],
+                    position=row["position"],
+                    percentage=row["percentage"],
+                    draft_count=row["draft_count"],
+                    co_occurrence_count=None,
+                )
+                for row in players_data
+            ]
+
+        else:  # scope == "player"
+            # Player view - conditional co-draft percentages
+            players_data = query_service.get_week17_bringback_player_view(entity, limit)
+
+            # Get opponent from first result or query directly
+            if players_data:
+                # Get the player's team to find opponent
+                player_team_result = query_service.query(
+                    "SELECT DISTINCT Team FROM picks WHERE player = ?", [entity]
+                )
+                if len(player_team_result) > 0:
+                    player_team = player_team_result["Team"][0]
+                    opponent = query_service.get_week17_opponent(player_team)
+                else:
+                    opponent = None
+            else:
+                opponent = None
+
+            players = [
+                Week17BringBackPlayer(
+                    player=row["player"],
+                    position=row["position"],
+                    percentage=row["percentage"],
+                    draft_count=None,
+                    co_occurrence_count=row["co_occurrence_count"],
+                )
+                for row in players_data
+            ]
+
+        return Week17BringBackResponse(
+            scope=scope,
+            entity=entity,
+            opponent=opponent,
+            total_drafts=query_service.total_drafts,
+            players=players,
+        )
+
+    except Exception:
+        logger.exception(
+            "Error getting Week 17 bring back data for %s: %s", scope, entity
+        )
         raise HTTPException(status_code=500, detail="An internal error occurred")

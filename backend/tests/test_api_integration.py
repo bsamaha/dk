@@ -221,3 +221,204 @@ def test_error_handling():
     # Test invalid draft slot
     response = client.get("/api/analytics/draft-slot?slot=15")  # Invalid slot number
     assert response.status_code == 422
+
+
+# ============================================================================
+# Week 17 Bring Back API Tests
+# ============================================================================
+
+
+def test_week17_bringback_team_view_endpoint(monkeypatch):
+    """Test the Week 17 bring back team view endpoint."""
+    # Mock the service method
+    mock_data = [
+        {
+            "player": "Aaron Rodgers",
+            "position": "QB",
+            "percentage": 85.5,
+            "draft_count": 12900,
+        },
+        {
+            "player": "Breece Hall",
+            "position": "RB",
+            "percentage": 72.3,
+            "draft_count": 10932,
+        },
+    ]
+
+    def mock_get_week17_bringback_team_view(self, team, limit):
+        return mock_data if team == "BUF" else []
+
+    def mock_get_week17_opponent(self, team):
+        return "NYJ" if team == "BUF" else None
+
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_bringback_team_view",
+        mock_get_week17_bringback_team_view,
+    )
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_opponent",
+        mock_get_week17_opponent,
+    )
+    # Mock the singleton instance's total_drafts property
+    monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
+
+    response = client.get(
+        "/api/analytics/week17-bringback?scope=team&entity=BUF&limit=5"
+    )
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["scope"] == "team"
+    assert data["entity"] == "BUF"
+    assert data["opponent"] == "NYJ"
+    assert data["total_drafts"] == 15000
+    assert len(data["players"]) == 2
+
+    # Check first player
+    player = data["players"][0]
+    assert player["player"] == "Aaron Rodgers"
+    assert player["position"] == "QB"
+    assert player["percentage"] == 85.5
+    assert player["draft_count"] == 12900
+    assert player["co_occurrence_count"] is None
+
+
+def test_week17_bringback_player_view_endpoint(monkeypatch):
+    """Test the Week 17 bring back player view endpoint."""
+    # Mock the service methods
+    mock_data = [
+        {
+            "player": "Aaron Rodgers",
+            "position": "QB",
+            "percentage": 15.2,
+            "co_occurrence_count": 1000,
+        },
+        {
+            "player": "Garrett Wilson",
+            "position": "WR",
+            "percentage": 12.8,
+            "co_occurrence_count": 842,
+        },
+    ]
+
+    def mock_get_week17_bringback_player_view(self, player, limit):
+        return mock_data if player == "Josh Allen" else []
+
+    def mock_query(self, sql, params=None):
+        # Mock query for getting player's team
+        import polars as pl
+
+        if "SELECT DISTINCT Team FROM picks WHERE player" in sql and params == [
+            "Josh Allen"
+        ]:
+            return pl.DataFrame({"Team": ["BUF"]})
+        return pl.DataFrame()
+
+    def mock_get_week17_opponent(self, team):
+        return "NYJ" if team == "BUF" else None
+
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_bringback_player_view",
+        mock_get_week17_bringback_player_view,
+    )
+    monkeypatch.setattr("app.services.query_service.QueryService.query", mock_query)
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_opponent",
+        mock_get_week17_opponent,
+    )
+    # Mock the singleton instance's total_drafts property
+    monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
+
+    response = client.get(
+        "/api/analytics/week17-bringback?scope=player&entity=Josh Allen&limit=5"
+    )
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["scope"] == "player"
+    assert data["entity"] == "Josh Allen"
+    assert data["opponent"] == "NYJ"
+    assert data["total_drafts"] == 15000
+    assert len(data["players"]) == 2
+
+    # Check first player
+    player = data["players"][0]
+    assert player["player"] == "Aaron Rodgers"
+    assert player["position"] == "QB"
+    assert player["percentage"] == 15.2
+    assert player["draft_count"] is None
+    assert player["co_occurrence_count"] == 1000
+
+
+def test_week17_bringback_invalid_scope():
+    """Test Week 17 bring back endpoint with invalid scope."""
+    response = client.get("/api/analytics/week17-bringback?scope=invalid&entity=BUF")
+    assert response.status_code == 422
+
+
+def test_week17_bringback_missing_entity():
+    """Test Week 17 bring back endpoint with missing entity."""
+    response = client.get("/api/analytics/week17-bringback?scope=team")
+    assert response.status_code == 422
+
+
+def test_week17_bringback_invalid_limit():
+    """Test Week 17 bring back endpoint with invalid limit."""
+    # Test limit too high
+    response = client.get(
+        "/api/analytics/week17-bringback?scope=team&entity=BUF&limit=30"
+    )
+    assert response.status_code == 422
+
+    # Test limit too low
+    response = client.get(
+        "/api/analytics/week17-bringback?scope=team&entity=BUF&limit=0"
+    )
+    assert response.status_code == 422
+
+
+def test_week17_bringback_no_data(monkeypatch):
+    """Test Week 17 bring back endpoint when no data is available."""
+
+    # Mock empty results
+    def mock_get_week17_bringback_team_view(self, team, limit):
+        return []
+
+    def mock_get_week17_opponent(self, team):
+        return None  # No opponent found
+
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_bringback_team_view",
+        mock_get_week17_bringback_team_view,
+    )
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_opponent",
+        mock_get_week17_opponent,
+    )
+    # Mock the singleton instance's total_drafts property
+    monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
+
+    response = client.get("/api/analytics/week17-bringback?scope=team&entity=INVALID")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["scope"] == "team"
+    assert data["entity"] == "INVALID"
+    assert data["opponent"] is None
+    assert data["players"] == []
+
+
+def test_week17_bringback_server_error(monkeypatch):
+    """Test Week 17 bring back endpoint when server error occurs."""
+
+    def mock_error(*args, **kwargs):
+        raise Exception("Database error")
+
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_bringback_team_view",
+        mock_error,
+    )
+
+    response = client.get("/api/analytics/week17-bringback?scope=team&entity=BUF")
+    assert response.status_code == 500
