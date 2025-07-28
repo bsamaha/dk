@@ -4,71 +4,62 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from ..models.schemas import (
-    DraftSlotResponse,
-    DraftSlotRow,
-    DriftEntry,
-    DriftResponse,
-    HeatMapCell,
-    HeatMapResponse,
-    StackEntry,
-    StackFinderResponse,
-)
-from ..services.analytics_service import analytics_service
+from ..services.query_service import query_service
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/analytics", tags=["analytics"])
+
+router = APIRouter()
 
 
-@router.get("/heat-map", response_model=HeatMapResponse)
+@router.get("/heat-map")
 async def get_heat_map():
+    """Get heat map data showing pick counts by round and position."""
     try:
-        cells = [HeatMapCell(**c) for c in analytics_service.get_heat_map()]
-        total = sum(c.count for c in cells)
-        return HeatMapResponse(cells=cells, total_picks=total)
-    except Exception as exc:
-        logger.exception("Heat map error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to compute heat map")
+        return {"heat_map": query_service.get_heat_map()}
+    except Exception:
+        logger.exception("Error getting heat map")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
-@router.get("/stacks", response_model=StackFinderResponse)
+@router.get("/stacks")
 async def get_stacks(
-    n_rounds: int = Query(10, ge=1, le=20), limit: int = Query(100, ge=1, le=1000)
+    n_rounds: int = Query(10, ge=1, le=20),
+    limit: int = Query(100, ge=1, le=1000),
 ):
+    """Find QB/receiver stacks drafted within first n_rounds."""
     try:
-        stacks = [
-            StackEntry(**row) for row in analytics_service.get_stacks(n_rounds, limit)
-        ]
-        return StackFinderResponse(stacks=stacks, total_stacks=len(stacks))
-    except Exception as exc:
-        logger.exception("Stack finder error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to compute stacks")
+        return {"stacks": query_service.get_stacks(n_rounds=n_rounds, limit=limit)}
+    except Exception:
+        logger.exception("Error getting stacks")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
-@router.get("/draft-slot", response_model=DraftSlotResponse)
-async def get_draft_slot(
+@router.get("/draft-slot")
+async def get_draft_slot_correlation(
     slot: int = Query(..., ge=1, le=12),
-    metric: str = Query("percent", pattern="^(count|percent|ratio)$"),
+    metric: str = Query("percent"),
     top_n: int = Query(25, ge=1, le=100),
+    min_teams: int = Query(10, ge=1),
 ):
+    """Get players most correlated with a specific draft slot."""
     try:
-        rows = [
-            DraftSlotRow(**r)
-            for r in analytics_service.get_draft_slot_correlation(slot, metric, top_n)
-        ]
-        return DraftSlotResponse(slot=slot, metric=metric, rows=rows)
-    except Exception as exc:
-        logger.exception("Draft slot correlation error: %s", exc)
-        raise HTTPException(
-            status_code=500, detail="Failed to compute draft slot correlation"
-        )
+        return {
+            "slot": slot,
+            "metric": metric,
+            "rows": query_service.get_draft_slot_correlation(
+                slot=slot, metric=metric, top_n=top_n, min_teams=min_teams
+            ),
+        }
+    except Exception:
+        logger.exception("Error getting draft slot correlation")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
-@router.get("/drift", response_model=DriftResponse)
-async def get_adp_drift(limit: int = Query(100, ge=1, le=1000)):
+@router.get("/drift")
+async def get_adp_drift():
+    """Get ADP drift between early and late drafts."""
     try:
-        drifts = [DriftEntry(**d) for d in analytics_service.get_adp_drift()[:limit]]
-        return DriftResponse(drifts=drifts)
-    except Exception as exc:
-        logger.exception("Drift error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to compute ADP drift")
+        return {"adp_drift": query_service.get_adp_drift()}
+    except Exception:
+        logger.exception("Error getting ADP drift")
+        raise HTTPException(status_code=500, detail="An internal error occurred")

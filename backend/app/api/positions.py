@@ -1,105 +1,79 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Path, Query
 
 from ..models.schemas import (
     AggregationType,
-    FirstPlayerDraftStats,
     Position,
-    PositionRoundCountsResponse,
+    PositionRoundCount,
     PositionStatsResponse,
     RosterConstruction,
 )
-from ..services.data_service import data_service
+from ..services.query_service import query_service
 
 logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
 @router.get("/stats", response_model=PositionStatsResponse)
 async def get_position_stats():
-    """Get statistics by position including draft counts and averages."""
+    """Get statistics for all positions."""
     try:
-        logger.info("Fetching position statistics")
-
-        position_stats = data_service.get_position_stats()
-        total_picks = sum(stat.total_drafted for stat in position_stats)
-
-        return PositionStatsResponse(
-            position_stats=position_stats, total_picks=total_picks
-        )
-
-    except Exception as e:
-        logger.error(f"Error fetching position stats: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to fetch position statistics: {str(e)}"
-        )
+        stats = query_service.get_position_stats()
+        total_picks = sum(stat.total_drafted for stat in stats)
+        return PositionStatsResponse(position_stats=stats, total_picks=total_picks)
+    except Exception:
+        logger.exception("Error getting position stats")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
-@router.get("/stats/first_player", response_model=List[FirstPlayerDraftStats])
+@router.get("/stats/first_player")
 async def get_first_player_position_stats():
     """Get the avg, min, and max pick for the first player drafted at each position."""
     try:
-        logger.info("Fetching first player draft stats by position")
-        stats = data_service.get_first_player_draft_stats()
-        return stats
-    except Exception as e:
-        logger.error(f"Error fetching first player draft stats: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch first player draft stats: {str(e)}",
-        )
+        stats = query_service.get_first_player_draft_stats()
+        return {"first_player_stats": stats}
+    except Exception:
+        logger.exception("Error getting first player stats")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
-@router.get("/stats/{position}/by_round", response_model=PositionRoundCountsResponse)
+@router.get("/stats/{position}/by_round")
 async def get_position_draft_counts_by_round(
-    position: Position, aggregation: AggregationType = AggregationType.MEAN
-):
-    """Get draft counts per round for a specific position."""
+    position: Position = Path(...),
+    aggregation: AggregationType = AggregationType.MEAN,
+) -> List[PositionRoundCount]:
+    """Get draft counts by round for a specific position."""
     try:
-        logger.info(f"Fetching draft counts by round for position: {position.value}")
-        round_counts = data_service.get_position_draft_counts_by_round(
-            position, aggregation
+        return query_service.get_position_draft_counts_by_round(
+            position=position, aggregation=aggregation
         )
-        return PositionRoundCountsResponse(position=position, round_counts=round_counts)
-    except Exception as e:
-        logger.error(
-            f"Error fetching position draft counts by round for {position.value}: {str(e)}"
-        )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch position draft counts by round: {str(e)}",
-        )
+    except Exception:
+        logger.exception("Error getting position draft counts")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
-@router.get("/roster-construction", response_model=List[RosterConstruction])
-async def get_roster_construction():
-    """Get roster construction for each team across all drafts."""
+@router.get("/roster-construction")
+async def get_roster_construction() -> List[RosterConstruction]:
+    """Get roster construction statistics."""
     try:
-        logger.info("Fetching roster construction data")
-        constructions = data_service.get_roster_construction()
-        return constructions
-    except Exception as e:
-        logger.error(f"Error fetching roster construction data: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        return query_service.get_roster_construction()
+    except Exception:
+        logger.exception("Error getting roster construction")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
-@router.get("/roster-construction/counts", response_model=List[Dict[str, Any]])
+@router.get("/roster-construction/counts")
 async def get_roster_construction_counts(
-    required_players: Optional[List[str]] = Query(
-        None, description="List of players that must be in roster constructions"
-    ),
-):
+    required_players: Optional[List[str]] = Query(None),
+) -> List[Dict[str, int]]:
     """Get aggregated counts of unique roster constructions."""
     try:
-        logger.info(
-            f"Fetching aggregated roster construction counts with required players: {required_players}"
-        )
-        counts = data_service.get_roster_construction_counts(
+        return query_service.get_roster_construction_counts(
             required_players=required_players
         )
-        return counts
-    except Exception as e:
-        logger.error(f"Error fetching roster construction counts: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+    except Exception:
+        logger.exception("Error getting roster construction counts")
+        raise HTTPException(status_code=500, detail="An internal error occurred")

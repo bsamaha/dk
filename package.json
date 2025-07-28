@@ -16,10 +16,17 @@
     "type": "git",
     "url": "https://github.com/bsamaha/dk.git"
   },
-  "keywords": ["fantasy-football", "analytics", "react", "fastapi", "typescript"],
+  "keywords": [
+    "fantasy-football",
+    "analytics",
+    "react",
+    "fastapi",
+    "typescript"
+  ],
   "author": "Blake Samaha",
   "license": "MIT",
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
     "concurrently": "^9.1.0"
   }
 }
