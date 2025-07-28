@@ -203,7 +203,7 @@ class QueryService:
 
     def get_player_details(
         self, player_name: str, position: str, team: str
-    ) -> Dict[str, Any]:
+    ) -> Optional[Dict[str, Any]]:
         """Get detailed draft data for a single player."""
         sql = """
         SELECT
@@ -222,19 +222,7 @@ class QueryService:
         df = self.query(sql, [player_name, position, team])
 
         if df.is_empty() or int(df["total_drafts"][0] or 0) == 0:
-            return {
-                "player_name": player_name,
-                "position": position,
-                "team": team,
-                "avg_pick": None,
-                "avg_round": None,
-                "min_pick": None,
-                "max_pick": None,
-                "std_dev_pick": None,
-                "total_drafts": None,
-                "picks": [],
-                "rounds": [],
-            }
+            return None
 
         result = df.to_dicts()[0]
         result["player_name"] = player_name

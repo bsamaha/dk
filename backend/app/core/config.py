@@ -81,9 +81,9 @@ class Settings(BaseSettings):
 
     class Config:
         # Load from env file (will be overridden by environment variables)
-        env_file = ".env"
+        env_file = ".env.production"
         env_file_encoding = "utf-8"
-        case_sensitive = True
+        case_sensitive = False
 
 
 settings = Settings()
