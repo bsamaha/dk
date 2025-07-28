@@ -111,6 +111,21 @@ class QueryService:
         with open(matchups_path, "r") as f:
             matchups_data = json.load(f)
 
+        # Validate structure of matchups_data
+        if not isinstance(matchups_data, dict):
+            logger.error("Week 17 matchups JSON is not a dictionary: %s", matchups_path)
+            return
+
+        for team, opponent in matchups_data.items():
+            if not isinstance(team, str) or not isinstance(opponent, str):
+                logger.error(
+                    "Invalid matchup entry in %s: team=%r, opponent=%r (both must be strings)",
+                    matchups_path,
+                    team,
+                    opponent,
+                )
+                return
+
         # Create list of tuples for DuckDB
         matchups_rows = [(team, opponent) for team, opponent in matchups_data.items()]
 
@@ -804,6 +819,16 @@ class QueryService:
         if len(player_team_result) == 0:
             logger.warning("Player not found: %s", player)
             return []
+
+        # Handle case where player appears on multiple teams
+        if len(player_team_result["Team"]) > 1:
+            teams = list(player_team_result["Team"])
+            logger.warning(
+                "Player %s found on multiple teams: %s. Using first team: %s",
+                player,
+                teams,
+                teams[0],
+            )
 
         player_team = player_team_result["Team"][0]
         opponent = self.get_week17_opponent(player_team)

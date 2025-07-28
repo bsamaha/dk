@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useWeek17Bringback } from '../../hooks/useWeek17Bringback';
 import {
   SegmentedControl,
@@ -7,7 +7,11 @@ import {
   Alert,
   Text,
   Box,
+  ActionIcon,
+  Tooltip,
+  Popover,
 } from '@mantine/core';
+import { IconInfoCircle } from '@tabler/icons-react';
 import {
   BarChart,
   Bar,
@@ -19,6 +23,30 @@ import {
 } from 'recharts';
 import type { Week17BringBackPlayer, Week17Scope } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+
+// Custom hook for window size
+const useWindowSize = () => {
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1024,
+    height: typeof window !== 'undefined' ? window.innerHeight : 768,
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return windowSize;
+};
 
 // Position colors based on brand book
 const POSITION_COLORS = {
@@ -92,6 +120,9 @@ const TOP_PLAYERS = [
 const Week17BringBackTab = () => {
   const [scope, setScope] = useState<Week17Scope>('team');
   const [entity, setEntity] = useState<string>('');
+  const [infoOpened, setInfoOpened] = useState(false);
+  const [selectionInfoOpened, setSelectionInfoOpened] = useState(false);
+  const { width: windowWidth } = useWindowSize();
 
   // Theme-aware values
   const { colorScheme } = useColorScheme();
@@ -126,9 +157,84 @@ const Week17BringBackTab = () => {
       {/* Controls */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
         <div className="flex-1">
-          <Text size="sm" fw={500} mb="xs">
-            View Scope
-          </Text>
+          <div className="flex items-center gap-2 mb-xs min-h-[36px]">
+            <Text size="sm" fw={500}>
+              View Scope
+            </Text>
+            <Popover
+              width={400}
+              position="bottom"
+              withArrow
+              shadow="md"
+              opened={infoOpened}
+              onChange={setInfoOpened}
+            >
+              <Popover.Target>
+                <Tooltip label="How to read this chart" withArrow>
+                  <ActionIcon
+                    variant="light"
+                    color="brand"
+                    size="xl"
+                    onClick={() => setInfoOpened(o => !o)}
+                  >
+                    <IconInfoCircle size={24} />
+                  </ActionIcon>
+                </Tooltip>
+              </Popover.Target>
+              <Popover.Dropdown
+                className={`${
+                  isDark
+                    ? 'bg-[#016140] text-white border-[#016140]'
+                    : 'bg-white text-[#016140] border-[#016140]'
+                }`}
+              >
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">
+                      Team View
+                    </Text>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>
+                        Shows top players from your selected team's Week 17
+                        opponent
+                      </li>
+                      <li>
+                        <strong>Percentage = General draft frequency</strong>
+                      </li>
+                      <li>
+                        100% means the player is drafted in 100% of all drafts
+                      </li>
+                      <li>
+                        Use this to find the most popular opponent players to
+                        stack with
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">
+                      Player View
+                    </Text>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>
+                        Shows opponent players most often drafted with your
+                        selected player
+                      </li>
+                      <li>
+                        <strong>Percentage = Co-drafting frequency</strong>
+                      </li>
+                      <li>
+                        50% means when your player is drafted, this opponent
+                        player is also drafted 50% of the time
+                      </li>
+                      <li>
+                        Use this to find the best specific stacking partners
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </Popover.Dropdown>
+            </Popover>
+          </div>
           <SegmentedControl
             value={scope}
             onChange={value => {
@@ -145,9 +251,87 @@ const Week17BringBackTab = () => {
         </div>
 
         <div className="flex-1">
-          <Text size="sm" fw={500} mb="xs">
-            {scope === 'team' ? 'Select Team' : 'Select Player'}
-          </Text>
+          <div className="flex items-center gap-2 mb-xs min-h-[36px]">
+            <Text size="sm" fw={500}>
+              {scope === 'team' ? 'Select Team' : 'Select Player'}
+            </Text>
+            <Popover
+              width={350}
+              position="bottom"
+              withArrow
+              shadow="md"
+              opened={selectionInfoOpened}
+              onChange={setSelectionInfoOpened}
+            >
+              <Popover.Target>
+                <Tooltip label="How selection works" withArrow>
+                  <ActionIcon
+                    variant="light"
+                    color="brand"
+                    size="xl"
+                    onClick={() => setSelectionInfoOpened(o => !o)}
+                  >
+                    <IconInfoCircle size={24} />
+                  </ActionIcon>
+                </Tooltip>
+              </Popover.Target>
+              <Popover.Dropdown
+                className={`${
+                  isDark
+                    ? 'bg-[#016140] text-white border-[#016140]'
+                    : 'bg-white text-[#016140] border-[#016140]'
+                }`}
+              >
+                <div className="space-y-3 text-sm">
+                  {scope === 'team' ? (
+                    <div>
+                      <Text fw={600} size="sm" mb="xs">
+                        Team Selection
+                      </Text>
+                      <ul className="list-disc list-inside space-y-1 text-xs">
+                        <li>Select the team you're interested in analyzing</li>
+                        <li>
+                          The chart will show players from that team's Week 17
+                          opponent
+                        </li>
+                        <li>
+                          Example: Select "BUF" → see players from "PHI"
+                          (Buffalo's Week 17 opponent)
+                        </li>
+                        <li>
+                          Use this to find opponent players to stack with your
+                          team's stars
+                        </li>
+                      </ul>
+                    </div>
+                  ) : (
+                    <div>
+                      <Text fw={600} size="sm" mb="xs">
+                        Player Selection
+                      </Text>
+                      <ul className="list-disc list-inside space-y-1 text-xs">
+                        <li>
+                          Select the player you want to build stacks around
+                        </li>
+                        <li>
+                          The chart shows opponents most often drafted with your
+                          player
+                        </li>
+                        <li>
+                          Example: Select "Josh Allen" → see Bills' Week 17
+                          opponents who pair well
+                        </li>
+                        <li>
+                          Use this to find the best specific stacking
+                          combinations
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </Popover.Dropdown>
+            </Popover>
+          </div>
           <Select
             placeholder={
               scope === 'team' ? 'Choose a team...' : 'Choose a player...'
@@ -162,7 +346,7 @@ const Week17BringBackTab = () => {
         </div>
       </div>
 
-      {/* Info Section */}
+      {/* Enhanced Info Section */}
       {data && (
         <Box
           p="sm"
@@ -170,15 +354,21 @@ const Week17BringBackTab = () => {
           bg={isDark ? '#262626' : '#f8f9fa'}
           style={{ borderRadius: '8px' }}
         >
-          <Text size="xs" sm-size="sm" c="dimmed" className="break-words">
+          <Text size="xs" sm-size="sm" c="dimmed" className="break-words mb-2">
             <strong>Week 17 Matchup:</strong> {data.entity} vs{' '}
             {data.opponent || 'N/A'}
           </Text>
-          <Text size="xs" sm-size="sm" c="dimmed" className="break-words">
-            <strong>View:</strong>{' '}
+          <Text size="xs" sm-size="sm" c="dimmed" className="break-words mb-2">
+            <strong>Analysis:</strong>{' '}
             {scope === 'team'
-              ? `Top players from ${data.opponent || 'opponent'} by draft percentage`
-              : `${data.opponent || 'Opponent'} players most often drafted with ${data.entity}`}
+              ? `Top ${data.players.length} players from ${data.opponent || 'opponent'} by general draft percentage`
+              : `Top ${data.players.length} ${data.opponent || 'opponent'} players most often drafted with ${data.entity}`}
+          </Text>
+          <Text size="xs" sm-size="sm" c="dimmed" className="break-words">
+            <strong>Percentage Meaning:</strong>{' '}
+            {scope === 'team'
+              ? 'How often each player is drafted across all teams (100% = drafted in every single draft)'
+              : `How often each player is drafted when ${data.entity} is also on the team (50% = co-drafted half the time)`}
           </Text>
         </Box>
       )}
@@ -214,9 +404,9 @@ const Week17BringBackTab = () => {
               layout="vertical"
               margin={{
                 left: 10,
-                right: window.innerWidth < 640 ? 20 : 80,
-                top: window.innerWidth < 640 ? 15 : 30,
-                bottom: window.innerWidth < 640 ? 15 : 30,
+                right: windowWidth < 640 ? 20 : 80,
+                top: windowWidth < 640 ? 15 : 30,
+                bottom: windowWidth < 640 ? 15 : 30,
               }}
               barCategoryGap="15%"
             >
@@ -232,18 +422,18 @@ const Week17BringBackTab = () => {
                 tickFormatter={value => `${value.toFixed(1)}%`}
                 tick={{
                   fill: axisTickColor,
-                  fontSize: window.innerWidth < 640 ? '10px' : '12px',
+                  fontSize: windowWidth < 640 ? '10px' : '12px',
                 }}
                 axisLine={{ stroke: axisTickColor }}
                 tickLine={{ stroke: axisTickColor }}
                 label={{
                   value: 'Draft Percentage',
                   position: 'insideBottom',
-                  offset: window.innerWidth < 640 ? -10 : -15,
+                  offset: windowWidth < 640 ? -10 : -15,
                   style: {
                     textAnchor: 'middle',
                     fill: axisTickColor,
-                    fontSize: window.innerWidth < 640 ? '11px' : '13px',
+                    fontSize: windowWidth < 640 ? '11px' : '13px',
                     fontWeight: 500,
                   },
                 }}
@@ -251,15 +441,15 @@ const Week17BringBackTab = () => {
               <YAxis
                 type="category"
                 dataKey="name"
-                width={window.innerWidth < 640 ? 100 : 150}
+                width={windowWidth < 640 ? 100 : 150}
                 tick={{
                   fill: axisTickColor,
-                  fontSize: window.innerWidth < 640 ? '10px' : '12px',
+                  fontSize: windowWidth < 640 ? '10px' : '12px',
                   textAnchor: 'end',
                   fontWeight: 500,
                 }}
                 tickFormatter={value =>
-                  window.innerWidth < 640
+                  windowWidth < 640
                     ? value.length > 12
                       ? value.substring(0, 12) + '...'
                       : value
@@ -281,32 +471,52 @@ const Week17BringBackTab = () => {
                           color: isDark ? '#ffffff' : '#000000',
                           border: '1px solid',
                           borderRadius: '8px',
-                          padding: window.innerWidth < 640 ? '8px' : '12px',
-                          fontSize: window.innerWidth < 640 ? '12px' : '13px',
+                          padding: windowWidth < 640 ? '8px' : '12px',
+                          fontSize: windowWidth < 640 ? '12px' : '13px',
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                          maxWidth: window.innerWidth < 640 ? '200px' : 'none',
+                          maxWidth: windowWidth < 640 ? '250px' : '300px',
                         }}
                       >
-                        <p style={{ margin: '0 0 4px 0', fontWeight: 600 }}>
+                        <p
+                          style={{
+                            margin: '0 0 6px 0',
+                            fontWeight: 600,
+                            fontSize: windowWidth < 640 ? '13px' : '14px',
+                          }}
+                        >
                           {data.name}
                         </p>
                         <p
                           style={{
-                            margin: '0 0 2px 0',
+                            margin: '0 0 4px 0',
                             color: '#666',
-                            fontSize: window.innerWidth < 640 ? '10px' : '11px',
+                            fontSize: windowWidth < 640 ? '10px' : '11px',
                           }}
                         >
                           Position: {data.position}
                         </p>
                         <p
                           style={{
-                            margin: 0,
+                            margin: '0 0 6px 0',
                             color: '#00A86B',
-                            fontSize: window.innerWidth < 640 ? '13px' : '14px',
+                            fontSize: windowWidth < 640 ? '14px' : '15px',
                             fontWeight: 600,
                           }}
-                        >{`${data.value.toFixed(1)}%`}</p>
+                        >
+                          {`${data.value.toFixed(1)}%`}
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            color: '#888',
+                            fontSize: windowWidth < 640 ? '10px' : '11px',
+                            fontStyle: 'italic',
+                          }}
+                        >
+                          {scope === 'team'
+                            ? `Drafted in ${data.value.toFixed(1)}% of all drafts`
+                            : `Co-drafted ${data.value.toFixed(1)}% of the time with your player`}
+                        </p>
                       </div>
                     );
                   }
@@ -322,11 +532,11 @@ const Week17BringBackTab = () => {
                 fill="#00A86B"
                 radius={[
                   0,
-                  window.innerWidth < 640 ? 4 : 6,
-                  window.innerWidth < 640 ? 4 : 6,
+                  windowWidth < 640 ? 4 : 6,
+                  windowWidth < 640 ? 4 : 6,
                   0,
                 ]}
-                barSize={window.innerWidth < 640 ? 25 : 35}
+                barSize={windowWidth < 640 ? 25 : 35}
               />
             </BarChart>
           </ResponsiveContainer>

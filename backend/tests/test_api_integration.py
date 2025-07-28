@@ -358,24 +358,100 @@ def test_week17_bringback_invalid_scope():
 
 
 def test_week17_bringback_missing_entity():
-    """Test Week 17 bring back endpoint with missing entity."""
+    """Test Week 17 bring back endpoint with missing entity parameter."""
     response = client.get("/api/analytics/week17-bringback?scope=team")
-    assert response.status_code == 422
+    assert response.status_code == 422  # Validation error
 
 
 def test_week17_bringback_invalid_limit():
-    """Test Week 17 bring back endpoint with invalid limit."""
-    # Test limit too high
+    """Test Week 17 bring back endpoint with invalid limit parameter."""
+    # Test with non-integer limit
     response = client.get(
-        "/api/analytics/week17-bringback?scope=team&entity=BUF&limit=30"
+        "/api/analytics/week17-bringback?scope=team&entity=BUF&limit=abc"
     )
     assert response.status_code == 422
 
-    # Test limit too low
+    # Test with negative limit
+    response = client.get(
+        "/api/analytics/week17-bringback?scope=team&entity=BUF&limit=-1"
+    )
+    assert response.status_code == 422
+
+    # Test with zero limit
     response = client.get(
         "/api/analytics/week17-bringback?scope=team&entity=BUF&limit=0"
     )
     assert response.status_code == 422
+
+    # Test with limit too high
+    response = client.get(
+        "/api/analytics/week17-bringback?scope=team&entity=BUF&limit=100"
+    )
+    assert response.status_code == 422
+
+
+def test_week17_bringback_missing_limit_uses_default(monkeypatch):
+    """Test Week 17 bring back endpoint with missing limit parameter uses default."""
+    # Mock the service method
+    mock_data = [
+        {
+            "player": "Test Player",
+            "position": "QB",
+            "percentage": 50.0,
+            "draft_count": 100,
+        }
+    ]
+
+    def mock_get_week17_bringback_team_view(self, team, limit):
+        # Verify that default limit (10) is used when not specified
+        assert limit == 10
+        return mock_data
+
+    def mock_get_week17_opponent(self, team):
+        return "NYJ" if team == "BUF" else None
+
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_bringback_team_view",
+        mock_get_week17_bringback_team_view,
+    )
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_opponent",
+        mock_get_week17_opponent,
+    )
+    monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
+
+    response = client.get("/api/analytics/week17-bringback?scope=team&entity=BUF")
+    assert response.status_code == 200
+
+
+def test_week17_bringback_partial_data(monkeypatch):
+    """Test Week 17 bring back endpoint when opponent exists but no players found."""
+
+    # Mock empty player results but valid opponent
+    def mock_get_week17_bringback_team_view(self, team, limit):
+        return []  # No players found
+
+    def mock_get_week17_opponent(self, team):
+        return "NYJ"  # Opponent exists
+
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_bringback_team_view",
+        mock_get_week17_bringback_team_view,
+    )
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_week17_opponent",
+        mock_get_week17_opponent,
+    )
+    monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
+
+    response = client.get("/api/analytics/week17-bringback?scope=team&entity=BUF")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["scope"] == "team"
+    assert data["entity"] == "BUF"
+    assert data["opponent"] == "NYJ"  # Opponent found
+    assert data["players"] == []  # But no players
 
 
 def test_week17_bringback_no_data(monkeypatch):

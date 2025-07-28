@@ -334,15 +334,15 @@ def test_get_week17_opponent_valid_team(query_service):
     """Test getting Week 17 opponent for a valid team."""
     # Test with a known matchup from our data
     opponent = query_service.get_week17_opponent("BUF")
-    assert opponent == "NYJ"
+    assert opponent == "PHI"
 
     # Test the reverse
-    opponent = query_service.get_week17_opponent("NYJ")
+    opponent = query_service.get_week17_opponent("PHI")
     assert opponent == "BUF"
 
     # Test another matchup
     opponent = query_service.get_week17_opponent("KC")
-    assert opponent == "PIT"
+    assert opponent == "DEN"
 
 
 def test_get_week17_opponent_invalid_team(query_service):
@@ -361,7 +361,10 @@ def test_get_week17_opponent_case_sensitivity(query_service):
     assert opponent is None  # Should not match
 
     opponent = query_service.get_week17_opponent("BUF")  # uppercase
-    assert opponent == "NYJ"  # Should match
+    assert opponent == "PHI"  # Should match
+
+    opponent = query_service.get_week17_opponent("BuF")  # mixed case
+    assert opponent is None  # Should not match
 
 
 def test_get_week17_bringback_team_view_valid_team(query_service):
