@@ -15,11 +15,14 @@ echo "🔧 Starting certificate bootstrap for $DOMAIN..."
 echo "🛑 Stopping existing containers..."
 docker-compose down
 
+# Clean up any existing bootstrap nginx container
+echo "🧹 Cleaning up any existing bootstrap containers..."
+docker rm -f nginx-bootstrap 2>/dev/null || true
+
 # Start nginx with bootstrap configuration (HTTP-only)
 echo "📦 Starting nginx with bootstrap configuration..."
 docker run -d \
   --name nginx-bootstrap \
-  --network dk_app-network \
   -p 80:80 \
   -v "$(pwd)/nginx-bootstrap.conf:/etc/nginx/nginx.conf:ro" \
   -v "$(pwd)/certbot/www:/var/www/certbot" \
