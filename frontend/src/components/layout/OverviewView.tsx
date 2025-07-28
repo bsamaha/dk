@@ -54,7 +54,7 @@ const OverviewView = () => {
 
   const roundBarData = useMemo(
     () =>
-      roundCountsData?.round_counts.map(rc => ({
+      roundCountsData?.map(rc => ({
         round: `R${rc.round}`,
         count: rc.count,
       })) || [],

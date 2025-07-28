@@ -50,7 +50,7 @@ flowchart LR
     E -- parquet --> F[data/bestball.parquet]
 ```
 
-*Entire stack ships as **one container**; CloudFront terminates TLS and routes to port 80 → 8000 inside the EC2 Spot instance.*
+*The stack is deployed via Docker Compose. An **Nginx container** serves as a reverse proxy, terminating TLS (via Let's Encrypt) and routing traffic to the FastAPI `app` container.*
 
 ---
 

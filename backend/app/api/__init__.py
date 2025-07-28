@@ -11,5 +11,4 @@ router.include_router(positions.router, prefix="/positions", tags=["positions"])
 router.include_router(
     combinations.router, prefix="/combinations", tags=["combinations"]
 )
-# analytics router already defines its own prefix
-router.include_router(analytics.router)
+router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])

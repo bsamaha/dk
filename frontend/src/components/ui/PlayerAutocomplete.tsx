@@ -35,12 +35,10 @@ const PlayerAutocomplete = ({
 
   // Memoize player options to avoid re-computation
   const playerOptions = useMemo(() => {
+    if (!metadataData) {
+      return [];
+    }
     try {
-      console.log('Processing metadata data:', metadataData);
-      if (!metadataData) {
-        console.log('No metadataData received');
-        return [];
-      }
       if (!metadataData.all_players) {
         console.log(
           'No all_players property in metadata:',
