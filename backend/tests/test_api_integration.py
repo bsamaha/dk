@@ -1,6 +1,14 @@
-from app.main import app
-from app.services.query_service import QueryService
+from unittest.mock import patch
+
+import pytest
+from app.main import create_app
 from fastapi.testclient import TestClient
+
+# Mock settings to allow testserver host
+test_allowed_hosts = ["localhost", "127.0.0.1", "testserver"]
+
+with patch("app.core.config.settings.ALLOWED_HOSTS", test_allowed_hosts):
+    app = create_app()
 
 client = TestClient(app)
 
@@ -35,16 +43,17 @@ def test_players_endpoint():
     assert isinstance(data["players"], list)
 
 
-def test_players_endpoint_with_filters():
-    """Test the players endpoint with position filter."""
-    response = client.get("/api/players/?positions=QB&limit=10")
+@pytest.mark.parametrize("position", ["QB", "RB", "WR", "TE"])
+def test_players_endpoint_with_filters(position):
+    """Test the players endpoint with position filter for multiple positions."""
+    response = client.get(f"/api/players/?positions={position}&limit=10")
     assert response.status_code == 200
     data = response.json()
     assert "players" in data
     assert len(data["players"]) <= 10
-    # Check that all returned players are QBs
+    # Check that all returned players have the correct position
     for player in data["players"]:
-        assert player["position"] == "QB"
+        assert player["position"] == position
 
 
 def test_players_search():
@@ -54,6 +63,18 @@ def test_players_search():
     data = response.json()
     assert "players" in data
     assert len(data["players"]) <= 5
+
+
+def test_players_search_missing_q():
+    """Test the player search endpoint with missing 'q' parameter."""
+    response = client.get("/api/players/search?limit=5")
+    assert response.status_code == 422 or response.status_code == 400
+
+
+def test_players_search_empty_q():
+    """Test the player search endpoint with empty 'q' parameter."""
+    response = client.get("/api/players/search?q=&limit=5")
+    assert response.status_code == 422 or response.status_code == 400
 
 
 def test_player_details():
@@ -100,6 +121,14 @@ def test_position_by_round():
     assert isinstance(data, list)
 
 
+def test_position_by_round_invalid_position():
+    """Test position draft counts by round with invalid position."""
+    response = client.get("/api/positions/stats/INVALIDPOS/by_round")
+    assert response.status_code == 422
+    data = response.json()
+    assert "detail" in data
+
+
 def test_roster_construction():
     """Test roster construction endpoint."""
     response = client.get("/api/positions/roster-construction")
@@ -117,6 +146,16 @@ def test_player_combinations():
     data = response.json()
     assert "combinations" in data
     assert "required_players" in data
+
+
+def test_player_combinations_missing_required_players():
+    """Test player combinations endpoint with missing required_players parameter."""
+    response = client.get("/api/combinations/")
+    # Adjust the expected status code if your API returns something other than 422
+    assert response.status_code in (400, 422)
+    data = response.json()
+    # Adjust the key/message check below to match your API's error response format
+    assert "detail" in data
 
 
 def test_analytics_heat_map():
@@ -142,7 +181,7 @@ def test_analytics_draft_slot():
     data = response.json()
     assert "slot" in data
     assert "metric" in data
-    assert "correlations" in data
+    assert "rows" in data
 
 
 def test_analytics_drift():
@@ -153,32 +192,22 @@ def test_analytics_drift():
     assert "adp_drift" in data
 
 
-def test_query_service_methods():
-    """Test that QueryService methods work correctly."""
-    service = QueryService()
+def test_analytics_drift_empty_db(monkeypatch):
+    """Test analytics ADP drift endpoint with empty database."""
 
-    # Test metadata
-    metadata = service.get_metadata()
-    assert "total_players" in metadata
-    assert "total_drafts" in metadata
+    # Patch the QueryService or relevant service to return empty data
+    def mock_get_adp_drift(*args, **kwargs):
+        return []
 
-    # Test players
-    players, count = service.get_players(limit=5)
-    assert len(players) <= 5
-    assert count >= 0
+    monkeypatch.setattr(
+        "app.services.query_service.QueryService.get_adp_drift", mock_get_adp_drift
+    )
 
-    # Test position stats
-    stats = service.get_position_stats()
-    assert isinstance(stats, list)
-    assert len(stats) > 0
-
-    # Test heat map
-    heat_map = service.get_heat_map()
-    assert isinstance(heat_map, list)
-
-    # Test stacks
-    stacks = service.get_stacks(n_rounds=5, limit=10)
-    assert isinstance(stacks, list)
+    response = client.get("/api/analytics/drift")
+    assert response.status_code == 200
+    data = response.json()
+    assert "adp_drift" in data
+    assert data["adp_drift"] == []
 
 
 def test_error_handling():

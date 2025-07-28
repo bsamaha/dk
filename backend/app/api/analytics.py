@@ -16,9 +16,9 @@ async def get_heat_map():
     """Get heat map data showing pick counts by round and position."""
     try:
         return {"heat_map": query_service.get_heat_map()}
-    except Exception as e:
-        logger.error(f"Error getting heat map: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error getting heat map")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 @router.get("/stacks")
@@ -29,9 +29,9 @@ async def get_stacks(
     """Find QB/receiver stacks drafted within first n_rounds."""
     try:
         return {"stacks": query_service.get_stacks(n_rounds=n_rounds, limit=limit)}
-    except Exception as e:
-        logger.error(f"Error getting stacks: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error getting stacks")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 @router.get("/draft-slot")
@@ -50,9 +50,9 @@ async def get_draft_slot_correlation(
                 slot=slot, metric=metric, top_n=top_n, min_teams=min_teams
             ),
         }
-    except Exception as e:
-        logger.error(f"Error getting draft slot correlation: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error getting draft slot correlation")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 @router.get("/drift")
@@ -60,6 +60,6 @@ async def get_adp_drift():
     """Get ADP drift between early and late drafts."""
     try:
         return {"adp_drift": query_service.get_adp_drift()}
-    except Exception as e:
-        logger.error(f"Error getting ADP drift: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error getting ADP drift")
+        raise HTTPException(status_code=500, detail="An internal error occurred")

@@ -102,8 +102,12 @@ def test_get_player_details_nonexistent(query_service):
     assert details["player_name"] == "NonExistentPlayer"
     assert details["position"] == "QB"
     assert details["team"] == "XXX"
-    # The numeric fields should be None/null since no data exists
+    # The numeric/statistical fields should be None/null since no data exists
     assert details["avg_pick"] is None
+    assert details.get("min_pick") is None
+    assert details.get("max_pick") is None
+    assert details.get("std_dev_pick") is None
+    assert details.get("total_drafts") is None
 
 
 def test_get_position_stats(query_service):
@@ -164,6 +168,17 @@ def test_get_player_combinations(query_service):
         )
         assert isinstance(combinations, list)
         # We might not have combinations, but the structure should be correct
+        for combination in combinations:
+            assert isinstance(combination, dict)
+            # Adjust the expected keys as per your actual combination structure
+            expected_keys = {
+                "players",
+                "positions",
+                "draft_id",
+                "draft_position",
+                "position_counts",
+            }
+            assert expected_keys.issubset(combination.keys())
 
 
 def test_get_player_combinations_empty_list(query_service):
@@ -279,9 +294,13 @@ def test_get_data_path_error_handling(mock_path):
 
 def test_query_service_singleton_behavior():
     """Test that the query_service singleton works correctly."""
+    # Import the singleton again to check identity
     from app.services.query_service import query_service
+    from app.services.query_service import query_service as query_service_again
 
     # The singleton should be initialized and functional
     assert query_service is not None
     metadata = query_service.get_metadata()
     assert "total_players" in metadata
+    # Assert that both imports refer to the same instance
+    assert query_service is query_service_again

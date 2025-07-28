@@ -205,6 +205,14 @@ class PlayerDetailsResponse(BaseModel):
     player_name: str = Field(..., description="Player name")
     position: str = Field(..., description="Player position")
     team: str = Field(..., description="Player team")
+    avg_pick: Optional[float] = Field(None, description="Average draft pick")
+    avg_round: Optional[float] = Field(None, description="Average draft round")
+    min_pick: Optional[int] = Field(None, description="Minimum draft pick")
+    max_pick: Optional[int] = Field(None, description="Maximum draft pick")
+    std_dev_pick: Optional[float] = Field(
+        None, description="Standard deviation of draft picks"
+    )
+    total_drafts: Optional[int] = Field(None, description="Total number of drafts")
     picks: List[int] = Field(..., description="List of draft picks")
     rounds: List[int] = Field(..., description="List of draft rounds")
 

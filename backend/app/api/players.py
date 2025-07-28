@@ -51,9 +51,9 @@ async def get_players(
                 total_pages=(total_count + limit - 1) // limit if limit > 0 else 1,
             ),
         )
-    except Exception as e:
-        logger.error(f"Error getting players: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error getting players")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 @router.get("/search", response_model=PlayersResponse)
@@ -82,9 +82,9 @@ async def search_players(
                 total_pages=1,
             ),
         )
-    except Exception as e:
-        logger.error(f"Error searching players: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error searching players")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 @router.get("/details", response_model=PlayerDetailsResponse)
@@ -103,6 +103,6 @@ async def get_player_details(
         return PlayerDetailsResponse(**details)
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error getting player details: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error getting player details")
+        raise HTTPException(status_code=500, detail="An internal error occurred")

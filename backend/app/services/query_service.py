@@ -69,6 +69,22 @@ class QueryService:
 
         logger.info("QueryService initialized successfully.")
 
+        self.total_drafts = int(
+            self.query("SELECT COUNT(DISTINCT draft) AS count FROM picks")["count"][0]
+            or 0
+        )
+        self.total_teams = int(
+            self.query("SELECT COUNT(DISTINCT team_id) AS count FROM picks")["count"][0]
+            or 0
+        )
+        self.total_players = int(
+            self.query("SELECT COUNT(DISTINCT player) AS count FROM picks")["count"][0]
+            or 0
+        )
+        self.all_players = self.query(
+            "SELECT DISTINCT player FROM picks ORDER BY player"
+        )["player"].to_list()
+
     @staticmethod
     def _get_data_path() -> str:
         """Return absolute path to the parquet data file."""
@@ -106,22 +122,11 @@ class QueryService:
 
     def get_metadata(self) -> Dict[str, Any]:
         """Get metadata about the dataset."""
-        # Execute queries to get metadata
-        all_players_df = self.query("SELECT DISTINCT player FROM picks ORDER BY player")
-        total_drafts_df = self.query("SELECT COUNT(DISTINCT draft) AS count FROM picks")
-        total_teams_df = self.query(
-            "SELECT COUNT(DISTINCT team_id) AS count FROM picks"
-        )
-
-        all_players = all_players_df["player"].to_list()
-        total_drafts = int(total_drafts_df["count"][0])
-        total_teams = int(total_teams_df["count"][0])
-
         return {
-            "all_players": all_players,
-            "total_drafts": total_drafts,
-            "total_teams": total_teams,
-            "total_players": len(all_players),
+            "all_players": self.all_players,
+            "total_drafts": self.total_drafts,
+            "total_teams": self.total_teams,
+            "total_players": self.total_players,
         }
 
     def get_players(
@@ -134,13 +139,7 @@ class QueryService:
         sort_order: SortOrder = SortOrder.ASC,
     ) -> Tuple[List[Player], int]:
         """Return a paginated list of players with aggregated draft statistics."""
-        # Get total drafts for draft_percentage calculation
-        total_drafts_df = self.query(
-            "SELECT COUNT(DISTINCT draft) AS n FROM picks LIMIT 1;"
-        )
-        total_drafts: int = (
-            int(total_drafts_df.item()) if not total_drafts_df.is_empty() else 1
-        )
+        total_drafts = self.total_drafts if self.total_drafts > 0 else 1
 
         # Build dynamic WHERE clause based on optional filters
         where_clauses: List[str] = []
@@ -214,24 +213,33 @@ class QueryService:
             MAX(pick) AS max_pick,
             STDDEV(pick) AS std_dev_pick,
             COUNT(DISTINCT team_id) AS total_drafts,
-            ARRAY_AGG(pick) AS picks,
-            ARRAY_AGG(round) AS rounds
+            COALESCE(ARRAY_AGG(pick), []) AS picks,
+            COALESCE(ARRAY_AGG(round), []) AS rounds
         FROM picks
         WHERE player = ? AND Position = ? AND Team = ?
         """
 
         df = self.query(sql, [player_name, position, team])
 
-        if df.is_empty():
-            return {}
+        if df.is_empty() or int(df["total_drafts"][0] or 0) == 0:
+            return {
+                "player_name": player_name,
+                "position": position,
+                "team": team,
+                "avg_pick": None,
+                "avg_round": None,
+                "min_pick": None,
+                "max_pick": None,
+                "std_dev_pick": None,
+                "total_drafts": None,
+                "picks": [],
+                "rounds": [],
+            }
 
         result = df.to_dicts()[0]
-
-        # Add player identifiers
         result["player_name"] = player_name
         result["position"] = position
         result["team"] = team
-
         return result
 
     def get_position_stats(self) -> List[PositionStats]:

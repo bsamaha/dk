@@ -28,9 +28,9 @@ async def get_player_combinations(
             "combinations": combinations,
             "total_found": len(combinations),
         }
-    except Exception as e:
-        logger.error(f"Error getting player combinations: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error getting player combinations")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 @router.get("/roster-construction/")
@@ -38,9 +38,9 @@ async def get_roster_construction():
     """Get roster construction counts."""
     try:
         return {"roster_constructions": query_service.get_roster_construction()}
-    except Exception as e:
-        logger.error(f"Error getting roster construction: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error getting roster construction")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 @router.get("/roster-construction/counts/")
@@ -54,6 +54,6 @@ async def get_roster_construction_counts(
                 required_players=required_players
             )
         }
-    except Exception as e:
-        logger.error(f"Error getting roster construction counts: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error getting roster construction counts")
+        raise HTTPException(status_code=500, detail="An internal error occurred")

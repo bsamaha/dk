@@ -237,6 +237,7 @@ sequenceDiagram
 - **HTTPS/SSL**: Now handled by Nginx + Let's Encrypt, not CloudFront/ACM. No AWS-managed certificate required.
 - **Security**: Nginx enforces security headers, rate limiting, and HTTP→HTTPS redirect. FastAPI CORS is still enforced at the app layer.
 - **Deployment**: Remains a single-container (app) plus Nginx/Certbot sidecars, all orchestrated via Docker Compose.
+- **API Changes**: Several endpoint response schemas have been updated (e.g., search now returns PlayersResponse). This may be a breaking change; please update clients accordingly. Consider versioning the API if needed.
 
 ---
 

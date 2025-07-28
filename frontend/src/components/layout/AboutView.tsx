@@ -8,10 +8,7 @@ const AboutView: React.FC = () => {
   };
 
   return (
-    <div
-      className="flex flex-col h-full p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto"
-      style={{ backgroundColor: '#2C2C2C' }}
-    >
+    <div className="flex flex-col h-full p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto bg-neutral-900">
       {/* Centered Header with larger logo */}
       <div className="flex-shrink-0 flex flex-col items-center justify-center text-center space-y-4">
         <Logo variant="mark" size={500} className="drop-shadow-lg" />

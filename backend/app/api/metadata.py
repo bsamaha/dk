@@ -16,6 +16,6 @@ async def get_metadata():
     try:
         metadata = query_service.get_metadata()
         return MetadataResponse(**metadata)
-    except Exception as e:
-        logger.error(f"Error getting metadata: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error getting metadata")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
