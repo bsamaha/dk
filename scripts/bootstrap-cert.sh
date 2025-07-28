@@ -1,25 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# One-time script to obtain initial Let’s Encrypt certificate for the domain
+# One-time script to obtain initial Let's Encrypt certificate for the domain
 # Usage:
-#   export LETSENCRYPT_EMAIL="user@example.com"
-#   ./scripts/bootstrap-cert.sh  thesignalcallers.com
+#   ./scripts/bootstrap-cert.sh
 
-# Load env file if exists and variable not exported
-DOMAIN="${1:-thesignalcallers.com}"
-if [ -z "${LETSENCRYPT_EMAIL:-}" ] && [ -f .env.production ]; then
-  # shellcheck source=/dev/null
-  source .env.production
-fi
-EMAIL="${LETSENCRYPT_EMAIL:-${SSL_EMAIL:-}}"
-if [ -z "$EMAIL" ]; then
-  echo "❌ Provide email either via LETSENCRYPT_EMAIL env var or SSL_EMAIL in .env.production"
-  exit 1
-fi
+# Hardcoded values for thesignalcallers.com
+DOMAIN="thesignalcallers.com"
+EMAIL="blake.samaha16@gmail.com"
 
-# Start nginx (HTTP-only) so webroot validation works
-docker compose up -d nginx
+echo "🔧 Starting certificate bootstrap for $DOMAIN..."
+
+# Stop any existing containers
+echo "🛑 Stopping existing containers..."
+docker-compose down
+
+# Clean up any existing bootstrap nginx container
+echo "🧹 Cleaning up any existing bootstrap containers..."
+docker rm -f nginx-bootstrap 2>/dev/null || true
+
+# Start nginx with bootstrap configuration (HTTP-only)
+echo "📦 Starting nginx with bootstrap configuration..."
+docker run -d \
+  --name nginx-bootstrap \
+  -p 80:80 \
+  -v "$(pwd)/nginx-bootstrap.conf:/etc/nginx/nginx.conf:ro" \
+  -v "$(pwd)/certbot/www:/var/www/certbot" \
+  nginx:alpine
 
 echo "➡️  Requesting certificate for $DOMAIN and www.$DOMAIN …"
 docker run --rm \
@@ -31,7 +38,11 @@ docker run --rm \
     -m "$EMAIL" \
     -d "$DOMAIN" -d "www.$DOMAIN"
 
-echo "♻️  Reloading nginx with TLS…"
-docker compose restart nginx
+echo "🛑 Stopping bootstrap nginx..."
+docker stop nginx-bootstrap
+docker rm nginx-bootstrap
 
-echo "✅ Certificate obtained and nginx reloaded. Verify via https://$DOMAIN"
+echo "♻️  Starting full application with SSL..."
+docker-compose up -d
+
+echo "✅ Certificate obtained and application started. Verify via https://$DOMAIN"
