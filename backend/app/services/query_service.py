@@ -7,6 +7,7 @@ data access methods through SQL queries.
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -67,6 +68,9 @@ class QueryService:
             """  # nosec B608  # Safe due to prior path validation
         )
 
+        # Load Week 17 matchups
+        self._load_week17_matchups()
+
         logger.info("QueryService initialized successfully.")
 
         self.total_drafts = int(
@@ -92,6 +96,54 @@ class QueryService:
         project_root = Path(__file__).parent.parent.parent.parent
         data_path = project_root / "data" / "updated_bestball_data.parquet"
         return str(data_path.resolve())
+
+    def _load_week17_matchups(self) -> None:
+        """Load Week 17 matchups data into DuckDB."""
+        # Get path to Week 17 matchups file
+        project_root = Path(__file__).parent.parent.parent.parent
+        matchups_path = project_root / "data" / "week17_matchups.json"
+
+        if not matchups_path.exists():
+            logger.warning("Week 17 matchups file not found: %s", matchups_path)
+            return
+
+        # Load JSON data
+        with open(matchups_path, "r") as f:
+            matchups_data = json.load(f)
+
+        # Validate structure of matchups_data
+        if not isinstance(matchups_data, dict):
+            logger.error("Week 17 matchups JSON is not a dictionary: %s", matchups_path)
+            return
+
+        for team, opponent in matchups_data.items():
+            if not isinstance(team, str) or not isinstance(opponent, str):
+                logger.error(
+                    "Invalid matchup entry in %s: team=%r, opponent=%r (both must be strings)",
+                    matchups_path,
+                    team,
+                    opponent,
+                )
+                return
+
+        # Create list of tuples for DuckDB
+        matchups_rows = [(team, opponent) for team, opponent in matchups_data.items()]
+
+        # Create DuckDB table from the data
+        self._con.execute("DROP TABLE IF EXISTS week17_matchups")
+        self._con.execute("""
+            CREATE TABLE week17_matchups (
+                team VARCHAR,
+                opponent VARCHAR
+            )
+        """)
+
+        # Insert data
+        self._con.executemany(
+            "INSERT INTO week17_matchups (team, opponent) VALUES (?, ?)", matchups_rows
+        )
+
+        logger.info("Loaded %d Week 17 matchups into DuckDB", len(matchups_rows))
 
     def query(
         self, sql: str, params: Optional[Sequence[Any]] | None = None
@@ -715,6 +767,114 @@ class QueryService:
         """  # nosec B608
 
         result = self.query(sql, params)
+        return result.to_dicts()
+
+    def get_week17_opponent(self, team: str) -> Optional[str]:
+        """Get the Week 17 opponent for a given team."""
+        try:
+            result = self.query(
+                "SELECT opponent FROM week17_matchups WHERE team = ?", [team]
+            )
+            if len(result) > 0:
+                return result["opponent"][0]
+            return None
+        except Exception as e:
+            logger.error("Error getting Week 17 opponent for %s: %s", team, e)
+            return None
+
+    def get_week17_bringback_team_view(
+        self, team: str, limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """Get Week 17 bring back data for team view (aggregate draft percentages)."""
+        opponent = self.get_week17_opponent(team)
+        if not opponent:
+            logger.warning("No Week 17 opponent found for team: %s", team)
+            return []
+
+        sql = """
+        SELECT
+            p.player,
+            p.Position as position,
+            COUNT(*) as draft_count,
+            CAST(COUNT(*) AS FLOAT) / ? * 100 as percentage
+        FROM picks p
+        WHERE p.Team = ?
+        GROUP BY p.player, p.Position
+        ORDER BY percentage DESC
+        LIMIT ?
+        """
+
+        result = self.query(sql, [self.total_drafts, opponent, limit])
+        return result.to_dicts()
+
+    def get_week17_bringback_player_view(
+        self, player: str, limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """Get Week 17 bring back data for player view (conditional co-draft percentages)."""
+        # First, get the player's team
+        player_team_result = self.query(
+            "SELECT DISTINCT Team FROM picks WHERE player = ?", [player]
+        )
+
+        if len(player_team_result) == 0:
+            logger.warning("Player not found: %s", player)
+            return []
+
+        # Handle case where player appears on multiple teams
+        if len(player_team_result["Team"]) > 1:
+            teams = list(player_team_result["Team"])
+            logger.warning(
+                "Player %s found on multiple teams: %s. Using first team: %s",
+                player,
+                teams,
+                teams[0],
+            )
+
+        player_team = player_team_result["Team"][0]
+        opponent = self.get_week17_opponent(player_team)
+
+        if not opponent:
+            logger.warning(
+                "No Week 17 opponent found for player %s's team: %s",
+                player,
+                player_team,
+            )
+            return []
+
+        # Get total rosters with the selected player
+        player_roster_count_result = self.query(
+            "SELECT COUNT(DISTINCT team_id || '-' || draft) as count FROM picks WHERE player = ?",
+            [player],
+        )
+        player_roster_count = player_roster_count_result["count"][0]
+
+        if player_roster_count == 0:
+            return []
+
+        sql = """
+        WITH player_rosters AS (
+            SELECT DISTINCT team_id, draft
+            FROM picks
+            WHERE player = ?
+        ),
+        opponent_players AS (
+            SELECT p.player, p.Position as position, pr.team_id, pr.draft
+            FROM picks p
+            INNER JOIN player_rosters pr ON p.team_id = pr.team_id AND p.draft = pr.draft
+            WHERE p.Team = ?
+        )
+        SELECT
+            op.player,
+            op.position,
+            COUNT(DISTINCT op.team_id || '-' || op.draft) as co_occurrence_count,
+            CAST(COUNT(DISTINCT op.team_id || '-' || op.draft) AS FLOAT) / ? * 100 as percentage
+        FROM opponent_players op
+        GROUP BY op.player, op.position
+        ORDER BY percentage DESC
+        LIMIT ?
+        """
+
+        result = self.query(sql, [player, opponent, player_roster_count, limit])
         return result.to_dicts()
 
 

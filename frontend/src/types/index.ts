@@ -187,3 +187,22 @@ export interface ChartData {
   value: number;
   color?: string;
 }
+
+// Week 17 Bring Back Types
+export interface Week17BringBackPlayer {
+  player: string;
+  position: string;
+  percentage: number;
+  draft_count?: number;
+  co_occurrence_count?: number;
+}
+
+export interface Week17BringBackResponse {
+  scope: string;
+  entity: string;
+  opponent?: string;
+  total_drafts: number;
+  players: Week17BringBackPlayer[];
+}
+
+export type Week17Scope = 'team' | 'player';
