@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useWeek17Bringback } from '../../hooks/useWeek17Bringback';
+import { useQuery } from '@tanstack/react-query';
+import { apiService } from '../../services/api';
 import {
   SegmentedControl,
   Select,
@@ -94,29 +96,6 @@ const TEAMS = [
   'WSH',
 ].map(team => ({ label: team, value: team }));
 
-const TOP_PLAYERS = [
-  'Josh Allen',
-  'Lamar Jackson',
-  'Patrick Mahomes',
-  'Joe Burrow',
-  'Dak Prescott',
-  'Christian McCaffrey',
-  'Derrick Henry',
-  'Saquon Barkley',
-  'Austin Ekeler',
-  'Tony Pollard',
-  'Tyreek Hill',
-  'Stefon Diggs',
-  'Davante Adams',
-  'DeAndre Hopkins',
-  'Mike Evans',
-  'Travis Kelce',
-  'Mark Andrews',
-  'George Kittle',
-  'T.J. Hockenson',
-  'Kyle Pitts',
-].map(player => ({ label: player, value: player }));
-
 const Week17BringBackTab = () => {
   const [scope, setScope] = useState<Week17Scope>('team');
   const [entity, setEntity] = useState<string>('');
@@ -128,6 +107,26 @@ const Week17BringBackTab = () => {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const axisTickColor = isDark ? '#E5E7EB' : '#4B5563';
+
+  // Fetch all players from metadata
+  const { data: metadataData } = useQuery({
+    queryKey: ['metadata', 'all-players'],
+    queryFn: () => apiService.getMetadata(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    retry: 3,
+    retryDelay: 1000,
+  });
+
+  // Memoize player options
+  const playerOptions = useMemo(() => {
+    if (!metadataData?.all_players) {
+      return [];
+    }
+    return metadataData.all_players.map(player => ({
+      label: player,
+      value: player,
+    }));
+  }, [metadataData]);
 
   const { data, isLoading, error } = useWeek17Bringback({
     scope,
@@ -336,7 +335,7 @@ const Week17BringBackTab = () => {
             placeholder={
               scope === 'team' ? 'Choose a team...' : 'Choose a player...'
             }
-            data={scope === 'team' ? TEAMS : TOP_PLAYERS}
+            data={scope === 'team' ? TEAMS : playerOptions}
             value={entity}
             onChange={value => setEntity(value || '')}
             searchable
