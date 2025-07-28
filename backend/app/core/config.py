@@ -1,7 +1,7 @@
 from typing import List
 
-from pydantic import FieldValidationInfo, field_validator
-from pydantic_settings import BaseSettings
+from pydantic import ValidationInfo, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     @field_validator("ALLOWED_ORIGINS", mode="after")
     @classmethod
-    def parse_allowed_origins(cls, v: str, info: FieldValidationInfo) -> List[str]:
+    def parse_allowed_origins(cls, v: str, info: ValidationInfo) -> List[str]:
         # Start with development defaults
         default_origins = [
             "http://localhost:3000",
@@ -60,7 +60,7 @@ class Settings(BaseSettings):
 
     @field_validator("ALLOWED_HOSTS", mode="after")
     @classmethod
-    def parse_allowed_hosts(cls, v: str, info: FieldValidationInfo) -> List[str]:
+    def parse_allowed_hosts(cls, v: str, info: ValidationInfo) -> List[str]:
         # If a value is provided via env var, parse and use it instead
         items = cls._parse_csv_list(v)
         if items:
@@ -79,11 +79,12 @@ class Settings(BaseSettings):
                 "0.0.0.0",  # nosec B104 - Required for Docker development
             ]
 
-    class Config:
-        # Load from env file (will be overridden by environment variables)
-        env_file = ".env.production"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    model_config = SettingsConfigDict(
+        env_file=".env.production",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",
+    )
 
 
 settings = Settings()
