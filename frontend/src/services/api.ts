@@ -23,8 +23,7 @@ import type {
 const isLocalhost =
   window.location.hostname === 'localhost' ||
   window.location.hostname === '127.0.0.1';
-const isDevServerPort =
-  window.location.port === '5173' || window.location.port === '3000';
+const isDevServerPort = window.location.port === '5173';
 
 // 1) Prefer explicit build-time environment variable (defined in .env or CI)
 const baseURL =

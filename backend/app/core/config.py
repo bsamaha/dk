@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: str = ""
 
     # Data Settings
-    DATA_PATH: str = "/app/data/bestball.parquet"
+    # Directory containing data files
+    DATA_PATH: str = "data"
 
     @staticmethod
     def _parse_csv_list(value: str) -> List[str]:
@@ -32,14 +33,10 @@ class Settings(BaseSettings):
     def parse_allowed_origins(cls, v: str, info: ValidationInfo) -> List[str]:
         # Start with development defaults
         default_origins = [
-            "http://localhost:3000",
             "http://localhost:5173",
             "http://localhost:5174",
-            "http://127.0.0.1:3000",
             "http://127.0.0.1:5173",
             "http://127.0.0.1:5174",
-            "http://localhost:8080",
-            "http://127.0.0.1:8080",
         ]
 
         # If a value is provided via env var, parse and use it instead
@@ -76,11 +73,10 @@ class Settings(BaseSettings):
             return [
                 "localhost",
                 "127.0.0.1",
-                "0.0.0.0",  # nosec B104 - Required for Docker development
             ]
 
     model_config = SettingsConfigDict(
-        env_file=".env.production",
+        env_file=[".env.development", ".env.production"],
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
