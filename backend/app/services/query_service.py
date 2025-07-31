@@ -33,14 +33,17 @@ class QueryService:
     """Unified service for all data operations using DuckDB."""
 
     def __init__(self) -> None:
+        """Initialize QueryService with DuckDB connection and data loading."""
         logger.info("Initializing QueryService with DuckDB...")
-        self._con = duckdb.connect(database=":memory:", read_only=False)
+        self._con: duckdb.DuckDBPyConnection = duckdb.connect(
+            database=":memory:", read_only=False
+        )
 
         # Enable arrow/polars integration
         self._con.execute("PRAGMA enable_object_cache;")
 
         # Attach parquet file as a view
-        data_path = self._get_data_path()
+        data_path: str = self._get_data_path()
         logger.info("Attaching parquet file to DuckDB: %s", data_path)
 
         # Validate path safety
@@ -48,7 +51,7 @@ class QueryService:
             raise ValueError(f"Invalid or unsafe path: {data_path}")
 
         # Escape single quotes for SQL literal
-        sanitized_path = data_path.replace("'", "''")
+        sanitized_path: str = data_path.replace("'", "''")
 
         # Create view with data corrections
         self._con.execute(
@@ -73,19 +76,19 @@ class QueryService:
 
         logger.info("QueryService initialized successfully.")
 
-        self.total_drafts = int(
+        self.total_drafts: int = int(
             self.query("SELECT COUNT(DISTINCT draft) AS count FROM picks")["count"][0]
             or 0
         )
-        self.total_teams = int(
+        self.total_teams: int = int(
             self.query("SELECT COUNT(DISTINCT team_id) AS count FROM picks")["count"][0]
             or 0
         )
-        self.total_players = int(
+        self.total_players: int = int(
             self.query("SELECT COUNT(DISTINCT player) AS count FROM picks")["count"][0]
             or 0
         )
-        self.all_players = self.query(
+        self.all_players: List[str] = self.query(
             "SELECT DISTINCT player FROM picks ORDER BY player"
         )["player"].to_list()
 
@@ -93,15 +96,15 @@ class QueryService:
     def _get_data_path() -> str:
         """Return absolute path to the parquet data file."""
         # From backend/app/services/query_service.py, go up to project root
-        project_root = Path(__file__).parent.parent.parent.parent
-        data_path = project_root / "data" / "updated_bestball_data.parquet"
+        project_root: Path = Path(__file__).parent.parent.parent.parent
+        data_path: Path = project_root / "data" / "updated_bestball_data.parquet"
         return str(data_path.resolve())
 
     def _load_week17_matchups(self) -> None:
         """Load Week 17 matchups data into DuckDB."""
         # Get path to Week 17 matchups file
-        project_root = Path(__file__).parent.parent.parent.parent
-        matchups_path = project_root / "data" / "week17_matchups.json"
+        project_root: Path = Path(__file__).parent.parent.parent.parent
+        matchups_path: Path = project_root / "data" / "week17_matchups.json"
 
         if not matchups_path.exists():
             logger.warning("Week 17 matchups file not found: %s", matchups_path)
@@ -109,7 +112,7 @@ class QueryService:
 
         # Load JSON data
         with open(matchups_path, "r") as f:
-            matchups_data = json.load(f)
+            matchups_data: Dict[str, str] = json.load(f)
 
         # Validate structure of matchups_data
         if not isinstance(matchups_data, dict):
@@ -127,7 +130,9 @@ class QueryService:
                 return
 
         # Create list of tuples for DuckDB
-        matchups_rows = [(team, opponent) for team, opponent in matchups_data.items()]
+        matchups_rows: List[Tuple[str, str]] = [
+            (team, opponent) for team, opponent in matchups_data.items()
+        ]
 
         # Create DuckDB table from the data
         self._con.execute("DROP TABLE IF EXISTS week17_matchups")
@@ -145,9 +150,7 @@ class QueryService:
 
         logger.info("Loaded %d Week 17 matchups into DuckDB", len(matchups_rows))
 
-    def query(
-        self, sql: str, params: Optional[Sequence[Any]] | None = None
-    ) -> pl.DataFrame:
+    def query(self, sql: str, params: Optional[Sequence[Any]] = None) -> pl.DataFrame:
         """Execute SQL query and return Polars DataFrame.
 
         Parameters
@@ -190,16 +193,32 @@ class QueryService:
         sort_by: SortableColumn = SortableColumn.AVG_PICK,
         sort_order: SortOrder = SortOrder.ASC,
     ) -> Tuple[List[Player], int]:
-        """Return a paginated list of players with aggregated draft statistics."""
-        total_drafts = self.total_drafts if self.total_drafts > 0 else 1
+        """Get players with their average draft position and other stats."""
+        # Validate inputs
+        if not isinstance(limit, int) or limit < 1 or limit > 1000:
+            raise ValueError("limit must be between 1 and 1000")
+        if not isinstance(offset, int) or offset < 0:
+            raise ValueError("offset must be non-negative")
+        if not isinstance(sort_by, SortableColumn):
+            raise ValueError("sort_by must be a valid SortableColumn")
+        if not isinstance(sort_order, SortOrder):
+            raise ValueError("sort_order must be a valid SortOrder")
 
-        # Build dynamic WHERE clause based on optional filters
+        # Get total drafts for percentage calculation
+        total_drafts_df: pl.DataFrame = self.query(
+            "SELECT COUNT(DISTINCT draft) AS cnt FROM picks"
+        )
+        total_drafts: int = (
+            int(total_drafts_df["cnt"][0]) if not total_drafts_df.is_empty() else 1
+        )
+
+        # Build WHERE clause with parameterized queries
         where_clauses: List[str] = []
         params: List[Any] = []
 
         if positions:
             # Use parameterized query for positions
-            placeholders = ", ".join(["?" for _ in positions])
+            placeholders: str = ", ".join(["?" for _ in positions])
             where_clauses.append(f"Position IN ({placeholders})")
             params.extend([p.value for p in positions])
 
@@ -208,10 +227,11 @@ class QueryService:
             where_clauses.append("lower(player) LIKE ?")
             params.append(f"%{search_term.lower()}%")
 
-        where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+        where_sql: str = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
 
-        # Base aggregation SQL
-        base_sql = f"""
+        # Base aggregation SQL - safe as it uses parameterized queries
+        # nosec B608
+        base_sql: str = f"""
         SELECT
             player,
             Position,
@@ -219,45 +239,80 @@ class QueryService:
             AVG(pick)      AS avg_pick,
             MIN(pick)      AS min_pick,
             MAX(pick)      AS max_pick,
-            COUNT(*) * 100.0 / {total_drafts} AS draft_percentage
+            COUNT(*) * 100.0 / ? AS draft_percentage
         FROM picks
         {where_sql}
         GROUP BY player, Position, Team
-        """  # nosec B608  # Safe: total_drafts is computed from database, where_sql uses parameterized queries
+        """
+
+        # Add total_drafts to params for the base query
+        base_params: List[Any] = [total_drafts] + params
 
         # Total count BEFORE pagination
-        total_count_df = self.query(
-            f"SELECT COUNT(*) AS cnt FROM ({base_sql})",  # nosec B608  # Safe: base_sql uses parameterized queries
-            params,
+        # nosec B608
+        total_count_df: pl.DataFrame = self.query(
+            "SELECT COUNT(*) AS cnt FROM (" + base_sql + ")",
+            base_params,
         )
         total_count: int = (
             int(total_count_df["cnt"][0]) if not total_count_df.is_empty() else 0
         )
 
-        # Apply order, pagination
-        order_dir = "DESC" if sort_order == SortOrder.DESC else "ASC"
-        final_sql = (
-            f"{base_sql}\n"
-            f"ORDER BY {sort_by.value} {order_dir}\n"
-            f"LIMIT {limit} OFFSET {offset}"
-        )
+        # Validate sort_by against allowed columns
+        allowed_columns: Dict[SortableColumn, str] = {
+            SortableColumn.AVG_PICK: "avg_pick",
+            SortableColumn.NAME: "player",
+            SortableColumn.POSITION: "position",
+            SortableColumn.TEAM: "team",
+            SortableColumn.DRAFT_PERCENTAGE: "draft_percentage",
+        }
+
+        if sort_by not in allowed_columns:
+            raise ValueError(f"Invalid sort_by: {sort_by}")
+
+        order_column: str = allowed_columns[sort_by]
+        order_dir: str = "DESC" if sort_order == SortOrder.DESC else "ASC"
+
+        # Final query with safe ORDER BY, LIMIT, and OFFSET using parameters
+        # nosec B608
+        final_sql: str = f"""
+        SELECT *
+        FROM (
+            SELECT
+                player,
+                Position,
+                Team,
+                AVG(pick)      AS avg_pick,
+                MIN(pick)      AS min_pick,
+                MAX(pick)      AS max_pick,
+                COUNT(*) * 100.0 / ? AS draft_percentage
+            FROM picks
+            {where_sql}
+            GROUP BY player, Position, Team
+        ) subquery
+        ORDER BY {order_column} {order_dir}
+        LIMIT ? OFFSET ?
+        """
+
+        # Build final params: [total_drafts, *where_params, limit, offset]
+        final_params: List[Any] = [total_drafts] + params + [limit, offset]
 
         logger.info("Running players query: limit=%d offset=%d", limit, offset)
-        df: pl.DataFrame = self.query(final_sql, params)
+        df: pl.DataFrame = self.query(final_sql, final_params)
 
         if df.is_empty():
             return [], total_count
 
         # Convert to Player models
         df = df.rename({"player": "name", "Position": "position", "Team": "team"})
-        players = [Player(**row) for row in df.to_dicts()]
+        players: List[Player] = [Player(**row) for row in df.to_dicts()]
         return players, total_count
 
     def get_player_details(
         self, player_name: str, position: str, team: str
     ) -> Dict[str, Any]:
         """Get detailed draft data for a single player."""
-        sql = """
+        sql: str = """
         SELECT
             AVG(pick) AS avg_pick,
             AVG(round) AS avg_round,
@@ -271,7 +326,7 @@ class QueryService:
         WHERE player = ? AND Position = ? AND Team = ?
         """
 
-        df = self.query(sql, [player_name, position, team])
+        df: pl.DataFrame = self.query(sql, [player_name, position, team])
 
         if df.is_empty() or int(df["total_drafts"][0] or 0) == 0:
             # Return dictionary with player identifiers and null statistical values
@@ -289,7 +344,7 @@ class QueryService:
                 "rounds": [],
             }
 
-        result = df.to_dicts()[0]
+        result: Dict[str, Any] = df.to_dicts()[0]
         result["player_name"] = player_name
         result["position"] = position
         result["team"] = team
@@ -298,7 +353,7 @@ class QueryService:
     def get_position_stats(self) -> List[PositionStats]:
         """Get statistics by position."""
         # Calculate median players per position per draft
-        median_sql = """
+        median_sql: str = """
         WITH position_counts AS (
             SELECT draft, Position, COUNT(*) as position_count
             FROM picks
@@ -312,7 +367,7 @@ class QueryService:
         """
 
         # Calculate total and unique counts
-        stats_sql = """
+        stats_sql: str = """
         SELECT
             Position,
             COUNT(*) as total_drafted,
@@ -321,14 +376,14 @@ class QueryService:
         GROUP BY Position
         """
 
-        median_df = self.query(median_sql)
-        stats_df = self.query(stats_sql)
+        median_df: pl.DataFrame = self.query(median_sql)
+        stats_df: pl.DataFrame = self.query(stats_sql)
 
         # Join the results
-        combined_df = stats_df.join(median_df, on="Position", how="left")
+        combined_df: pl.DataFrame = stats_df.join(median_df, on="Position", how="left")
 
         # Convert to PositionStats objects and sort
-        position_stats_list = [
+        position_stats_list: List[PositionStats] = [
             PositionStats(
                 position=row["Position"],
                 total_drafted=row["total_drafted"],
@@ -339,14 +394,14 @@ class QueryService:
         ]
 
         # Sort by position order
-        position_order = ["QB", "RB", "WR", "TE"]
+        position_order: List[str] = ["QB", "RB", "WR", "TE"]
         position_stats_list.sort(key=lambda p: position_order.index(p.position))
 
         return position_stats_list
 
     def get_first_player_draft_stats(self) -> List[Dict[str, Any]]:
         """Get the avg, min, and max pick for the first player drafted at each position."""
-        sql = """
+        sql: str = """
         WITH first_picks AS (
             SELECT
                 draft,
@@ -373,9 +428,9 @@ class QueryService:
         aggregation: AggregationType = AggregationType.MEAN,
     ) -> List[PositionRoundCount]:
         """Get position draft counts by round."""
-        agg_func = "AVG" if aggregation == AggregationType.MEAN else "MEDIAN"
+        agg_func: str = "AVG" if aggregation == AggregationType.MEAN else "MEDIAN"
 
-        sql = f"""
+        sql: str = f"""
             WITH all_rounds AS (
                 SELECT DISTINCT round FROM picks
             ),
@@ -407,7 +462,7 @@ class QueryService:
             ORDER BY round
             """  # nosec B608
 
-        df = self.query(sql, [position.value])
+        df: pl.DataFrame = self.query(sql, [position.value])
 
         return [
             PositionRoundCount(round=row["round"], count=row["count"])
@@ -421,14 +476,27 @@ class QueryService:
         limit: int = 100,
     ) -> List[Dict[str, Any]]:
         """Return teams that drafted all required players within first n_rounds."""
+        # Validate inputs
+        if not isinstance(required_players, list):
+            raise ValueError("required_players must be a list")
+        if not all(isinstance(p, str) and p.strip() for p in required_players):
+            raise ValueError("All required_players must be non-empty strings")
+        if len(required_players) > 50:
+            raise ValueError("required_players list is too long (max 50)")
+        if not isinstance(n_rounds, int) or n_rounds < 1 or n_rounds > 50:
+            raise ValueError("n_rounds must be between 1 and 50")
+        if not isinstance(limit, int) or limit < 1 or limit > 1000:
+            raise ValueError("limit must be between 1 and 1000")
+
         if not required_players:
             return []
 
         # Use parameterized query for player names
-        placeholders = ", ".join(["?" for _ in required_players])
-        num_required = len(required_players)
+        placeholders: str = ", ".join(["?" for _ in required_players])
+        num_required: int = len(required_players)
 
-        sql = f"""
+        # nosec B608
+        sql: str = f"""
         WITH filtered AS (
             SELECT draft,
                    team_id,
@@ -449,10 +517,10 @@ class QueryService:
         FROM filtered
         WHERE team_id IN (SELECT team_id FROM target_teams)
         ORDER BY draft, draft_position, team_id, round;
-        """  # nosec B608  # Safe: placeholders is generated from parameterized query
+        """
 
         # Build parameters list: [n_rounds, *required_players, num_required]
-        params = [n_rounds] + required_players + [num_required]
+        params: List[Any] = [n_rounds] + required_players + [num_required]
 
         logger.info(
             "Running combination query for %d required players (<= round %d)",
@@ -465,7 +533,7 @@ class QueryService:
             return []
 
         # Aggregate per team using Polars
-        result_df = (
+        result_df: pl.DataFrame = (
             df.lazy()
             .group_by("team_id")
             .agg(
@@ -483,7 +551,7 @@ class QueryService:
             return []
 
         # Calculate position counts
-        position_counts_df = (
+        position_counts_df: pl.DataFrame = (
             result_df.lazy()
             .select(["team_id", "positions"])
             .explode("positions")
@@ -494,9 +562,13 @@ class QueryService:
             .fill_null(0)
         )
 
+        # Add position counts to result
+        final_result_df: pl.DataFrame
         if not position_counts_df.is_empty():
-            pos_cols = [c for c in position_counts_df.columns if c != "team_id"]
-            position_counts_str_df = (
+            pos_cols: List[str] = [
+                c for c in position_counts_df.columns if c != "team_id"
+            ]
+            position_counts_str_df: pl.DataFrame = (
                 position_counts_df.lazy()
                 .with_columns(
                     pl.concat_str(
@@ -507,18 +579,26 @@ class QueryService:
                 .select(["team_id", "position_counts"])
                 .collect()
             )
-            final_df = result_df.join(position_counts_str_df, on="team_id", how="left")
+            final_result_df = result_df.join(
+                position_counts_str_df, on="team_id", how="left"
+            )
         else:
-            final_df = result_df.with_columns(
+            final_result_df = result_df.with_columns(
                 pl.lit(None, dtype=pl.String).alias("position_counts")
             )
 
-        logger.info("Combination query returned %d teams", final_df.height)
-        return final_df.to_dicts()
+        logger.info("Combination query returned %d teams", final_result_df.height)
+        return final_result_df.to_dicts()
 
     def get_stacks(self, n_rounds: int = 10, limit: int = 100) -> List[Dict[str, Any]]:
         """Find QB/receiver stacks drafted within first n_rounds."""
-        sql = """
+        # Validate inputs
+        if not isinstance(n_rounds, int) or n_rounds < 1 or n_rounds > 50:
+            raise ValueError("n_rounds must be between 1 and 50")
+        if not isinstance(limit, int) or limit < 1 or limit > 1000:
+            raise ValueError("limit must be between 1 and 1000")
+
+        sql: str = """
         WITH early AS (
             SELECT draft, team_id, player, Position, Team AS nfl_team, round
             FROM picks
@@ -545,11 +625,11 @@ class QueryService:
         ORDER BY draft, team_id
         LIMIT ?;
         """
-        return self.query(sql, [n_rounds, limit]).to_dicts()
+        return self.query(sql, params=[n_rounds, limit]).to_dicts()
 
     def get_heat_map(self) -> List[Dict[str, Any]]:
         """Return pick counts grouped by round & position for heat-map visual."""
-        sql = """
+        sql: str = """
         SELECT round, Position as position, COUNT(*) AS count
         FROM picks
         GROUP BY round, Position
@@ -565,11 +645,18 @@ class QueryService:
         min_teams: int = 10,
     ) -> List[Dict[str, Any]]:
         """Return players most correlated with a given draft slot."""
+        # Validate inputs
+        if not isinstance(slot, int) or slot < 1 or slot > 20:
+            raise ValueError("slot must be between 1 and 20")
         if metric not in {"count", "percent", "ratio"}:
             raise ValueError("metric must be 'count', 'percent', or 'ratio'")
+        if not isinstance(top_n, int) or top_n < 1 or top_n > 100:
+            raise ValueError("top_n must be between 1 and 100")
+        if not isinstance(min_teams, int) or min_teams < 1 or min_teams > 1000:
+            raise ValueError("min_teams must be between 1 and 1000")
 
         # Pre-compute totals
-        totals_sql = """
+        totals_sql: str = """
         WITH uniq AS (
             SELECT DISTINCT draft, team_id, draft_position
             FROM picks
@@ -582,11 +669,11 @@ class QueryService:
         totals_df: pl.DataFrame = self.query(totals_sql, [slot])
         if totals_df.is_empty():
             return []
-        total_overall = int(totals_df["total_overall"][0])
-        total_slot = int(totals_df["total_slot"][0]) or 1
+        total_overall: int = int(totals_df["total_overall"][0])
+        total_slot: int = int(totals_df["total_slot"][0]) or 1
 
         # Compute counts per player
-        query_sql = """
+        query_sql: str = """
         WITH uniq AS (
             SELECT DISTINCT draft, team_id, draft_position, player
             FROM picks
@@ -615,7 +702,7 @@ class QueryService:
         ORDER BY score DESC
         LIMIT ?;
         """
-        params = [
+        params: List[Any] = [
             slot,
             slot,
             min_teams,
@@ -634,31 +721,33 @@ class QueryService:
     def get_adp_drift(self) -> List[Dict[str, Any]]:
         """Calculate average pick drift between early vs late halves of drafts."""
         # Determine midpoint draft id
-        midpoint_df = self.query("SELECT median(draft) AS mid FROM picks")
-        mid = int(midpoint_df["mid"][0])
+        midpoint_df: pl.DataFrame = self.query("SELECT median(draft) AS mid FROM picks")
+        mid: int = int(midpoint_df["mid"][0])
 
-        early_sql = """
+        early_sql: str = """
         SELECT player, Position, AVG(pick) AS avg_pick_early
         FROM picks
         WHERE draft <= ?
         GROUP BY player, Position
         """
 
-        late_sql = """
+        late_sql: str = """
         SELECT player, Position, AVG(pick) AS avg_pick_late
         FROM picks
         WHERE draft > ?
         GROUP BY player, Position
         """
 
-        early_df = self.query(early_sql, [mid])
-        late_df = self.query(late_sql, [mid])
+        early_df: pl.DataFrame = self.query(early_sql, [mid])
+        late_df: pl.DataFrame = self.query(late_sql, [mid])
 
         # Join and calculate drift
-        merged = (
-            early_df.join(late_df, on=["player", "Position"], how="inner")
+        merged: pl.DataFrame = (
+            early_df.join(other=late_df, on=["player", "Position"], how="inner")
             .with_columns(
-                (pl.col("avg_pick_late") - pl.col("avg_pick_early")).alias("drift")
+                (pl.col(name="avg_pick_late") - pl.col(name="avg_pick_early")).alias(
+                    name="drift"
+                )
             )
             .sort("drift", descending=True)
         )
@@ -666,7 +755,7 @@ class QueryService:
 
     def get_roster_construction(self) -> List[RosterConstruction]:
         """Get roster construction for each team across all drafts."""
-        sql = """
+        sql: str = """
         WITH position_counts AS (
             SELECT draft, team_id, Position, COUNT(*) as count
             FROM picks
@@ -681,31 +770,33 @@ class QueryService:
         ORDER BY draft, team_id, Position
         """
 
-        df = self.query(sql)
+        df: pl.DataFrame = self.query(sql)
 
         if df.is_empty():
             return []
 
         # Pivot to get positions as columns
-        roster_df = (
+        roster_df: pl.DataFrame = (
             df.pivot(index=["draft", "team_id"], on="Position", values="count")
             .fill_null(0)
             .rename({"draft": "draft_id"})
         )
 
         # Get all possible position names from the enum
-        position_columns = [p.value for p in Position]
+        position_columns: List[str] = [p.value for p in Position]
 
         # Ensure all position columns exist, filling missing with 0
         for col in position_columns:
             if col not in roster_df.columns:
-                roster_df = roster_df.with_columns(pl.lit(0).cast(pl.Int64).alias(col))
+                roster_df = roster_df.with_columns(
+                    pl.lit(value=0).cast(dtype=pl.Int64).alias(name=col)
+                )
 
         # Group by position counts to find frequency
-        roster_counts = (
+        roster_counts: pl.DataFrame = (
             roster_df.group_by(position_columns)
-            .agg(pl.len().alias("count"))
-            .sort("count", descending=True)
+            .agg(pl.len().alias(name="count"))
+            .sort(by="count", descending=True)
         )
 
         return [
@@ -721,15 +812,25 @@ class QueryService:
         self, required_players: Optional[List[str]] = None
     ) -> List[Dict[str, Any]]:
         """Get aggregated counts of unique roster constructions, focusing on QB, RB, WR, TE."""
-        where_clause = ""
-        params = []
+        where_clause: str = ""
+        params: List[Any] = []
 
         if required_players:
+            # Validate required_players
+            if not isinstance(required_players, list) or not all(
+                isinstance(p, str) for p in required_players
+            ):
+                raise ValueError("required_players must be a list of strings")
+            if len(required_players) > 50:  # Reasonable limit
+                raise ValueError("required_players list is too long (max 50)")
+
             logger.info(
-                f"Filtering roster constructions for teams with required players: {required_players}"
+                "Filtering roster constructions for teams with required players: %s",
+                required_players,
             )
             # Get teams that have all required players
-            placeholders = ", ".join(["?" for _ in required_players])
+            placeholders: str = ", ".join(["?" for _ in required_players])
+            # nosec B608
             where_clause = f"""
             AND team_id IN (
                 SELECT team_id
@@ -738,10 +839,11 @@ class QueryService:
                 GROUP BY team_id
                 HAVING COUNT(DISTINCT player) = ?
             )
-            """  # nosec B608
+            """
             params = required_players + [len(required_players)]
 
-        sql = f"""
+        # nosec B608
+        sql: str = f"""
         WITH position_counts AS (
             SELECT draft, team_id, Position, COUNT(*) as count
             FROM picks
@@ -764,16 +866,16 @@ class QueryService:
         )
         GROUP BY QB, RB, WR, TE
         ORDER BY count DESC
-        """  # nosec B608
+        """
 
-        result = self.query(sql, params)
+        result: pl.DataFrame = self.query(sql, params)
         return result.to_dicts()
 
     def get_week17_opponent(self, team: str) -> Optional[str]:
         """Get the Week 17 opponent for a given team."""
         try:
-            result = self.query(
-                "SELECT opponent FROM week17_matchups WHERE team = ?", [team]
+            result: pl.DataFrame = self.query(
+                sql="SELECT opponent FROM week17_matchups WHERE team = ?", params=[team]
             )
             if len(result) > 0:
                 return result["opponent"][0]
@@ -786,12 +888,12 @@ class QueryService:
         self, team: str, limit: int = 10
     ) -> List[Dict[str, Any]]:
         """Get Week 17 bring back data for team view (aggregate draft percentages)."""
-        opponent = self.get_week17_opponent(team)
+        opponent: Optional[str] = self.get_week17_opponent(team)
         if not opponent:
             logger.warning("No Week 17 opponent found for team: %s", team)
             return []
 
-        sql = """
+        sql: str = """
         SELECT
             p.player,
             p.Position as position,
@@ -804,7 +906,9 @@ class QueryService:
         LIMIT ?
         """
 
-        result = self.query(sql, [self.total_drafts, opponent, limit])
+        result: pl.DataFrame = self.query(
+            sql, params=[self.total_drafts, opponent, limit]
+        )
         return result.to_dicts()
 
     def get_week17_bringback_player_view(
@@ -812,8 +916,8 @@ class QueryService:
     ) -> List[Dict[str, Any]]:
         """Get Week 17 bring back data for player view (conditional co-draft percentages)."""
         # First, get the player's team
-        player_team_result = self.query(
-            "SELECT DISTINCT Team FROM picks WHERE player = ?", [player]
+        player_team_result: pl.DataFrame = self.query(
+            sql="SELECT DISTINCT Team FROM picks WHERE player = ?", params=[player]
         )
 
         if len(player_team_result) == 0:
@@ -822,7 +926,7 @@ class QueryService:
 
         # Handle case where player appears on multiple teams
         if len(player_team_result["Team"]) > 1:
-            teams = list(player_team_result["Team"])
+            teams: List[str] = list(player_team_result["Team"])
             logger.warning(
                 "Player %s found on multiple teams: %s. Using first team: %s",
                 player,
@@ -830,8 +934,8 @@ class QueryService:
                 teams[0],
             )
 
-        player_team = player_team_result["Team"][0]
-        opponent = self.get_week17_opponent(player_team)
+        player_team: str = player_team_result["Team"][0]
+        opponent: Optional[str] = self.get_week17_opponent(player_team)
 
         if not opponent:
             logger.warning(
@@ -842,16 +946,16 @@ class QueryService:
             return []
 
         # Get total rosters with the selected player
-        player_roster_count_result = self.query(
-            "SELECT COUNT(DISTINCT team_id || '-' || draft) as count FROM picks WHERE player = ?",
-            [player],
+        player_roster_count_result: pl.DataFrame = self.query(
+            sql="SELECT COUNT(DISTINCT team_id || '-' || draft) as count FROM picks WHERE player = ?",
+            params=[player],
         )
-        player_roster_count = player_roster_count_result["count"][0]
+        player_roster_count: int = player_roster_count_result["count"][0]
 
         if player_roster_count == 0:
             return []
 
-        sql = """
+        sql: str = """
         WITH player_rosters AS (
             SELECT DISTINCT team_id, draft
             FROM picks
@@ -874,9 +978,11 @@ class QueryService:
         LIMIT ?
         """
 
-        result = self.query(sql, [player, opponent, player_roster_count, limit])
+        result: pl.DataFrame = self.query(
+            sql, params=[player, opponent, player_roster_count, limit]
+        )
         return result.to_dicts()
 
 
 # Global singleton instance
-query_service = QueryService()
+query_service: QueryService = QueryService()

@@ -1,16 +1,19 @@
 # ---------- Stage 1: build React frontend ----------
 FROM node:20-alpine AS ui-builder
 
+# Install pnpm globally
+RUN npm install -g pnpm
+
 # Set workdir to frontend source
 WORKDIR /src/frontend
 
 # Install dependencies first (better layer caching)
-COPY frontend/package.json ./
-RUN npm install --silent
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the frontend source and build
 COPY frontend .
-RUN npm run build
+RUN pnpm run build
 
 # ---------- Stage 2: production image ----------
 FROM python:3.11-slim AS runtime

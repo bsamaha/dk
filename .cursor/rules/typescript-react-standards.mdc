@@ -1,0 +1,51 @@
+---
+globs: *.ts,*.tsx,*.js,*.jsx,tsconfig*.json,package.json
+---
+# TypeScript/React Coding Standards (Google Style Guide)
+
+Follow Google's TypeScript style guide for all TypeScript and React code.
+
+## Key Standards
+- Use 2 spaces for indentation
+- Maximum line length: 80 characters
+- Use camelCase for variables, functions, and methods
+- Use PascalCase for classes, interfaces, and components
+- Use UPPER_SNAKE_CASE for constants
+- Prefer `const` over `let`, avoid `var`
+- Use semicolons at the end of statements
+- Use single quotes for strings unless double quotes are needed
+
+## Project Structure
+The main frontend is in [frontend/](mdc:frontend/) with:
+- Main application in [frontend/src/](mdc:frontend/src/)
+- Components in [frontend/src/components/](mdc:frontend/src/components/)
+- Services in [frontend/src/services/](mdc:frontend/src/services/)
+- Hooks in [frontend/src/hooks/](mdc:frontend/src/hooks/)
+- Types in [frontend/src/types/](mdc:frontend/src/types/)
+- Store in [frontend/src/store/](mdc:frontend/src/store/)
+- Tests in [frontend/src/__tests__/](mdc:frontend/src/__tests__/)
+- Configuration in [frontend/package.json](mdc:frontend/package.json) and TypeScript config in [frontend/tsconfig.json](mdc:frontend/tsconfig.json)
+
+## React/JSX Standards
+- Use functional components with hooks
+- Use PascalCase for component names
+- Use camelCase for props
+- Destructure props at the top of components
+- Use TypeScript interfaces for prop types
+
+## Tools
+- Use ESLint with TypeScript rules (configured in [frontend/eslint.config.js](mdc:frontend/eslint.config.js))
+- Use Prettier for code formatting (configured in [frontend/.prettierrc](mdc:frontend/.prettierrc))
+- Use TypeScript strict mode
+
+## Example Component
+```typescript
+interface UserCardProps {
+  user: UserData;
+  onEdit: (id: string) => void;
+}
+
+const UserCard: React.FC<UserCardProps> = ({ user, onEdit }) => {
+  // ... component implementation
+};
+```
