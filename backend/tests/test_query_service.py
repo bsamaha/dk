@@ -526,3 +526,48 @@ def test_week17_matchups_file_integration(query_service):
     # Verify bidirectional relationship
     reverse_opponent = query_service.get_week17_opponent(opponent)
     assert reverse_opponent == "BUF", "Week 17 matchups should be bidirectional"
+
+
+def test_validate_required_players_edge_cases(query_service):
+    """Test required_players validation with edge cases."""
+    # Test empty list (now allowed)
+    result = query_service._validate_required_players([])
+    assert result == []
+
+    # Test non-list input
+    with pytest.raises(ValueError, match="required_players must be a list"):
+        query_service._validate_required_players("not a list")
+
+    # Test list with non-string elements
+    with pytest.raises(ValueError, match="Player at index 0 must be a string"):
+        query_service._validate_required_players([123])
+
+    # Test empty string
+    with pytest.raises(ValueError, match="Player at index 0 cannot be empty"):
+        query_service._validate_required_players([""])
+
+    # Test whitespace-only string
+    with pytest.raises(ValueError, match="Player at index 1 cannot be empty"):
+        query_service._validate_required_players(["Josh Allen", "   "])
+
+    # Test valid input with whitespace
+    result = query_service._validate_required_players(
+        ["  Josh Allen  ", "Stefon Diggs"]
+    )
+    assert result == ["Josh Allen", "Stefon Diggs"]
+
+    # Test valid input without whitespace
+    result = query_service._validate_required_players(["Josh Allen", "Stefon Diggs"])
+    assert result == ["Josh Allen", "Stefon Diggs"]
+
+    # Test 50-player limit
+    valid_players = [f"Player{i}" for i in range(50)]
+    result = query_service._validate_required_players(valid_players)
+    assert result == valid_players
+
+    # Test exceeding 50-player limit
+    too_many_players = [f"Player{i}" for i in range(51)]
+    with pytest.raises(
+        ValueError, match="A maximum of 50 required players can be specified"
+    ):
+        query_service._validate_required_players(too_many_players)
