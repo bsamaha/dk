@@ -108,6 +108,28 @@ class TestPlayerSearchQueryParams:
             PlayerSearchQueryParams(q="   ", limit=50)
         assert "Search query cannot be empty or only whitespace" in str(exc_info.value)
 
+    def test_limit_minimum_boundary(self):
+        """Test limit at minimum allowed value."""
+        params = PlayerSearchQueryParams(q="Tom Brady", limit=1)
+        assert params.limit == 1
+
+    def test_limit_below_minimum(self):
+        """Test limit below minimum allowed value."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerSearchQueryParams(q="Tom Brady", limit=0)
+        assert "Input should be greater than or equal to 1" in str(exc_info.value)
+
+    def test_limit_maximum_boundary(self):
+        """Test limit at maximum allowed value."""
+        params = PlayerSearchQueryParams(q="Tom Brady", limit=100)
+        assert params.limit == 100
+
+    def test_limit_above_maximum(self):
+        """Test limit above maximum allowed value."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerSearchQueryParams(q="Tom Brady", limit=101)
+        assert "Input should be less than or equal to 100" in str(exc_info.value)
+
 
 class TestPlayerDetailsQueryParams:
     """Test validation for player details endpoint query parameters."""
@@ -139,6 +161,24 @@ class TestPlayerDetailsQueryParams:
             PlayerDetailsQueryParams(
                 player_name="Tom Brady", position="QB", team="TAMPA"
             )
+        assert "Team must be a valid abbreviation" in str(exc_info.value)
+
+    def test_position_case_sensitivity(self):
+        """Test that position validation is case sensitive."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerDetailsQueryParams(player_name="Tom Brady", position="qb", team="TB")
+        assert "Invalid position" in str(exc_info.value)
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerDetailsQueryParams(player_name="Tom Brady", position="qB", team="TB")
+        assert "Invalid position" in str(exc_info.value)
+
+    def test_team_case_sensitivity(self):
+        """Test that team abbreviation validation is case sensitive."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerDetailsQueryParams(player_name="Tom Brady", position="QB", team="tb")
+        assert "Team must be a valid abbreviation" in str(exc_info.value)
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerDetailsQueryParams(player_name="Tom Brady", position="QB", team="tB")
         assert "Team must be a valid abbreviation" in str(exc_info.value)
 
 
@@ -184,6 +224,20 @@ class TestAnalyticsDraftSlotQueryParams:
                 slot=15, metric="percent", top_n=25, min_teams=10
             )
         assert "Input should be less than or equal to 12" in str(exc_info.value)
+
+    def test_min_teams_minimum_boundary(self):
+        """Test min_teams at its minimum allowed value."""
+        params = AnalyticsDraftSlotQueryParams(
+            slot=3, metric="percent", top_n=10, min_teams=1
+        )
+        assert params.min_teams == 1
+
+    def test_min_teams_maximum_boundary(self):
+        """Test min_teams at its maximum allowed value."""
+        params = AnalyticsDraftSlotQueryParams(
+            slot=3, metric="percent", top_n=10, min_teams=1000
+        )
+        assert params.min_teams == 1000
 
     def test_invalid_metric(self):
         """Test invalid metric."""
@@ -236,6 +290,21 @@ class TestAnalyticsWeek17BringBackQueryParams:
                 scope="player", entity="Tom@Brady", limit=15
             )
         assert "Entity must be a valid player name" in str(exc_info.value)
+
+    @pytest.mark.parametrize(
+        "scope,entity,expected_error",
+        [
+            ("team", "", "Entity must be a valid team abbreviation"),
+            ("team", "   ", "Entity must be a valid team abbreviation"),
+            ("player", "", "Entity must be a valid player name"),
+            ("player", "   ", "Entity cannot be empty or only whitespace"),
+        ],
+    )
+    def test_empty_or_whitespace_entity(self, scope, entity, expected_error):
+        """Test empty or whitespace-only entity values for both scopes."""
+        with pytest.raises(ValidationError) as exc_info:
+            AnalyticsWeek17BringBackQueryParams(scope=scope, entity=entity, limit=15)
+        assert expected_error in str(exc_info.value)
 
 
 class TestCombinationsQueryParams:
@@ -294,6 +363,15 @@ class TestRosterConstructionCountsQueryParams:
         with pytest.raises(ValidationError) as exc_info:
             RosterConstructionCountsQueryParams(required_players=["Tom@Brady"])
         assert "Invalid player name: Tom@Brady" in str(exc_info.value)
+
+    def test_empty_or_whitespace_player_name(self):
+        """Test empty or whitespace-only player names are rejected."""
+        with pytest.raises(ValidationError) as exc_info:
+            RosterConstructionCountsQueryParams(required_players=[""])
+        assert "Invalid player name: " in str(exc_info.value)
+        with pytest.raises(ValidationError) as exc_info:
+            RosterConstructionCountsQueryParams(required_players=["   "])
+        assert "Player name cannot be empty or only whitespace" in str(exc_info.value)
 
 
 class TestPositionStatsQueryParams:

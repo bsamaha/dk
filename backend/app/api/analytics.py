@@ -3,6 +3,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, Query, Request
+from pydantic import ValidationError
 
 from ..models.schemas import Week17BringBackPlayer, Week17BringBackResponse
 from ..models.validation import (
@@ -29,7 +30,6 @@ async def get_heat_map():
 
 @router.get("/stacks")
 async def get_stacks(
-    request: Request,
     n_rounds: int = Query(10, ge=1, le=20),
     limit: int = Query(100, ge=1, le=1000),
 ):
@@ -167,6 +167,9 @@ async def get_week17_bringback(
             players=players,
         )
 
+    except ValidationError:
+        # Let the global validation exception handler deal with this
+        raise
     except Exception:
         logger.exception(
             "Error getting Week 17 bring back data for %s: %s", scope, entity

@@ -485,6 +485,19 @@ def test_week17_bringback_no_data(monkeypatch):
     assert data["players"] == []
 
 
+def test_week17_bringback_invalid_team_entity():
+    """Test Week 17 bring back endpoint with invalid team abbreviation."""
+    response = client.get("/api/analytics/week17-bringback?scope=team&entity=INVALID")
+    assert response.status_code == 422
+
+    data = response.json()
+    assert "validation_errors" in data
+    assert any(
+        "Entity must be a valid team abbreviation" in str(error)
+        for error in data["validation_errors"]
+    )
+
+
 def test_week17_bringback_server_error(monkeypatch):
     """Test Week 17 bring back endpoint when server error occurs."""
 

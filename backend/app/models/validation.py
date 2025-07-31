@@ -3,7 +3,7 @@
 import re
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .schemas import AggregationType, Position, SortableColumn, SortOrder
 
@@ -80,7 +80,7 @@ class PlayerDetailsQueryParams(BaseModel):
     @field_validator("position")
     @classmethod
     def validate_position(cls, v):
-        if v not in ["QB", "RB", "WR", "TE"]:
+        if v not in Position._value2member_map_:
             raise ValueError("Invalid position")
         return v
 
@@ -133,26 +133,28 @@ class AnalyticsWeek17BringBackQueryParams(BaseModel):
             raise ValueError(f"Scope must be one of: {', '.join(valid_scopes)}")
         return v
 
-    @field_validator("entity")
-    @classmethod
-    def validate_entity(cls, v, info):
-        scope = info.data.get("scope")
+    @model_validator(mode="after")
+    def validate_scope_and_entity(self):
+        scope = getattr(self, "scope", None)
+        entity = getattr(self, "entity", None)
+
         if scope == "team":
-            # For team scope, entity should be a team abbreviation
-            if not re.match(TEAM_ABBR_PATTERN, v):
+            if not re.match(TEAM_ABBR_PATTERN, entity or ""):
                 raise ValueError(
                     'Entity must be a valid team abbreviation (e.g., "BUF", "PHI")'
                 )
         elif scope == "player":
-            # For player scope, entity should be a player name
-            if not re.match(PLAYER_NAME_PATTERN, v):
+            if not re.match(PLAYER_NAME_PATTERN, entity or ""):
                 raise ValueError("Entity must be a valid player name")
 
         # Remove extra whitespace
-        v = " ".join(v.split())
-        if not v.strip():
-            raise ValueError("Entity cannot be empty or only whitespace")
-        return v
+        if entity is not None:
+            cleaned_entity = " ".join(entity.split())
+            if not cleaned_entity.strip():
+                raise ValueError("Entity cannot be empty or only whitespace")
+            self.entity = cleaned_entity
+
+        return self
 
 
 class CombinationsQueryParams(BaseModel):
@@ -168,23 +170,24 @@ class CombinationsQueryParams(BaseModel):
         if not v:
             raise ValueError("At least one required player must be specified")
 
-        # Validate each player name
+        # Normalize and validate each player name
+        normalized_players = []
         for player in v:
-            if not re.match(PLAYER_NAME_PATTERN, player):
-                raise ValueError(f"Invalid player name: {player}")
-            # Remove extra whitespace
+            # Normalize whitespace first
             player_clean = " ".join(player.split())
             if not player_clean.strip():
                 raise ValueError("Player name cannot be empty or only whitespace")
+            if not re.match(PLAYER_NAME_PATTERN, player_clean):
+                raise ValueError(f"Invalid player name: {player_clean}")
+            normalized_players.append(player_clean)
 
         # Remove duplicates while preserving order
         seen = set()
         unique_players = []
-        for player in v:
-            player_clean = " ".join(player.split())
-            if player_clean not in seen:
-                seen.add(player_clean)
-                unique_players.append(player_clean)
+        for player in normalized_players:
+            if player not in seen:
+                seen.add(player)
+                unique_players.append(player)
 
         return unique_players
 

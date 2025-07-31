@@ -15,7 +15,6 @@ router = APIRouter()
 
 @router.get("/")
 async def get_player_combinations(
-    request: Request,
     required_players: List[str] = Query(...),
     n_rounds: int = Query(20, ge=1, le=20),
     limit: int = Query(100, ge=1, le=1000),
