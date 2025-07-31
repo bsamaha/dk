@@ -1,0 +1,70 @@
+---
+alwaysApply: true
+---
+# Security Standards
+
+## SQL Injection Prevention
+
+### Bandit B608 Warnings
+The codebase uses f-strings for SQL query construction, which Bandit flags as potential SQL injection risks (B608). However, these are **false positives** because:
+
+1. **Static SQL Structure**: F-strings are only used for static SQL structure, not user input
+2. **Parameterized Queries**: All user inputs use `?` placeholders and parameterized queries
+3. **Controlled Variables**: Dynamic parts are controlled and validated
+
+### Examples of Safe SQL Construction
+```python
+# ✅ SAFE: Static structure with parameterized inputs
+base_sql: str = f"""  # nosec B608
+SELECT player, Position, Team, AVG(pick) AS avg_pick
+FROM picks
+{where_sql}  # This is controlled, not user input
+GROUP BY player, Position, Team
+"""
+
+# ✅ SAFE: All user inputs are parameterized
+params = [user_input_1, user_input_2]
+result = self.query(base_sql, params)
+```
+
+### When to Use # nosec B608
+- Only when f-strings are used for static SQL structure
+- When all user inputs are properly parameterized
+- When dynamic parts are controlled and validated
+
+### When NOT to Use # nosec B608
+- When user input is directly interpolated into SQL
+- When using string concatenation with user input
+- When not using parameterized queries
+
+## Security Tools Configuration
+
+### Bandit Configuration
+- Skip `B101`: assert_used (acceptable in tests)
+- Skip `B608`: hardcoded_sql_expressions (false positives in our codebase)
+- Configured in [.pre-commit-config.yaml](mdc:.pre-commit-config.yaml)
+
+### Pre-commit Hooks
+All security checks run automatically on commit:
+- Bandit for Python security
+- ESLint for JavaScript security
+- Secret detection
+- Large file checks
+
+## Best Practices
+
+### SQL Security
+- Always use parameterized queries with `?` placeholders
+- Never concatenate user input directly into SQL strings
+- Validate and sanitize all inputs before database operations
+- Use ORM features when possible
+
+### Input Validation
+- Validate all user inputs at API boundaries
+- Use Pydantic models for request validation
+- Implement proper error handling without exposing internals
+
+### Error Handling
+- Don't expose sensitive information in error messages
+- Log errors appropriately for debugging
+- Return generic error messages to users

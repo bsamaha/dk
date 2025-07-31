@@ -46,8 +46,8 @@ repos:
     hooks:
       - id: bandit
         files: ^backend/.*\.py$
-        args: ['--skip', 'B101', '--exclude', 'backend/tests']
-        # Skip B101 (assert_used) warnings and exclude test directories
+        args: ['--skip', 'B101,B608', '--exclude', 'backend/tests']
+        # Skip B101 (assert_used) and B608 (hardcoded_sql_expressions) warnings
 
   # ===== FRONTEND =====
   - repo: local

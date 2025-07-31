@@ -1,0 +1,72 @@
+---
+globs: backend/app/**/*.py
+---
+# FastAPI Backend Standards
+
+Follow FastAPI best practices and Google Python style guide for the backend API.
+
+## Project Structure
+The FastAPI application follows this structure:
+- [backend/app/main.py](mdc:backend/app/main.py) - Main FastAPI application entry point
+- [backend/app/api/](mdc:backend/app/api/) - API route handlers
+- [backend/app/services/](mdc:backend/app/services/) - Business logic and external service integrations
+- [backend/app/models/](mdc:backend/app/models/) - Pydantic models and data schemas
+- [backend/app/core/](mdc:backend/app/core/) - Configuration, middleware, and core utilities
+
+## FastAPI Best Practices
+- Use Pydantic models for request/response validation
+- Use dependency injection for shared resources
+- Use proper HTTP status codes and error responses
+- Use async/await for I/O operations
+- Use type hints for all function parameters and return values
+- Use descriptive route names and HTTP methods
+
+## Example API Route
+```python
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from typing import List
+
+router = APIRouter(prefix="/api/v1", tags=["users"])
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+
+class UserResponse(BaseModel):
+    id: str
+    name: str
+    email: str
+
+@router.post("/users", response_model=UserResponse, status_code=201)
+async def create_user(user: UserCreate, db: Database = Depends(get_db)) -> UserResponse:
+    """Create a new user.
+
+    Args:
+        user: User creation data.
+        db: Database dependency.
+
+    Returns:
+        Created user data.
+
+    Raises:
+        HTTPException: If user creation fails.
+    """
+    try:
+        # ... implementation
+        return UserResponse(id=user_id, name=user.name, email=user.email)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+```
+
+## Service Layer Pattern
+- Keep API routes thin, move business logic to services
+- Use dependency injection for service dependencies
+- Handle external API calls and database operations in services
+- Use proper error handling and logging
+
+## Data Models
+- Use Pydantic models for data validation
+- Use descriptive field names and types
+- Add field descriptions for API documentation
+- Use enums for constrained values

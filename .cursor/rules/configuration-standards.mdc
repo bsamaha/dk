@@ -1,0 +1,34 @@
+---
+globs: *.yml,*.yaml,*.toml,*.json,Dockerfile,docker-compose*.yml,*.conf,*.sh
+---
+# Configuration and Infrastructure Standards
+
+## YAML/TOML Files
+- Use 2 spaces for indentation
+- Use snake_case for keys
+- Group related settings together
+- Add comments for complex configurations
+- Keep line length under 80 characters
+
+## Docker Standards
+- Use specific version tags, avoid `latest`
+- Use multi-stage builds when possible
+- Minimize the number of layers
+- Use `.dockerignore` to exclude unnecessary files
+- Use descriptive names for stages and images
+
+## Shell Scripts
+- Use 2 spaces for indentation
+- Use snake_case for variable and function names
+- Use UPPER_CASE for constants
+- Add shebang line: `#!/bin/bash`
+- Use `set -euo pipefail` for error handling
+- Quote all variables: `"$variable"`
+
+## Project Configuration Files
+- [docker-compose.yml](mdc:docker-compose.yml) - Main Docker Compose configuration
+- [docker-compose.dev.yml](mdc:docker-compose.dev.yml) - Development environment
+- [Dockerfile](mdc:Dockerfile) - Main application container
+- [pyproject.toml](mdc:pyproject.toml) - Python project configuration
+- [frontend/package.json](mdc:frontend/package.json) - Frontend dependencies
+- [.pre-commit-config.yaml](mdc:.pre-commit-config.yaml) - Pre-commit hooks

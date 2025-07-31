@@ -1,0 +1,49 @@
+---
+globs: *.py,pyproject.toml,requirements.txt
+---
+# Python Coding Standards (Google Style Guide)
+
+Follow the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html) for all Python code.
+
+## Key Standards
+- Use 4 spaces for indentation (no tabs)
+- Maximum line length: 80 characters
+- Use snake_case for functions, variables, and modules
+- Use PascalCase for classes
+- Use UPPER_CASE for constants
+- Include type hints for all function parameters and return values
+- Use Google-style docstrings with Args, Returns, and Raises sections
+
+## Project Structure
+The main Python backend is in [backend/](mdc:backend/) with:
+- Main application in [backend/app/](mdc:backend/app/)
+- API routes in [backend/app/api/](mdc:backend/app/api/)
+- Services in [backend/app/services/](mdc:backend/app/services/)
+- Models in [backend/app/models/](mdc:backend/app/models/)
+- Core configuration in [backend/app/core/](mdc:backend/app/core/)
+- Tests in [backend/tests/](mdc:backend/tests/)
+- Configuration in [pyproject.toml](mdc:pyproject.toml) and dependencies in [backend/requirements.txt](mdc:backend/requirements.txt)
+
+## Tools
+- Use `ruff` for linting and formatting (configured in [pyproject.toml](mdc:pyproject.toml))
+- Use `mypy` for type checking
+- Use `isort` for import sorting
+
+## Example Function
+```python
+def process_data(data: List[Dict[str, Any]]) -> pd.DataFrame:
+    """Process raw data into a structured DataFrame.
+
+    Args:
+        data: List of dictionaries containing raw data.
+
+    Returns:
+        DataFrame with processed data.
+
+    Raises:
+        ValueError: If data is empty or malformed.
+    """
+    if not data:
+        raise ValueError("Data cannot be empty")
+    # ... implementation
+```

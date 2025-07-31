@@ -1,0 +1,71 @@
+---
+globs: frontend/src/**/*.tsx,frontend/src/**/*.ts
+---
+# React/TypeScript Frontend Patterns
+
+Follow React best practices and TypeScript patterns for the frontend application.
+
+## Project Architecture
+The React application uses:
+- [frontend/src/App.tsx](mdc:frontend/src/App.tsx) - Main application component
+- [frontend/src/components/](mdc:frontend/src/components/) - Reusable UI components
+- [frontend/src/services/](mdc:frontend/src/services/) - API service layer
+- [frontend/src/hooks/](mdc:frontend/src/hooks/) - Custom React hooks
+- [frontend/src/types/](mdc:frontend/src/types/) - TypeScript type definitions
+- [frontend/src/store/](mdc:frontend/src/store/) - State management (Zustand)
+- [frontend/src/contexts/](mdc:frontend/src/contexts/) - React contexts
+
+## State Management
+- Use Zustand for global state management
+- Use React Query for server state management
+- Use local state for component-specific data
+- Use React Context sparingly, prefer Zustand for shared state
+
+## Component Patterns
+- Use functional components with hooks
+- Use TypeScript interfaces for props
+- Destructure props at the top of components
+- Use proper prop validation and default values
+- Keep components focused and single-purpose
+
+## Example Component
+```typescript
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { User } from '../types/user';
+
+interface UserListProps {
+  onUserSelect: (user: User) => void;
+  className?: string;
+}
+
+const UserList: React.FC<UserListProps> = ({ onUserSelect, className = '' }) => {
+  const { data: users, isLoading, error } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers,
+  });
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading users</div>;
+
+  return (
+    <div className={`user-list ${className}`}>
+      {users?.map((user) => (
+        <UserCard key={user.id} user={user} onSelect={onUserSelect} />
+      ))}
+    </div>
+  );
+};
+```
+
+## API Service Pattern
+- Use Axios for HTTP requests
+- Create typed service functions
+- Use React Query for caching and state management
+- Handle errors gracefully with proper error boundaries
+
+## Custom Hooks
+- Extract reusable logic into custom hooks
+- Use descriptive hook names starting with 'use'
+- Return objects with clear property names
+- Handle loading and error states
