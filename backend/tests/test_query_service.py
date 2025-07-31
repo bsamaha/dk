@@ -526,3 +526,36 @@ def test_week17_matchups_file_integration(query_service):
     # Verify bidirectional relationship
     reverse_opponent = query_service.get_week17_opponent(opponent)
     assert reverse_opponent == "BUF", "Week 17 matchups should be bidirectional"
+
+
+def test_validate_required_players_edge_cases(query_service):
+    """Test required_players validation with edge cases."""
+    # Test empty list
+    with pytest.raises(ValueError, match="required_players cannot be empty"):
+        query_service._validate_required_players([])
+
+    # Test non-list input
+    with pytest.raises(ValueError, match="required_players must be a list"):
+        query_service._validate_required_players("not a list")
+
+    # Test list with non-string elements
+    with pytest.raises(ValueError, match="Player at index 0 must be a string"):
+        query_service._validate_required_players([123])
+
+    # Test empty string
+    with pytest.raises(ValueError, match="Player at index 0 cannot be empty"):
+        query_service._validate_required_players([""])
+
+    # Test whitespace-only string
+    with pytest.raises(ValueError, match="Player at index 1 cannot be empty"):
+        query_service._validate_required_players(["Josh Allen", "   "])
+
+    # Test valid input with whitespace
+    result = query_service._validate_required_players(
+        ["  Josh Allen  ", "Stefon Diggs"]
+    )
+    assert result == ["Josh Allen", "Stefon Diggs"]
+
+    # Test valid input without whitespace
+    result = query_service._validate_required_players(["Josh Allen", "Stefon Diggs"])
+    assert result == ["Josh Allen", "Stefon Diggs"]

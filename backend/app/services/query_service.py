@@ -469,6 +469,42 @@ class QueryService:
             for row in df.iter_rows(named=True)
         ]
 
+    def _validate_required_players(self, required_players: List[str]) -> List[str]:
+        """Validate and clean required_players list.
+
+        Args:
+            required_players: List of player names to validate
+
+        Returns:
+            Cleaned list of non-empty player names
+
+        Raises:
+            ValueError: If validation fails
+        """
+        if not isinstance(required_players, list):
+            raise ValueError("required_players must be a list")
+
+        if not required_players:
+            raise ValueError("required_players cannot be empty")
+
+        # Clean and validate each player name
+        cleaned_players = []
+        for i, player in enumerate(required_players):
+            if not isinstance(player, str):
+                raise ValueError(
+                    f"Player at index {i} must be a string, got {type(player)}"
+                )
+
+            cleaned_player = player.strip()
+            if not cleaned_player:
+                raise ValueError(
+                    f"Player at index {i} cannot be empty or whitespace-only"
+                )
+
+            cleaned_players.append(cleaned_player)
+
+        return cleaned_players
+
     def get_player_combinations(
         self,
         required_players: List[str],
@@ -477,12 +513,6 @@ class QueryService:
     ) -> List[Dict[str, Any]]:
         """Return teams that drafted all required players within first n_rounds."""
         # Validate inputs
-        if not isinstance(required_players, list):
-            raise ValueError("required_players must be a list")
-        if not all(isinstance(p, str) and p.strip() for p in required_players):
-            raise ValueError("All required_players must be non-empty strings")
-        if len(required_players) > 50:
-            raise ValueError("required_players list is too long (max 50)")
         if not isinstance(n_rounds, int) or n_rounds < 1 or n_rounds > 50:
             raise ValueError("n_rounds must be between 1 and 50")
         if not isinstance(limit, int) or limit < 1 or limit > 1000:
@@ -490,6 +520,9 @@ class QueryService:
 
         if not required_players:
             return []
+
+        # Validate and clean required_players
+        required_players = self._validate_required_players(required_players)
 
         # Use parameterized query for player names
         placeholders: str = ", ".join(["?" for _ in required_players])
@@ -816,13 +849,8 @@ class QueryService:
         params: List[Any] = []
 
         if required_players:
-            # Validate required_players
-            if not isinstance(required_players, list) or not all(
-                isinstance(p, str) for p in required_players
-            ):
-                raise ValueError("required_players must be a list of strings")
-            if len(required_players) > 50:  # Reasonable limit
-                raise ValueError("required_players list is too long (max 50)")
+            # Validate and clean required_players
+            required_players = self._validate_required_players(required_players)
 
             logger.info(
                 "Filtering roster constructions for teams with required players: %s",
