@@ -1,28 +1,11 @@
 """Comprehensive input validation schemas for API endpoints."""
 
 import re
-from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from .schemas import AggregationType, Position, SortableColumn, SortOrder
-
-
-class MetricType(str, Enum):
-    """Metric types for draft slot correlation."""
-
-    COUNT = "count"
-    PERCENT = "percent"
-    RATIO = "ratio"
-
-
-class ScopeType(str, Enum):
-    """Scope types for Week 17 bring back analytics."""
-
-    TEAM = "team"
-    PLAYER = "player"
-
 
 # Validation patterns
 PLAYER_NAME_PATTERN = r"^[A-Za-z\s\.\-']{1,50}$"
@@ -42,7 +25,8 @@ class PlayersQueryParams(BaseModel):
     )
     sort_order: SortOrder = Field(SortOrder.ASC, description="Sort order")
 
-    @validator("search_term")
+    @field_validator("search_term")
+    @classmethod
     def validate_search_term(cls, v):
         if v is not None:
             # Remove extra whitespace
@@ -61,7 +45,8 @@ class PlayerSearchQueryParams(BaseModel):
     q: str = Field(..., description="Search query")
     limit: int = Field(50, description="Maximum number of results", ge=1, le=100)
 
-    @validator("q")
+    @field_validator("q")
+    @classmethod
     def validate_search_query(cls, v):
         # Remove extra whitespace
         v = " ".join(v.split())
@@ -80,7 +65,8 @@ class PlayerDetailsQueryParams(BaseModel):
     position: str = Field(..., description="Player position")
     team: str = Field(..., description="Player team")
 
-    @validator("player_name")
+    @field_validator("player_name")
+    @classmethod
     def validate_player_name(cls, v):
         # Remove extra whitespace
         v = " ".join(v.split())
@@ -91,13 +77,15 @@ class PlayerDetailsQueryParams(BaseModel):
             raise ValueError("Player name contains invalid characters")
         return v
 
-    @validator("position")
+    @field_validator("position")
+    @classmethod
     def validate_position(cls, v):
         if v not in ["QB", "RB", "WR", "TE"]:
             raise ValueError("Invalid position")
         return v
 
-    @validator("team")
+    @field_validator("team")
+    @classmethod
     def validate_team(cls, v):
         if not re.match(TEAM_ABBR_PATTERN, v):
             raise ValueError('Team must be a valid abbreviation (e.g., "BUF", "PHI")')
@@ -121,7 +109,8 @@ class AnalyticsDraftSlotQueryParams(BaseModel):
         10, description="Minimum number of teams required", ge=1, le=1000
     )
 
-    @validator("metric")
+    @field_validator("metric")
+    @classmethod
     def validate_metric(cls, v):
         valid_metrics = ["count", "percent", "ratio"]
         if v not in valid_metrics:
@@ -136,23 +125,25 @@ class AnalyticsWeek17BringBackQueryParams(BaseModel):
     entity: str = Field(..., description="Team abbreviation or player name")
     limit: int = Field(10, description="Number of top players to return", ge=1, le=25)
 
-    @validator("scope")
+    @field_validator("scope")
+    @classmethod
     def validate_scope(cls, v):
         valid_scopes = ["team", "player"]
         if v not in valid_scopes:
             raise ValueError(f'Scope must be one of: {", ".join(valid_scopes)}')
         return v
 
-    @validator("entity")
-    def validate_entity(cls, v, values):
-        scope = values.get("scope")
-        if scope == ScopeType.TEAM:
+    @field_validator("entity")
+    @classmethod
+    def validate_entity(cls, v, info):
+        scope = info.data.get("scope")
+        if scope == "team":
             # For team scope, entity should be a team abbreviation
             if not re.match(TEAM_ABBR_PATTERN, v):
                 raise ValueError(
                     'Entity must be a valid team abbreviation (e.g., "BUF", "PHI")'
                 )
-        elif scope == ScopeType.PLAYER:
+        elif scope == "player":
             # For player scope, entity should be a player name
             if not re.match(PLAYER_NAME_PATTERN, v):
                 raise ValueError("Entity must be a valid player name")
@@ -171,7 +162,8 @@ class CombinationsQueryParams(BaseModel):
     n_rounds: int = Field(20, description="Number of rounds to consider", ge=1, le=20)
     limit: int = Field(100, description="Maximum number of results", ge=1, le=1000)
 
-    @validator("required_players")
+    @field_validator("required_players")
+    @classmethod
     def validate_required_players(cls, v):
         if not v:
             raise ValueError("At least one required player must be specified")
@@ -204,7 +196,8 @@ class RosterConstructionCountsQueryParams(BaseModel):
         None, description="List of required players"
     )
 
-    @validator("required_players")
+    @field_validator("required_players")
+    @classmethod
     def validate_required_players(cls, v):
         if v is not None:
             # Validate each player name
@@ -255,7 +248,8 @@ class PlayerFilterRequest(BaseModel):
     )
     sort_order: Optional[SortOrder] = Field(SortOrder.ASC, description="Sort order")
 
-    @validator("search_term")
+    @field_validator("search_term")
+    @classmethod
     def validate_search_term(cls, v):
         if v is not None:
             # Remove extra whitespace

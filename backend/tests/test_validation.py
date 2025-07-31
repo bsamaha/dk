@@ -1,7 +1,7 @@
 """Tests for input validation schemas."""
 
 import pytest
-from app.models.schemas import Position, SortableColumn, SortOrder
+from app.models.schemas import AggregationType, Position, SortableColumn, SortOrder
 from app.models.validation import (
     AnalyticsDraftSlotQueryParams,
     AnalyticsStacksQueryParams,
@@ -55,8 +55,8 @@ class TestPlayersQueryParams:
                 search_term="   ",
                 limit=100,
                 offset=0,
-                sort_by="avg_pick",
-                sort_order="asc",
+                sort_by=SortableColumn.AVG_PICK,
+                sort_order=SortOrder.ASC,
             )
         assert "Search term cannot be empty or only whitespace" in str(exc_info.value)
 
@@ -68,10 +68,10 @@ class TestPlayersQueryParams:
                 search_term=None,
                 limit=0,
                 offset=0,
-                sort_by="avg_pick",
-                sort_order="asc",
+                sort_by=SortableColumn.AVG_PICK,
+                sort_order=SortOrder.ASC,
             )
-        assert "ensure this value is greater than or equal to 1" in str(exc_info.value)
+        assert "Input should be greater than or equal to 1" in str(exc_info.value)
 
     def test_invalid_offset(self):
         """Test invalid offset."""
@@ -81,10 +81,10 @@ class TestPlayersQueryParams:
                 search_term=None,
                 limit=100,
                 offset=-1,
-                sort_by="avg_pick",
-                sort_order="asc",
+                sort_by=SortableColumn.AVG_PICK,
+                sort_order=SortOrder.ASC,
             )
-        assert "ensure this value is greater than or equal to 0" in str(exc_info.value)
+        assert "Input should be greater than or equal to 0" in str(exc_info.value)
 
 
 class TestPlayerSearchQueryParams:
@@ -99,13 +99,13 @@ class TestPlayerSearchQueryParams:
     def test_invalid_search_query(self):
         """Test invalid search query."""
         with pytest.raises(ValidationError) as exc_info:
-            PlayerSearchQueryParams(q="Tom@Brady")
+            PlayerSearchQueryParams(q="Tom@Brady", limit=50)
         assert "Search query contains invalid characters" in str(exc_info.value)
 
     def test_empty_search_query(self):
         """Test empty search query."""
         with pytest.raises(ValidationError) as exc_info:
-            PlayerSearchQueryParams(q="   ")
+            PlayerSearchQueryParams(q="   ", limit=50)
         assert "Search query cannot be empty or only whitespace" in str(exc_info.value)
 
 
@@ -154,14 +154,14 @@ class TestAnalyticsStacksQueryParams:
     def test_invalid_n_rounds(self):
         """Test invalid n_rounds."""
         with pytest.raises(ValidationError) as exc_info:
-            AnalyticsStacksQueryParams(n_rounds=25)
-        assert "ensure this value is less than or equal to 20" in str(exc_info.value)
+            AnalyticsStacksQueryParams(n_rounds=25, limit=100)
+        assert "Input should be less than or equal to 20" in str(exc_info.value)
 
     def test_invalid_limit(self):
         """Test invalid limit."""
         with pytest.raises(ValidationError) as exc_info:
-            AnalyticsStacksQueryParams(limit=2000)
-        assert "ensure this value is less than or equal to 1000" in str(exc_info.value)
+            AnalyticsStacksQueryParams(limit=2000, n_rounds=10)
+        assert "Input should be less than or equal to 1000" in str(exc_info.value)
 
 
 class TestAnalyticsDraftSlotQueryParams:
@@ -180,13 +180,17 @@ class TestAnalyticsDraftSlotQueryParams:
     def test_invalid_slot(self):
         """Test invalid slot."""
         with pytest.raises(ValidationError) as exc_info:
-            AnalyticsDraftSlotQueryParams(slot=15)
-        assert "ensure this value is less than or equal to 12" in str(exc_info.value)
+            AnalyticsDraftSlotQueryParams(
+                slot=15, metric="percent", top_n=25, min_teams=10
+            )
+        assert "Input should be less than or equal to 12" in str(exc_info.value)
 
     def test_invalid_metric(self):
         """Test invalid metric."""
         with pytest.raises(ValidationError) as exc_info:
-            AnalyticsDraftSlotQueryParams(slot=5, metric="invalid")
+            AnalyticsDraftSlotQueryParams(
+                slot=5, metric="invalid", top_n=25, min_teams=10
+            )
         assert "Metric must be one of: count, percent, ratio" in str(exc_info.value)
 
 
@@ -249,19 +253,23 @@ class TestCombinationsQueryParams:
     def test_empty_required_players(self):
         """Test empty required players."""
         with pytest.raises(ValidationError) as exc_info:
-            CombinationsQueryParams(required_players=[])
+            CombinationsQueryParams(required_players=[], n_rounds=20, limit=100)
         assert "At least one required player must be specified" in str(exc_info.value)
 
     def test_invalid_player_name(self):
         """Test invalid player name."""
         with pytest.raises(ValidationError) as exc_info:
-            CombinationsQueryParams(required_players=["Tom@Brady"])
+            CombinationsQueryParams(
+                required_players=["Tom@Brady"], n_rounds=20, limit=100
+            )
         assert "Invalid player name: Tom@Brady" in str(exc_info.value)
 
     def test_duplicate_players(self):
         """Test duplicate players are removed."""
         params = CombinationsQueryParams(
-            required_players=["Tom Brady", "Tom Brady", "Mike Evans"]
+            required_players=["Tom Brady", "Tom Brady", "Mike Evans"],
+            n_rounds=20,
+            limit=100,
         )
         assert params.required_players == ["Tom Brady", "Mike Evans"]
 
@@ -293,12 +301,14 @@ class TestPositionStatsQueryParams:
 
     def test_valid_params(self):
         """Test valid parameters."""
-        params = PositionStatsQueryParams(position="QB", aggregation="mean")
-        assert params.position == "QB"
-        assert params.aggregation == "mean"
+        params = PositionStatsQueryParams(
+            position=Position.QB, aggregation=AggregationType.MEAN
+        )
+        assert params.position == Position.QB
+        assert params.aggregation == AggregationType.MEAN
 
     def test_invalid_position(self):
         """Test invalid position."""
         with pytest.raises(ValidationError) as exc_info:
-            PositionStatsQueryParams(position="XX")
+            PositionStatsQueryParams(position="XX", aggregation=AggregationType.MEAN)  # type: ignore
         assert "Input should be 'QB', 'RB', 'WR' or 'TE'" in str(exc_info.value)
