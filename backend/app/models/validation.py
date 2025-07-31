@@ -114,7 +114,7 @@ class AnalyticsDraftSlotQueryParams(BaseModel):
     def validate_metric(cls, v):
         valid_metrics = ["count", "percent", "ratio"]
         if v not in valid_metrics:
-            raise ValueError(f'Metric must be one of: {", ".join(valid_metrics)}')
+            raise ValueError(f"Metric must be one of: {', '.join(valid_metrics)}")
         return v
 
 
@@ -130,7 +130,7 @@ class AnalyticsWeek17BringBackQueryParams(BaseModel):
     def validate_scope(cls, v):
         valid_scopes = ["team", "player"]
         if v not in valid_scopes:
-            raise ValueError(f'Scope must be one of: {", ".join(valid_scopes)}')
+            raise ValueError(f"Scope must be one of: {', '.join(valid_scopes)}")
         return v
 
     @field_validator("entity")
