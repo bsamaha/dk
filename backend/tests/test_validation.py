@@ -124,6 +124,19 @@ class TestPlayerSearchQueryParams:
         params = PlayerSearchQueryParams(q="Tom Brady", limit=100)
         assert params.limit == 100
 
+    def test_query_at_maximum_length(self):
+        """Test search query at the maximum allowed length (30 characters)."""
+        max_length_query = "A" * 30
+        params = PlayerSearchQueryParams(q=max_length_query, limit=10)
+        assert params.q == max_length_query
+
+    def test_query_above_maximum_length(self):
+        """Test search query above the maximum allowed length (31 characters)."""
+        too_long_query = "A" * 31
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerSearchQueryParams(q=too_long_query, limit=10)
+        assert "Search query contains invalid characters" in str(exc_info.value)
+
     def test_limit_above_maximum(self):
         """Test limit above maximum allowed value."""
         with pytest.raises(ValidationError) as exc_info:
@@ -290,6 +303,27 @@ class TestAnalyticsWeek17BringBackQueryParams:
                 scope="player", entity="Tom@Brady", limit=15
             )
         assert "Entity must be a valid player name" in str(exc_info.value)
+
+    def test_player_entity_max_length(self):
+        """Test player entity at the maximum allowed length (50 characters)."""
+        valid_name = "A" * 50
+        try:
+            AnalyticsWeek17BringBackQueryParams(
+                scope="player", entity=valid_name, limit=15
+            )
+        except ValidationError:
+            pytest.fail("ValidationError raised for valid 50-character player name")
+
+    def test_player_entity_exceeds_max_length(self):
+        """Test player entity exceeding the maximum allowed length (51 characters)."""
+        invalid_name = "B" * 51
+        with pytest.raises(ValidationError) as exc_info:
+            AnalyticsWeek17BringBackQueryParams(
+                scope="player", entity=invalid_name, limit=15
+            )
+        assert "Entity must be a valid player name" in str(
+            exc_info.value
+        ) or "ensure this value has at most 50 characters" in str(exc_info.value)
 
     @pytest.mark.parametrize(
         "scope,entity,expected_error",
