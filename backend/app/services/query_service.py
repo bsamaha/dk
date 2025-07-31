@@ -190,12 +190,26 @@ class QueryService:
         sort_by: SortableColumn = SortableColumn.AVG_PICK,
         sort_order: SortOrder = SortOrder.ASC,
     ) -> Tuple[List[Player], int]:
-        """Return a paginated list of players with aggregated draft statistics."""
-        total_drafts = self.total_drafts if self.total_drafts > 0 else 1
+        """Get players with their average draft position and other stats."""
+        # Validate inputs
+        if not isinstance(limit, int) or limit < 1 or limit > 1000:
+            raise ValueError("limit must be between 1 and 1000")
+        if not isinstance(offset, int) or offset < 0:
+            raise ValueError("offset must be non-negative")
+        if not isinstance(sort_by, SortableColumn):
+            raise ValueError("sort_by must be a valid SortableColumn")
+        if not isinstance(sort_order, SortOrder):
+            raise ValueError("sort_order must be a valid SortOrder")
 
-        # Build dynamic WHERE clause based on optional filters
-        where_clauses: List[str] = []
-        params: List[Any] = []
+        # Get total drafts for percentage calculation
+        total_drafts_df = self.query("SELECT COUNT(DISTINCT draft) AS cnt FROM picks")
+        total_drafts = (
+            int(total_drafts_df["cnt"][0]) if not total_drafts_df.is_empty() else 1
+        )
+
+        # Build WHERE clause with parameterized queries
+        where_clauses = []
+        params = []
 
         if positions:
             # Use parameterized query for positions
@@ -210,7 +224,7 @@ class QueryService:
 
         where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
 
-        # Base aggregation SQL
+        # Base aggregation SQL - safe as it uses parameterized queries
         base_sql = f"""
         SELECT
             player,
@@ -219,31 +233,64 @@ class QueryService:
             AVG(pick)      AS avg_pick,
             MIN(pick)      AS min_pick,
             MAX(pick)      AS max_pick,
-            COUNT(*) * 100.0 / {total_drafts} AS draft_percentage
+            COUNT(*) * 100.0 / ? AS draft_percentage
         FROM picks
         {where_sql}
         GROUP BY player, Position, Team
-        """  # nosec B608  # Safe: total_drafts is computed from database, where_sql uses parameterized queries
+        """
+
+        # Add total_drafts to params for the base query
+        base_params = [total_drafts] + params
 
         # Total count BEFORE pagination
         total_count_df = self.query(
-            f"SELECT COUNT(*) AS cnt FROM ({base_sql})",  # nosec B608  # Safe: base_sql uses parameterized queries
-            params,
+            "SELECT COUNT(*) AS cnt FROM (" + base_sql + ")",
+            base_params,
         )
         total_count: int = (
             int(total_count_df["cnt"][0]) if not total_count_df.is_empty() else 0
         )
 
-        # Apply order, pagination
+        # Validate sort_by against allowed columns
+        allowed_columns = {
+            SortableColumn.AVG_PICK: "avg_pick",
+            SortableColumn.NAME: "player",
+            SortableColumn.POSITION: "position",
+            SortableColumn.TEAM: "team",
+            SortableColumn.DRAFT_PERCENTAGE: "draft_percentage",
+        }
+
+        if sort_by not in allowed_columns:
+            raise ValueError(f"Invalid sort_by: {sort_by}")
+
+        order_column = allowed_columns[sort_by]
         order_dir = "DESC" if sort_order == SortOrder.DESC else "ASC"
-        final_sql = (
-            f"{base_sql}\n"
-            f"ORDER BY {sort_by.value} {order_dir}\n"
-            f"LIMIT {limit} OFFSET {offset}"
-        )
+
+        # Final query with safe ORDER BY, LIMIT, and OFFSET using parameters
+        final_sql = f"""
+        SELECT *
+        FROM (
+            SELECT
+                player,
+                Position,
+                Team,
+                AVG(pick)      AS avg_pick,
+                MIN(pick)      AS min_pick,
+                MAX(pick)      AS max_pick,
+                COUNT(*) * 100.0 / ? AS draft_percentage
+            FROM picks
+            {where_sql}
+            GROUP BY player, Position, Team
+        ) subquery
+        ORDER BY {order_column} {order_dir}
+        LIMIT ? OFFSET ?
+        """
+
+        # Build final params: [total_drafts, *where_params, limit, offset]
+        final_params = [total_drafts] + params + [limit, offset]
 
         logger.info("Running players query: limit=%d offset=%d", limit, offset)
-        df: pl.DataFrame = self.query(final_sql, params)
+        df: pl.DataFrame = self.query(final_sql, final_params)
 
         if df.is_empty():
             return [], total_count
@@ -421,6 +468,18 @@ class QueryService:
         limit: int = 100,
     ) -> List[Dict[str, Any]]:
         """Return teams that drafted all required players within first n_rounds."""
+        # Validate inputs
+        if not isinstance(required_players, list):
+            raise ValueError("required_players must be a list")
+        if not all(isinstance(p, str) and p.strip() for p in required_players):
+            raise ValueError("All required_players must be non-empty strings")
+        if len(required_players) > 50:
+            raise ValueError("required_players list is too long (max 50)")
+        if not isinstance(n_rounds, int) or n_rounds < 1 or n_rounds > 50:
+            raise ValueError("n_rounds must be between 1 and 50")
+        if not isinstance(limit, int) or limit < 1 or limit > 1000:
+            raise ValueError("limit must be between 1 and 1000")
+
         if not required_players:
             return []
 
@@ -428,7 +487,7 @@ class QueryService:
         placeholders = ", ".join(["?" for _ in required_players])
         num_required = len(required_players)
 
-        sql = f"""
+        sql = """
         WITH filtered AS (
             SELECT draft,
                    team_id,
@@ -441,7 +500,7 @@ class QueryService:
         ), target_teams AS (
             SELECT team_id
             FROM filtered
-            WHERE player IN ({placeholders})
+            WHERE player IN ({})
             GROUP BY team_id
             HAVING COUNT(DISTINCT player) = ?
         )
@@ -449,7 +508,7 @@ class QueryService:
         FROM filtered
         WHERE team_id IN (SELECT team_id FROM target_teams)
         ORDER BY draft, draft_position, team_id, round;
-        """  # nosec B608  # Safe: placeholders is generated from parameterized query
+        """.format(placeholders)
 
         # Build parameters list: [n_rounds, *required_players, num_required]
         params = [n_rounds] + required_players + [num_required]
@@ -518,6 +577,12 @@ class QueryService:
 
     def get_stacks(self, n_rounds: int = 10, limit: int = 100) -> List[Dict[str, Any]]:
         """Find QB/receiver stacks drafted within first n_rounds."""
+        # Validate inputs
+        if not isinstance(n_rounds, int) or n_rounds < 1 or n_rounds > 50:
+            raise ValueError("n_rounds must be between 1 and 50")
+        if not isinstance(limit, int) or limit < 1 or limit > 1000:
+            raise ValueError("limit must be between 1 and 1000")
+
         sql = """
         WITH early AS (
             SELECT draft, team_id, player, Position, Team AS nfl_team, round
@@ -565,8 +630,15 @@ class QueryService:
         min_teams: int = 10,
     ) -> List[Dict[str, Any]]:
         """Return players most correlated with a given draft slot."""
+        # Validate inputs
+        if not isinstance(slot, int) or slot < 1 or slot > 20:
+            raise ValueError("slot must be between 1 and 20")
         if metric not in {"count", "percent", "ratio"}:
             raise ValueError("metric must be 'count', 'percent', or 'ratio'")
+        if not isinstance(top_n, int) or top_n < 1 or top_n > 100:
+            raise ValueError("top_n must be between 1 and 100")
+        if not isinstance(min_teams, int) or min_teams < 1 or min_teams > 1000:
+            raise ValueError("min_teams must be between 1 and 1000")
 
         # Pre-compute totals
         totals_sql = """
@@ -725,27 +797,36 @@ class QueryService:
         params = []
 
         if required_players:
+            # Validate required_players
+            if not isinstance(required_players, list) or not all(
+                isinstance(p, str) for p in required_players
+            ):
+                raise ValueError("required_players must be a list of strings")
+            if len(required_players) > 50:  # Reasonable limit
+                raise ValueError("required_players list is too long (max 50)")
+
             logger.info(
-                f"Filtering roster constructions for teams with required players: {required_players}"
+                "Filtering roster constructions for teams with required players: %s",
+                required_players,
             )
             # Get teams that have all required players
             placeholders = ", ".join(["?" for _ in required_players])
-            where_clause = f"""
+            where_clause = """
             AND team_id IN (
                 SELECT team_id
                 FROM picks
-                WHERE player IN ({placeholders})
+                WHERE player IN ({})
                 GROUP BY team_id
                 HAVING COUNT(DISTINCT player) = ?
             )
-            """  # nosec B608
+            """.format(placeholders)
             params = required_players + [len(required_players)]
 
-        sql = f"""
+        sql = """
         WITH position_counts AS (
             SELECT draft, team_id, Position, COUNT(*) as count
             FROM picks
-            WHERE 1=1 {where_clause}
+            WHERE 1=1 {}
             GROUP BY draft, team_id, Position
         )
         SELECT
@@ -764,7 +845,7 @@ class QueryService:
         )
         GROUP BY QB, RB, WR, TE
         ORDER BY count DESC
-        """  # nosec B608
+        """.format(where_clause)
 
         result = self.query(sql, params)
         return result.to_dicts()
