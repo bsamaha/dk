@@ -230,7 +230,8 @@ class QueryService:
         where_sql: str = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
 
         # Base aggregation SQL - safe as it uses parameterized queries
-        base_sql: str = f"""  # nosec B608
+        # nosec B608
+        base_sql: str = f"""
         SELECT
             player,
             Position,
@@ -248,8 +249,9 @@ class QueryService:
         base_params: List[Any] = [total_drafts] + params
 
         # Total count BEFORE pagination
+        # nosec B608
         total_count_df: pl.DataFrame = self.query(
-            "SELECT COUNT(*) AS cnt FROM (" + base_sql + ")",  # nosec B608
+            "SELECT COUNT(*) AS cnt FROM (" + base_sql + ")",
             base_params,
         )
         total_count: int = (
@@ -272,7 +274,8 @@ class QueryService:
         order_dir: str = "DESC" if sort_order == SortOrder.DESC else "ASC"
 
         # Final query with safe ORDER BY, LIMIT, and OFFSET using parameters
-        final_sql: str = f"""  # nosec B608
+        # nosec B608
+        final_sql: str = f"""
         SELECT *
         FROM (
             SELECT
@@ -492,7 +495,8 @@ class QueryService:
         placeholders: str = ", ".join(["?" for _ in required_players])
         num_required: int = len(required_players)
 
-        sql: str = f"""  # nosec B608
+        # nosec B608
+        sql: str = f"""
         WITH filtered AS (
             SELECT draft,
                    team_id,
@@ -826,7 +830,8 @@ class QueryService:
             )
             # Get teams that have all required players
             placeholders: str = ", ".join(["?" for _ in required_players])
-            where_clause = f"""  # nosec B608
+            # nosec B608
+            where_clause = f"""
             AND team_id IN (
                 SELECT team_id
                 FROM picks
@@ -837,7 +842,8 @@ class QueryService:
             """
             params = required_players + [len(required_players)]
 
-        sql: str = f"""  # nosec B608
+        # nosec B608
+        sql: str = f"""
         WITH position_counts AS (
             SELECT draft, team_id, Position, COUNT(*) as count
             FROM picks
