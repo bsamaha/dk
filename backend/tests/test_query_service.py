@@ -281,12 +281,12 @@ def test_query_method_with_params(query_service):
     assert result["count"][0] > 0
 
 
-@patch("app.services.query_service.Path")
-def test_get_data_path_error_handling(mock_path):
+@patch("app.services.query_service.QueryService._validate_and_sanitize_path")
+def test_get_data_path_error_handling(mock_validate):
     """Test error handling when data file doesn't exist."""
-    mock_path.return_value.exists.return_value = False
+    mock_validate.side_effect = ValueError("Path does not exist: /fake/path")
 
-    with pytest.raises(ValueError, match="Invalid or unsafe path"):
+    with pytest.raises(ValueError, match="Path does not exist"):
         QueryService()
 
 

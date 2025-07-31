@@ -46,10 +46,6 @@ class QueryService:
         data_path: str = self._get_data_path()
         logger.info("Attaching parquet file to DuckDB: %s", data_path)
 
-        # Validate path safety
-        if not Path(data_path).exists():
-            raise ValueError(f"Invalid or unsafe path: {data_path}")
-
         # Escape single quotes for SQL literal
         sanitized_path: str = data_path.replace("'", "''")
 
@@ -93,37 +89,105 @@ class QueryService:
         )["player"].to_list()
 
     @staticmethod
+    def _validate_and_sanitize_path(file_path: Path, allowed_dir: Path) -> Path:
+        """Validate and sanitize file path to prevent path traversal attacks.
+
+        Args:
+            file_path: The file path to validate
+            allowed_dir: The allowed directory that the file must be within
+
+        Returns:
+            Resolved and validated Path object
+
+        Raises:
+            ValueError: If path is invalid, unsafe, or outside allowed directory
+        """
+        try:
+            # Check for suspicious path components BEFORE resolving
+            path_str = str(file_path)
+            suspicious_patterns = [
+                "..",  # Directory traversal
+                "~",  # Home directory expansion
+                "//",  # Multiple slashes
+                "\\",  # Windows path separators (potential injection)
+            ]
+
+            for pattern in suspicious_patterns:
+                if pattern in path_str:
+                    raise ValueError(
+                        f"Path contains suspicious pattern '{pattern}': {file_path}"
+                    )
+
+            # Resolve the path to handle any symlinks or relative components
+            resolved_path = file_path.resolve()
+            allowed_dir_resolved = allowed_dir.resolve()
+
+            # Check if the resolved path is within the allowed directory
+            try:
+                resolved_path.relative_to(allowed_dir_resolved)
+            except ValueError:
+                raise ValueError(
+                    f"Path {resolved_path} is outside allowed directory {allowed_dir_resolved}"
+                )
+
+            # Additional security checks
+            if not resolved_path.exists():
+                raise ValueError(f"Path does not exist: {resolved_path}")
+
+            if not resolved_path.is_file():
+                raise ValueError(f"Path is not a file: {resolved_path}")
+
+            return resolved_path
+
+        except (OSError, FileNotFoundError) as e:
+            raise ValueError(f"Invalid path: {file_path} - {str(e)}")
+        except Exception:
+            # Log unexpected exceptions to aid debugging
+            logger.exception(f"Unexpected error while validating path: {file_path}")
+            raise
+
+    @staticmethod
     def _get_data_path() -> str:
         """Return absolute path to the parquet data file."""
         # From backend/app/services/query_service.py, go up to project root
         project_root: Path = Path(__file__).parent.parent.parent.parent
-        data_path: Path = project_root / "data" / "updated_bestball_data.parquet"
-        return str(data_path.resolve())
+        data_dir: Path = project_root / "data"
+        data_path: Path = data_dir / "updated_bestball_data.parquet"
+
+        # Validate the path is safe
+        validated_path = QueryService._validate_and_sanitize_path(data_path, data_dir)
+        return str(validated_path)
 
     def _load_week17_matchups(self) -> None:
         """Load Week 17 matchups data into DuckDB."""
         # Get path to Week 17 matchups file
         project_root: Path = Path(__file__).parent.parent.parent.parent
-        matchups_path: Path = project_root / "data" / "week17_matchups.json"
+        data_dir: Path = project_root / "data"
+        matchups_path: Path = data_dir / "week17_matchups.json"
 
-        if not matchups_path.exists():
-            logger.warning("Week 17 matchups file not found: %s", matchups_path)
+        try:
+            # Validate the path is safe
+            validated_path = self._validate_and_sanitize_path(matchups_path, data_dir)
+        except ValueError as e:
+            logger.warning("Week 17 matchups file validation failed: %s", e)
             return
 
         # Load JSON data
-        with open(matchups_path, "r") as f:
+        with open(validated_path, "r") as f:
             matchups_data: Dict[str, str] = json.load(f)
 
         # Validate structure of matchups_data
         if not isinstance(matchups_data, dict):
-            logger.error("Week 17 matchups JSON is not a dictionary: %s", matchups_path)
+            logger.error(
+                "Week 17 matchups JSON is not a dictionary: %s", validated_path
+            )
             return
 
         for team, opponent in matchups_data.items():
             if not isinstance(team, str) or not isinstance(opponent, str):
                 logger.error(
                     "Invalid matchup entry in %s: team=%r, opponent=%r (both must be strings)",
-                    matchups_path,
+                    validated_path,
                     team,
                     opponent,
                 )
