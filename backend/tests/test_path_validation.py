@@ -57,11 +57,13 @@ class TestPathValidation:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        # Try to access it with directory traversal
-        malicious_path = tmp_path / "test.txt" / ".." / "test.txt"
+        # Try to access it with directory traversal using a string path containing '..'
+        malicious_path = tmp_path / "subdir"
+        malicious_path.mkdir()
+        traversal_path = str(tmp_path / "subdir" / ".." / "test.txt")
 
         with pytest.raises(ValueError, match="suspicious pattern"):
-            QueryService._validate_and_sanitize_path(malicious_path, tmp_path)
+            QueryService._validate_and_sanitize_path(Path(traversal_path), tmp_path)
 
     def test_validate_and_sanitize_path_home_expansion(self, tmp_path):
         """Test that home directory expansion is rejected."""

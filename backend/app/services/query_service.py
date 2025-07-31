@@ -139,10 +139,12 @@ class QueryService:
 
             return resolved_path
 
-        except Exception as e:
-            if isinstance(e, ValueError):
-                raise
+        except (OSError, FileNotFoundError) as e:
             raise ValueError(f"Invalid path: {file_path} - {str(e)}")
+        except Exception:
+            # Log unexpected exceptions to aid debugging
+            logger.exception(f"Unexpected error while validating path: {file_path}")
+            raise
 
     @staticmethod
     def _get_data_path() -> str:
