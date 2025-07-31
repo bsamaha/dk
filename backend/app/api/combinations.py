@@ -1,8 +1,12 @@
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 
+from ..models.validation import (
+    CombinationsQueryParams,
+    RosterConstructionCountsQueryParams,
+)
 from ..services.query_service import query_service
 
 logger = logging.getLogger(__name__)
@@ -17,14 +21,21 @@ async def get_player_combinations(
 ):
     """Get teams that drafted all specified players within the first n rounds."""
     try:
-        combinations = query_service.get_player_combinations(
+        # Validate query parameters using Pydantic schema
+        params = CombinationsQueryParams(
             required_players=required_players,
             n_rounds=n_rounds,
             limit=limit,
         )
+
+        combinations = query_service.get_player_combinations(
+            required_players=params.required_players,
+            n_rounds=params.n_rounds,
+            limit=params.limit,
+        )
         return {
-            "required_players": required_players,
-            "n_rounds": n_rounds,
+            "required_players": params.required_players,
+            "n_rounds": params.n_rounds,
             "combinations": combinations,
             "total_found": len(combinations),
         }
@@ -45,13 +56,17 @@ async def get_roster_construction():
 
 @router.get("/roster-construction/counts/")
 async def get_roster_construction_counts(
+    request: Request,
     required_players: Optional[List[str]] = Query(None),
 ):
     """Get aggregated counts of unique roster constructions."""
     try:
+        # Validate query parameters using Pydantic schema
+        params = RosterConstructionCountsQueryParams(required_players=required_players)
+
         return {
             "roster_construction_counts": query_service.get_roster_construction_counts(
-                required_players=required_players
+                required_players=params.required_players
             )
         }
     except Exception:

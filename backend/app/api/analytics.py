@@ -2,9 +2,15 @@
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
+from pydantic import ValidationError
 
 from ..models.schemas import Week17BringBackPlayer, Week17BringBackResponse
+from ..models.validation import (
+    AnalyticsDraftSlotQueryParams,
+    AnalyticsStacksQueryParams,
+    AnalyticsWeek17BringBackQueryParams,
+)
 from ..services.query_service import query_service
 
 logger = logging.getLogger(__name__)
@@ -29,7 +35,14 @@ async def get_stacks(
 ):
     """Find QB/receiver stacks drafted within first n_rounds."""
     try:
-        return {"stacks": query_service.get_stacks(n_rounds=n_rounds, limit=limit)}
+        # Validate query parameters using Pydantic schema
+        params = AnalyticsStacksQueryParams(n_rounds=n_rounds, limit=limit)
+
+        return {
+            "stacks": query_service.get_stacks(
+                n_rounds=params.n_rounds, limit=params.limit
+            )
+        }
     except Exception:
         logger.exception("Error getting stacks")
         raise HTTPException(status_code=500, detail="An internal error occurred")
@@ -37,6 +50,7 @@ async def get_stacks(
 
 @router.get("/draft-slot")
 async def get_draft_slot_correlation(
+    request: Request,
     slot: int = Query(..., ge=1, le=12),
     metric: str = Query("percent"),
     top_n: int = Query(25, ge=1, le=100),
@@ -44,11 +58,19 @@ async def get_draft_slot_correlation(
 ):
     """Get players most correlated with a specific draft slot."""
     try:
+        # Validate query parameters using Pydantic schema
+        params = AnalyticsDraftSlotQueryParams(
+            slot=slot, metric=metric, top_n=top_n, min_teams=min_teams
+        )
+
         return {
-            "slot": slot,
-            "metric": metric,
+            "slot": params.slot,
+            "metric": params.metric,
             "rows": query_service.get_draft_slot_correlation(
-                slot=slot, metric=metric, top_n=top_n, min_teams=min_teams
+                slot=params.slot,
+                metric=params.metric,
+                top_n=params.top_n,
+                min_teams=params.min_teams,
             ),
         }
     except Exception:
@@ -68,6 +90,7 @@ async def get_adp_drift():
 
 @router.get("/week17-bringback", response_model=Week17BringBackResponse)
 async def get_week17_bringback(
+    request: Request,
     scope: str = Query(
         ..., pattern="^(team|player)$", description="View scope: 'team' or 'player'"
     ),
@@ -82,10 +105,17 @@ async def get_week17_bringback(
     - Player view: Shows opponent players most often drafted with the selected player
     """
     try:
-        if scope == "team":
+        # Validate query parameters using Pydantic schema
+        params = AnalyticsWeek17BringBackQueryParams(
+            scope=scope, entity=entity, limit=limit
+        )
+
+        if params.scope == "team":
             # Team view - aggregate draft percentages
-            players_data = query_service.get_week17_bringback_team_view(entity, limit)
-            opponent = query_service.get_week17_opponent(entity)
+            players_data = query_service.get_week17_bringback_team_view(
+                params.entity, params.limit
+            )
+            opponent = query_service.get_week17_opponent(params.entity)
 
             players = [
                 Week17BringBackPlayer(
@@ -100,13 +130,15 @@ async def get_week17_bringback(
 
         else:  # scope == "player"
             # Player view - conditional co-draft percentages
-            players_data = query_service.get_week17_bringback_player_view(entity, limit)
+            players_data = query_service.get_week17_bringback_player_view(
+                params.entity, params.limit
+            )
 
             # Get opponent from first result or query directly
             if players_data:
                 # Get the player's team to find opponent
                 player_team_result = query_service.query(
-                    "SELECT DISTINCT Team FROM picks WHERE player = ?", [entity]
+                    "SELECT DISTINCT Team FROM picks WHERE player = ?", [params.entity]
                 )
                 if len(player_team_result) > 0:
                     player_team = player_team_result["Team"][0]
@@ -128,13 +160,16 @@ async def get_week17_bringback(
             ]
 
         return Week17BringBackResponse(
-            scope=scope,
-            entity=entity,
+            scope=params.scope,
+            entity=params.entity,
             opponent=opponent,
             total_drafts=query_service.total_drafts,
             players=players,
         )
 
+    except ValidationError:
+        # Let the global validation exception handler deal with this
+        raise
     except Exception:
         logger.exception(
             "Error getting Week 17 bring back data for %s: %s", scope, entity

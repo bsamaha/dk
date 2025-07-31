@@ -163,3 +163,52 @@ Ensure `data/updated_bestball_data.parquet` exists in the project root.
 ## 📄 License
 
 This project is for educational and analytical purposes.
+
+## Development Workflow
+
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to ensure code quality. **Never skip these checks!**
+
+#### Setup (first time only)
+
+```bash
+# Install pre-commit hooks
+pre-commit install
+```
+
+#### Development Workflow
+
+```bash
+# 1. Make your changes
+# 2. Stage your changes
+git add .
+
+# 3. Commit (pre-commit hooks will run automatically)
+git commit -m "your commit message"
+
+# If pre-commit hooks fail, fix the issues and commit again
+# DO NOT use --no-verify or -n flags!
+```
+
+#### Manual Pre-commit Check
+
+```bash
+# Run all pre-commit hooks manually
+pre-commit run --all-files
+
+# Run only on staged files
+pre-commit run
+```
+
+#### What the hooks check
+
+- ✅ Code formatting (ruff-format)
+- ✅ Linting (ruff)
+- ✅ Import sorting (isort)
+- ✅ Security (bandit)
+- ✅ Frontend linting and tests
+- ✅ Documentation formatting
+- ✅ Secret detection
+
+**⚠️ Never use `git commit --no-verify` or `git commit -n` - this skips all quality checks!**

@@ -475,14 +475,27 @@ def test_week17_bringback_no_data(monkeypatch):
     # Mock the singleton instance's total_drafts property
     monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
 
-    response = client.get("/api/analytics/week17-bringback?scope=team&entity=INVALID")
+    response = client.get("/api/analytics/week17-bringback?scope=team&entity=BUF")
     assert response.status_code == 200
 
     data = response.json()
     assert data["scope"] == "team"
-    assert data["entity"] == "INVALID"
+    assert data["entity"] == "BUF"
     assert data["opponent"] is None
     assert data["players"] == []
+
+
+def test_week17_bringback_invalid_team_entity():
+    """Test Week 17 bring back endpoint with invalid team abbreviation."""
+    response = client.get("/api/analytics/week17-bringback?scope=team&entity=INVALID")
+    assert response.status_code == 422
+
+    data = response.json()
+    assert "validation_errors" in data
+    assert any(
+        "Entity must be a valid team abbreviation" in str(error)
+        for error in data["validation_errors"]
+    )
 
 
 def test_week17_bringback_server_error(monkeypatch):

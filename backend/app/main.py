@@ -7,9 +7,11 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
+from pydantic import ValidationError
 
 from .api import router
 from .core.config import settings
+from .core.validation import validation_exception_handler
 
 # Enable Polars string cache for categorical comparisons
 pl.enable_string_cache()
@@ -60,6 +62,9 @@ def create_app():
         allow_methods=["GET", "POST"],  # Restrict to needed methods
         allow_headers=["*"],
     )
+
+    # Register validation exception handler
+    app.add_exception_handler(ValidationError, validation_exception_handler)
 
     app.include_router(router, prefix="/api")
 
