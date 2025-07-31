@@ -11,8 +11,6 @@ class Position(str, Enum):
     RB = "RB"
     WR = "WR"
     TE = "TE"
-    K = "K"
-    DST = "DST"
 
 
 class SortableColumn(str, Enum):

@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 
 from ..models.schemas import (
     PageInfo,
@@ -10,6 +10,11 @@ from ..models.schemas import (
     Position,
     SortableColumn,
     SortOrder,
+)
+from ..models.validation import (
+    PlayerDetailsQueryParams,
+    PlayerSearchQueryParams,
+    PlayersQueryParams,
 )
 from ..services.query_service import query_service
 
@@ -20,6 +25,7 @@ router = APIRouter()
 
 @router.get("/", response_model=PlayersResponse)
 async def get_players(
+    request: Request,
     positions: Optional[List[Position]] = Query(None),
     search_term: Optional[str] = Query(None),
     limit: int = Query(100, ge=1, le=1000),
@@ -29,13 +35,23 @@ async def get_players(
 ):
     """Get players with optional filtering and pagination."""
     try:
-        players, total_count = query_service.get_players(
+        # Validate query parameters using Pydantic schema
+        params = PlayersQueryParams(
             positions=positions,
             search_term=search_term,
             limit=limit,
             offset=offset,
             sort_by=sort_by,
             sort_order=sort_order,
+        )
+
+        players, total_count = query_service.get_players(
+            positions=params.positions,
+            search_term=params.search_term,
+            limit=params.limit,
+            offset=params.offset,
+            sort_by=params.sort_by,
+            sort_order=params.sort_order,
         )
 
         return PlayersResponse(
@@ -58,14 +74,18 @@ async def get_players(
 
 @router.get("/search", response_model=PlayersResponse)
 async def search_players(
+    request: Request,
     q: str = Query(..., min_length=1),
     limit: int = Query(50, ge=1, le=100),
 ):
     """Search players by name."""
     try:
+        # Validate query parameters using Pydantic schema
+        params = PlayerSearchQueryParams(q=q, limit=limit)
+
         players, total_count = query_service.get_players(
-            search_term=q,
-            limit=limit,
+            search_term=params.q,
+            limit=params.limit,
             offset=0,
         )
 
@@ -89,13 +109,21 @@ async def search_players(
 
 @router.get("/details", response_model=PlayerDetailsResponse)
 async def get_player_details(
+    request: Request,
     player_name: str = Query(...),
     position: str = Query(...),
     team: str = Query(...),
 ):
     """Get detailed statistics for a specific player."""
     try:
-        details = query_service.get_player_details(player_name, position, team)
+        # Validate query parameters using Pydantic schema
+        params = PlayerDetailsQueryParams(
+            player_name=player_name, position=position, team=team
+        )
+
+        details = query_service.get_player_details(
+            params.player_name, params.position, params.team
+        )
 
         if details["total_drafts"] == 0:
             raise HTTPException(status_code=404, detail="Player not found")

@@ -1,0 +1,65 @@
+---
+title: Position Restrictions
+---
+
+# Position Restrictions
+
+This codebase is specifically designed for fantasy football analysis and **does not include Kickers (K) or Defense/Special Teams (DST)** positions.
+
+## Valid Positions
+
+The only valid player positions in this application are:
+- **QB** - Quarterback
+- **RB** - Running Back
+- **WR** - Wide Receiver
+- **TE** - Tight End
+
+## Implementation Details
+
+### Position Enum
+The [Position enum](mdc:backend/app/models/schemas.py) in the schemas module defines only these four positions:
+
+```python
+class Position(str, Enum):
+    """Player positions enum."""
+    QB = "QB"
+    RB = "RB"
+    WR = "WR"
+    TE = "TE"
+```
+
+### Validation
+All input validation in [validation.py](mdc:backend/app/models/validation.py) enforces these position restrictions:
+
+```python
+@validator('position')
+def validate_position(cls, v):
+    if v not in ['QB', 'RB', 'WR', 'TE']:
+        raise ValueError('Invalid position')
+    return v
+```
+
+## API Endpoints
+
+All API endpoints that accept position parameters will only accept these four positions:
+- `/api/players/` - Position filtering
+- `/api/positions/stats/{position}/by_round` - Position-specific stats
+- `/api/analytics/*` - Analytics endpoints
+
+## Data Considerations
+
+- The underlying data should only contain players from these four positions
+- Any data processing or analytics should exclude K and DST positions
+- Database queries should filter out these positions if they exist in raw data
+
+## Testing
+
+Tests in [test_validation.py](mdc:backend/tests/test_validation.py) verify that invalid positions (including K and DST) are properly rejected with appropriate error messages.
+
+## Future Considerations
+
+If K or DST positions need to be added in the future, this would require:
+1. Updating the Position enum
+2. Modifying all validation logic
+3. Updating tests
+4. Potentially adjusting analytics and data processing logic

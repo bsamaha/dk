@@ -1,0 +1,304 @@
+"""Tests for input validation schemas."""
+
+import pytest
+from app.models.schemas import Position, SortableColumn, SortOrder
+from app.models.validation import (
+    AnalyticsDraftSlotQueryParams,
+    AnalyticsStacksQueryParams,
+    AnalyticsWeek17BringBackQueryParams,
+    CombinationsQueryParams,
+    PlayerDetailsQueryParams,
+    PlayerSearchQueryParams,
+    PlayersQueryParams,
+    PositionStatsQueryParams,
+    RosterConstructionCountsQueryParams,
+)
+from pydantic import ValidationError
+
+
+class TestPlayersQueryParams:
+    """Test validation for players endpoint query parameters."""
+
+    def test_valid_params(self):
+        """Test valid parameters."""
+        params = PlayersQueryParams(
+            positions=[Position.QB, Position.RB],
+            search_term="Tom Brady",
+            limit=50,
+            offset=10,
+            sort_by=SortableColumn.AVG_PICK,
+            sort_order=SortOrder.ASC,
+        )
+        assert params.positions == ["QB", "RB"]
+        assert params.search_term == "Tom Brady"
+        assert params.limit == 50
+        assert params.offset == 10
+
+    def test_invalid_search_term(self):
+        """Test invalid search term with special characters."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayersQueryParams(
+                positions=None,
+                search_term="Tom@Brady",
+                limit=100,
+                offset=0,
+                sort_by=SortableColumn.AVG_PICK,
+                sort_order=SortOrder.ASC,
+            )
+        assert "Search term contains invalid characters" in str(exc_info.value)
+
+    def test_empty_search_term(self):
+        """Test empty search term."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayersQueryParams(
+                positions=None,
+                search_term="   ",
+                limit=100,
+                offset=0,
+                sort_by="avg_pick",
+                sort_order="asc",
+            )
+        assert "Search term cannot be empty or only whitespace" in str(exc_info.value)
+
+    def test_invalid_limit(self):
+        """Test invalid limit."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayersQueryParams(
+                positions=None,
+                search_term=None,
+                limit=0,
+                offset=0,
+                sort_by="avg_pick",
+                sort_order="asc",
+            )
+        assert "ensure this value is greater than or equal to 1" in str(exc_info.value)
+
+    def test_invalid_offset(self):
+        """Test invalid offset."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayersQueryParams(
+                positions=None,
+                search_term=None,
+                limit=100,
+                offset=-1,
+                sort_by="avg_pick",
+                sort_order="asc",
+            )
+        assert "ensure this value is greater than or equal to 0" in str(exc_info.value)
+
+
+class TestPlayerSearchQueryParams:
+    """Test validation for player search endpoint query parameters."""
+
+    def test_valid_params(self):
+        """Test valid parameters."""
+        params = PlayerSearchQueryParams(q="Tom Brady", limit=25)
+        assert params.q == "Tom Brady"
+        assert params.limit == 25
+
+    def test_invalid_search_query(self):
+        """Test invalid search query."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerSearchQueryParams(q="Tom@Brady")
+        assert "Search query contains invalid characters" in str(exc_info.value)
+
+    def test_empty_search_query(self):
+        """Test empty search query."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerSearchQueryParams(q="   ")
+        assert "Search query cannot be empty or only whitespace" in str(exc_info.value)
+
+
+class TestPlayerDetailsQueryParams:
+    """Test validation for player details endpoint query parameters."""
+
+    def test_valid_params(self):
+        """Test valid parameters."""
+        params = PlayerDetailsQueryParams(
+            player_name="Tom Brady", position="QB", team="TB"
+        )
+        assert params.player_name == "Tom Brady"
+        assert params.position == "QB"
+        assert params.team == "TB"
+
+    def test_invalid_player_name(self):
+        """Test invalid player name."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerDetailsQueryParams(player_name="Tom@Brady", position="QB", team="TB")
+        assert "Player name contains invalid characters" in str(exc_info.value)
+
+    def test_invalid_position(self):
+        """Test invalid position."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerDetailsQueryParams(player_name="Tom Brady", position="XX", team="TB")
+        assert "Invalid position" in str(exc_info.value)
+
+    def test_invalid_team(self):
+        """Test invalid team abbreviation."""
+        with pytest.raises(ValidationError) as exc_info:
+            PlayerDetailsQueryParams(
+                player_name="Tom Brady", position="QB", team="TAMPA"
+            )
+        assert "Team must be a valid abbreviation" in str(exc_info.value)
+
+
+class TestAnalyticsStacksQueryParams:
+    """Test validation for analytics stacks endpoint query parameters."""
+
+    def test_valid_params(self):
+        """Test valid parameters."""
+        params = AnalyticsStacksQueryParams(n_rounds=15, limit=200)
+        assert params.n_rounds == 15
+        assert params.limit == 200
+
+    def test_invalid_n_rounds(self):
+        """Test invalid n_rounds."""
+        with pytest.raises(ValidationError) as exc_info:
+            AnalyticsStacksQueryParams(n_rounds=25)
+        assert "ensure this value is less than or equal to 20" in str(exc_info.value)
+
+    def test_invalid_limit(self):
+        """Test invalid limit."""
+        with pytest.raises(ValidationError) as exc_info:
+            AnalyticsStacksQueryParams(limit=2000)
+        assert "ensure this value is less than or equal to 1000" in str(exc_info.value)
+
+
+class TestAnalyticsDraftSlotQueryParams:
+    """Test validation for analytics draft slot endpoint query parameters."""
+
+    def test_valid_params(self):
+        """Test valid parameters."""
+        params = AnalyticsDraftSlotQueryParams(
+            slot=5, metric="percent", top_n=50, min_teams=20
+        )
+        assert params.slot == 5
+        assert params.metric == "percent"
+        assert params.top_n == 50
+        assert params.min_teams == 20
+
+    def test_invalid_slot(self):
+        """Test invalid slot."""
+        with pytest.raises(ValidationError) as exc_info:
+            AnalyticsDraftSlotQueryParams(slot=15)
+        assert "ensure this value is less than or equal to 12" in str(exc_info.value)
+
+    def test_invalid_metric(self):
+        """Test invalid metric."""
+        with pytest.raises(ValidationError) as exc_info:
+            AnalyticsDraftSlotQueryParams(slot=5, metric="invalid")
+        assert "Metric must be one of: count, percent, ratio" in str(exc_info.value)
+
+
+class TestAnalyticsWeek17BringBackQueryParams:
+    """Test validation for Week 17 bring back analytics endpoint query parameters."""
+
+    def test_valid_team_scope(self):
+        """Test valid team scope parameters."""
+        params = AnalyticsWeek17BringBackQueryParams(
+            scope="team", entity="BUF", limit=15
+        )
+        assert params.scope == "team"
+        assert params.entity == "BUF"
+        assert params.limit == 15
+
+    def test_valid_player_scope(self):
+        """Test valid player scope parameters."""
+        params = AnalyticsWeek17BringBackQueryParams(
+            scope="player", entity="Tom Brady", limit=15
+        )
+        assert params.scope == "player"
+        assert params.entity == "Tom Brady"
+        assert params.limit == 15
+
+    def test_invalid_scope(self):
+        """Test invalid scope."""
+        with pytest.raises(ValidationError) as exc_info:
+            AnalyticsWeek17BringBackQueryParams(scope="invalid", entity="BUF", limit=15)
+        assert "Scope must be one of: team, player" in str(exc_info.value)
+
+    def test_invalid_team_entity(self):
+        """Test invalid team entity for team scope."""
+        with pytest.raises(ValidationError) as exc_info:
+            AnalyticsWeek17BringBackQueryParams(
+                scope="team", entity="BUFFALO", limit=15
+            )
+        assert "Entity must be a valid team abbreviation" in str(exc_info.value)
+
+    def test_invalid_player_entity(self):
+        """Test invalid player entity for player scope."""
+        with pytest.raises(ValidationError) as exc_info:
+            AnalyticsWeek17BringBackQueryParams(
+                scope="player", entity="Tom@Brady", limit=15
+            )
+        assert "Entity must be a valid player name" in str(exc_info.value)
+
+
+class TestCombinationsQueryParams:
+    """Test validation for combinations endpoint query parameters."""
+
+    def test_valid_params(self):
+        """Test valid parameters."""
+        params = CombinationsQueryParams(
+            required_players=["Tom Brady", "Mike Evans"], n_rounds=15, limit=200
+        )
+        assert params.required_players == ["Tom Brady", "Mike Evans"]
+        assert params.n_rounds == 15
+        assert params.limit == 200
+
+    def test_empty_required_players(self):
+        """Test empty required players."""
+        with pytest.raises(ValidationError) as exc_info:
+            CombinationsQueryParams(required_players=[])
+        assert "At least one required player must be specified" in str(exc_info.value)
+
+    def test_invalid_player_name(self):
+        """Test invalid player name."""
+        with pytest.raises(ValidationError) as exc_info:
+            CombinationsQueryParams(required_players=["Tom@Brady"])
+        assert "Invalid player name: Tom@Brady" in str(exc_info.value)
+
+    def test_duplicate_players(self):
+        """Test duplicate players are removed."""
+        params = CombinationsQueryParams(
+            required_players=["Tom Brady", "Tom Brady", "Mike Evans"]
+        )
+        assert params.required_players == ["Tom Brady", "Mike Evans"]
+
+
+class TestRosterConstructionCountsQueryParams:
+    """Test validation for roster construction counts endpoint query parameters."""
+
+    def test_valid_params(self):
+        """Test valid parameters."""
+        params = RosterConstructionCountsQueryParams(
+            required_players=["Tom Brady", "Mike Evans"]
+        )
+        assert params.required_players == ["Tom Brady", "Mike Evans"]
+
+    def test_none_required_players(self):
+        """Test None required players."""
+        params = RosterConstructionCountsQueryParams(required_players=None)
+        assert params.required_players is None
+
+    def test_invalid_player_name(self):
+        """Test invalid player name."""
+        with pytest.raises(ValidationError) as exc_info:
+            RosterConstructionCountsQueryParams(required_players=["Tom@Brady"])
+        assert "Invalid player name: Tom@Brady" in str(exc_info.value)
+
+
+class TestPositionStatsQueryParams:
+    """Test validation for position stats endpoint query parameters."""
+
+    def test_valid_params(self):
+        """Test valid parameters."""
+        params = PositionStatsQueryParams(position="QB", aggregation="mean")
+        assert params.position == "QB"
+        assert params.aggregation == "mean"
+
+    def test_invalid_position(self):
+        """Test invalid position."""
+        with pytest.raises(ValidationError) as exc_info:
+            PositionStatsQueryParams(position="XX")
+        assert "Input should be 'QB', 'RB', 'WR' or 'TE'" in str(exc_info.value)
