@@ -472,6 +472,8 @@ class QueryService:
     def _validate_required_players(self, required_players: List[str]) -> List[str]:
         """Validate and clean required_players list.
 
+        Enforces a maximum of 50 players.
+
         Args:
             required_players: List of player names to validate
 
@@ -479,13 +481,17 @@ class QueryService:
             Cleaned list of non-empty player names
 
         Raises:
-            ValueError: If validation fails
+            ValueError: If validation fails or if more than 50 players are provided
         """
         if not isinstance(required_players, list):
             raise ValueError("required_players must be a list")
 
+        if len(required_players) > 50:
+            raise ValueError("A maximum of 50 required players can be specified.")
+
+        # Allow empty lists (handled by calling methods)
         if not required_players:
-            raise ValueError("required_players cannot be empty")
+            return []
 
         # Clean and validate each player name
         cleaned_players = []
@@ -518,11 +524,12 @@ class QueryService:
         if not isinstance(limit, int) or limit < 1 or limit > 1000:
             raise ValueError("limit must be between 1 and 1000")
 
-        if not required_players:
-            return []
-
         # Validate and clean required_players
         required_players = self._validate_required_players(required_players)
+
+        # Return empty list if no players provided
+        if not required_players:
+            return []
 
         # Use parameterized query for player names
         placeholders: str = ", ".join(["?" for _ in required_players])

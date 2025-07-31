@@ -530,9 +530,9 @@ def test_week17_matchups_file_integration(query_service):
 
 def test_validate_required_players_edge_cases(query_service):
     """Test required_players validation with edge cases."""
-    # Test empty list
-    with pytest.raises(ValueError, match="required_players cannot be empty"):
-        query_service._validate_required_players([])
+    # Test empty list (now allowed)
+    result = query_service._validate_required_players([])
+    assert result == []
 
     # Test non-list input
     with pytest.raises(ValueError, match="required_players must be a list"):
@@ -559,3 +559,15 @@ def test_validate_required_players_edge_cases(query_service):
     # Test valid input without whitespace
     result = query_service._validate_required_players(["Josh Allen", "Stefon Diggs"])
     assert result == ["Josh Allen", "Stefon Diggs"]
+
+    # Test 50-player limit
+    valid_players = [f"Player{i}" for i in range(50)]
+    result = query_service._validate_required_players(valid_players)
+    assert result == valid_players
+
+    # Test exceeding 50-player limit
+    too_many_players = [f"Player{i}" for i in range(51)]
+    with pytest.raises(
+        ValueError, match="A maximum of 50 required players can be specified"
+    ):
+        query_service._validate_required_players(too_many_players)
