@@ -7,10 +7,6 @@ set -e
 
 echo "🔍 Running code quality checks..."
 
-# Run pre-commit hooks
-echo "📋 Running pre-commit hooks..."
-pre-commit run --all-files
-
 # Run tests
 echo "🧪 Running tests..."
 python -m pytest backend/tests/ -v --tb=short
@@ -20,6 +16,7 @@ echo "🐍 Running backend checks..."
 cd backend
 ruff check .
 ruff format --check .
+cd ..
 
 echo "✅ All checks passed! Ready to commit."
 echo ""

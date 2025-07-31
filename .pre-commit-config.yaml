@@ -31,6 +31,16 @@ repos:
         args: ["--profile", "black", "--filter-files"]
         files: ^backend/
 
+  # ===== CODE QUALITY CHECKS =====
+  - repo: local
+    hooks:
+      - id: check-code-quality
+        name: "Code Quality Check"
+        entry: bash -c "./scripts/check-code-quality.sh"
+        language: system
+        pass_filenames: false
+        stages: [commit]
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.2
     hooks:
