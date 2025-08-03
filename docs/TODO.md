@@ -54,11 +54,17 @@
   - ✅ Added local development path resolution for tests
   - Priority: **COMPLETED**
 
-- [ ] **Add rate limiting middleware**
-  - Location: `backend/app/main.py`
-  - Implement SlowAPI or similar rate limiting
-  - Add per-IP rate limits
-  - Priority: **HIGH**
+- [x] **Implement Nginx rate limiting** ✅ **COMPLETED**
+  - Location: `nginx.conf`
+  - ✅ Implemented granular rate limiting by endpoint type
+  - ✅ Analytics: 2r/s (heavy computations)
+  - ✅ Combinations: 3r/s (complex queries)
+  - ✅ Search: 5r/s (user-driven)
+  - ✅ Metadata: 5r/s (lightweight)
+  - ✅ General: 3r/s (health/static)
+  - ✅ Token bucket algorithm with burst allowances
+  - ✅ Decision: Skip application-level rate limiting (see [ADR-0003](adr/ADR-0003-rate-limiting.md))
+  - Priority: **COMPLETED**
 
 - [ ] **Add security headers**
   - Location: `frontend/vite.config.ts`
