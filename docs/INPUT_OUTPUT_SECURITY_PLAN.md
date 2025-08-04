@@ -237,7 +237,7 @@ The first development pass is complete and merged into this branch.
 ### Team Decisions Recorded
 
 1. **CSP environments** – Dev mode uses permissive CSP allowing unsafe-inline/unsafe-eval for Vite HMR, while preview mode uses restrictive production CSP.
-2. **Sanitisation utility** – Re-used the existing `utils/sanitization.ts` file instead of creating `input-sanitization.ts`.
+2. **Sanitization utility** – Re-used the existing `utils/sanitization.ts` file instead of creating `input-sanitization.ts`.
 3. **Validation library** – Adopted **Zod** as a runtime dependency for all client-side API payload checks.
 4. **Scope of work** – Implemented all Phase-1 + Phase-2 items in a single PR; tests written up front.
 
@@ -246,11 +246,11 @@ The first development pass is complete and merged into this branch.
 | Area | File(s) | Summary |
 |------|---------|---------|
 | CSP | `frontend/vite.config.ts` | Removed `unsafe-inline` / `unsafe-eval` from `script-src`, added `media-src`, same headers for `dev` & `preview`. |
-| Sanitisation | `utils/sanitization.ts` | Added `sanitizeSearchTerm` & `isValidSearchTerm`. |
+| Sanitization | `utils/sanitization.ts` | Added `sanitizeSearchTerm` & `isValidSearchTerm`. |
 | Validation | `utils/api-validation.ts` | Added Zod schemas (`PlayerSchema`, `PlayersResponseSchema`) & `validateApiResponse`. |
-| API layer | `services/api.ts` | • Sanitises `search_term` & live search queries<br/>• Validates `/players` responses via Zod. |
-| Components | `PlayersView.tsx`, `PlayerAutocomplete.tsx` | Integrated sanitisation into search boxes/autocomplete. |
-| Tests | `__tests__/security-headers.test.ts`, `__tests__/security-utils.test.ts` | Updated CSP expectations & added new test coverage for sanitisation + Zod validation. |
+| API layer | `services/api.ts` | • Sanitizes `search_term` & live search queries<br/>• Validates `/players` responses via Zod. |
+| Components | `PlayersView.tsx`, `PlayerAutocomplete.tsx` | Integrated sanitization into search boxes/autocomplete. |
+| Tests | `__tests__/security-headers.test.ts`, `__tests__/security-utils.test.ts` | Updated CSP expectations & added new test coverage for sanitization + Zod validation. |
 | Dependencies | `package.json` | Added `zod` ^3.x. |
 | Docs | This file (timeline boxes ticked). |
 
