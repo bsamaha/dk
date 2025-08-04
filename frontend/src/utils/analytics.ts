@@ -39,14 +39,18 @@ export const getGATrackingId = (): string | null => {
  */
 export const isAnalyticsEnabled = () => {
   // Guard against SSR and non-browser environments
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {
+    return false;
+  }
 
-  // Enable in production, disable in development
-  if (!isProduction) return false;
+  // Analytics are disabled in development to avoid polluting data
+  if (!isProduction) {
+    return false;
+  }
 
-  // Check for user consent (GDPR compliance)
-  const hasConsent = localStorage.getItem('analytics-consent') === 'true';
-  return hasConsent !== false; // Default to true if not set
+  // Analytics are enabled by default unless the user has explicitly opted out.
+  const hasConsent = localStorage.getItem('analytics-consent');
+  return hasConsent !== 'false';
 };
 
 /**
