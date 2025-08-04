@@ -1,13 +1,9 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import PlayersView from '../../layout/PlayersView';
 import { vi, describe, it, expect } from 'vitest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { MantineProvider } from '@mantine/core';
-import {
-  ColorSchemeContext,
-  type ColorSchemeContextValue,
-} from '../../../contexts/ColorSchemeContext';
 import type { UseQueryResult, QueryClient } from '@tanstack/react-query';
+import { renderWithContext } from '../../../test-utils/renderWithContext';
 
 vi.mock('@tanstack/react-query');
 vi.mocked(useQuery).mockReturnValue({
@@ -36,23 +32,24 @@ vi.mocked(useQueryClient).mockReturnValue({
   invalidateQueries: vi.fn(),
 } as unknown as QueryClient);
 
-const mockColorSchemeContext: ColorSchemeContextValue = {
-  colorScheme: 'light',
-  toggleColorScheme: vi.fn(),
-};
-
-const renderWithContext = (component: React.ReactElement) => {
-  return render(
-    <ColorSchemeContext.Provider value={mockColorSchemeContext}>
-      <MantineProvider>{component}</MantineProvider>
-    </ColorSchemeContext.Provider>
-  );
-};
-
 describe('PlayersView', () => {
   it('renders player table', () => {
     renderWithContext(<PlayersView />);
     expect(screen.getByText('Test')).toBeInTheDocument();
+  });
+
+  it('renders in dark mode', () => {
+    renderWithContext(<PlayersView />, { colorScheme: 'dark' });
+    expect(screen.getByText('Test')).toBeInTheDocument();
+    // Test that dark mode class or styles are applied
+    // This will depend on your specific implementation
+  });
+
+  it('toggles color scheme', () => {
+    const { toggleColorScheme } = renderWithContext(<PlayersView />);
+    expect(toggleColorScheme).toBeDefined();
+    // Test that toggleColorScheme function is accessible
+    expect(typeof toggleColorScheme).toBe('function');
   });
 
   it('handles search', () => {

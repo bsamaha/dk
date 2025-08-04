@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import type { DraftSlotRow, DraftSlotMetric } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import { getTooltipStyle, getCursorStyle } from '../../utils/chartTheme';
 
 const metricOptions: { label: string; value: DraftSlotMetric }[] = [
   { label: 'Count', value: 'count' },
@@ -225,17 +226,8 @@ const DraftSlotTab = () => {
               />
               <RechartsTooltip
                 formatter={(v: number) => (v as number).toFixed(3)}
-                contentStyle={{
-                  backgroundColor: '#1E1E1E',
-                  border: '1px solid #016140',
-                  borderRadius: '6px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-                  color: '#FFFFFF',
-                }}
-                cursor={{
-                  fill: '#383838',
-                  opacity: 0.2,
-                }}
+                contentStyle={getTooltipStyle(isDark)}
+                cursor={{ ...getCursorStyle(isDark), opacity: 0.2 }}
               />
               <Bar dataKey="value" name="Count" fill="#00A86B" />
             </BarChart>

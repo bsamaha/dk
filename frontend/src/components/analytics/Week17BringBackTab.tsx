@@ -25,6 +25,10 @@ import {
 } from 'recharts';
 import type { Week17BringBackPlayer, Week17Scope } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import {
+  getResponsiveTooltipStyle,
+  getCursorStyle,
+} from '../../utils/chartTheme';
 
 // Custom hook for window size
 const useWindowSize = () => {
@@ -464,16 +468,7 @@ const Week17BringBackTab = () => {
                     const data = payload[0].payload;
                     return (
                       <div
-                        style={{
-                          backgroundColor: '#1E1E1E',
-                          border: '1px solid #016140',
-                          color: '#FFFFFF',
-                          borderRadius: '6px',
-                          padding: windowWidth < 640 ? '8px' : '12px',
-                          fontSize: windowWidth < 640 ? '12px' : '13px',
-                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-                          maxWidth: windowWidth < 640 ? '250px' : '300px',
-                        }}
+                        style={getResponsiveTooltipStyle(isDark, windowWidth)}
                       >
                         <p
                           style={{
@@ -520,10 +515,7 @@ const Week17BringBackTab = () => {
                   }
                   return null;
                 }}
-                cursor={{
-                  fill: '#383838',
-                  opacity: 0.3,
-                }}
+                cursor={getCursorStyle(isDark)}
               />
               <Bar
                 dataKey="value"

@@ -1,28 +1,11 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MantineProvider } from '@mantine/core';
+import { screen } from '@testing-library/react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  ColorSchemeContext,
-  type ColorSchemeContextValue,
-} from '../../../contexts/ColorSchemeContext';
 import OverviewView from '../../layout/OverviewView';
 import type { UseQueryResult } from '@tanstack/react-query';
+import { renderWithContext } from '../../../test-utils/renderWithContext';
 
 vi.mock('@tanstack/react-query');
-
-const mockColorSchemeContext: ColorSchemeContextValue = {
-  colorScheme: 'light',
-  toggleColorScheme: vi.fn(),
-};
-
-const renderWithContext = (component: React.ReactElement) => {
-  return render(
-    <ColorSchemeContext.Provider value={mockColorSchemeContext}>
-      <MantineProvider>{component}</MantineProvider>
-    </ColorSchemeContext.Provider>
-  );
-};
 
 describe('OverviewView', () => {
   beforeEach(() => {

@@ -253,9 +253,7 @@ const PlayerTable = ({
                       <div
                         className="chart-container"
                         style={{
-                          backgroundColor: isDark
-                            ? 'transparent'
-                            : 'transparent',
+                          backgroundColor: 'transparent',
                           borderRadius: '6px',
                         }}
                       >
