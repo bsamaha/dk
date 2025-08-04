@@ -20,6 +20,7 @@ import { apiService } from '../../services/api';
 import PlayerAutocomplete from '../ui/PlayerAutocomplete';
 import PlayerTable from '../ui/PlayerTable';
 import type { Player, Position } from '../../types';
+import { sanitizeSearchTerm } from '../../utils/sanitization';
 
 // Custom hook for fetching player data
 const usePlayers = (
@@ -152,7 +153,10 @@ const PlayersView = () => {
                   : 'Search by player name (e.g., Dobbins)...'
               }
               value={searchTerm}
-              onChange={event => setSearchTerm(event.currentTarget.value)}
+              onChange={event => {
+                const sanitized = sanitizeSearchTerm(event.currentTarget.value);
+                setSearchTerm(sanitized);
+              }}
               size={responsive.inputSize}
             />
           </Grid.Col>

@@ -2,6 +2,7 @@ import logging
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Path, Query, Request
+from pydantic import ValidationError
 
 from ..models.schemas import (
     AggregationType,
@@ -23,11 +24,35 @@ router = APIRouter()
 
 @router.get("/stats", response_model=PositionStatsResponse)
 async def get_position_stats():
-    """Get statistics for all positions."""
+    """Get statistics for all positions and log raw payload when validation fails."""
     try:
         stats = query_service.get_position_stats()
-        total_picks = sum(stat.total_drafted for stat in stats)
+        total_picks = sum((stat.total_drafted or 0) for stat in stats)
+        # Let Pydantic validate – if any field is wrong this raises ValidationError
         return PositionStatsResponse(position_stats=stats, total_picks=total_picks)
+    except ValidationError as exc:  # type: ignore[pylint]
+        # Log both the validation error and the raw payload to make debugging easier
+        logger.error("Schema validation failed for /positions/stats -> %s", exc)
+        try:
+            import dataclasses
+            import json
+
+            from pydantic import BaseModel
+
+            raw_payload = [
+                s.dict()
+                if isinstance(s, BaseModel)
+                else dataclasses.asdict(s)
+                if dataclasses.is_dataclass(s)
+                else s
+                for s in stats
+            ]  # type: ignore
+            logger.error(
+                "Offending payload: %s", json.dumps(raw_payload, indent=2, default=str)
+            )
+        except Exception:  # pragma: no cover – logging helper should never crash
+            logger.exception("Failed to serialise offending payload for log")
+        raise HTTPException(status_code=500, detail="Invalid position stats payload")
     except Exception:
         logger.exception("Error getting position stats")
         raise HTTPException(status_code=500, detail="An internal error occurred")

@@ -16,6 +16,24 @@ import type {
   RosterConstructionCount,
   Week17BringBackResponse,
 } from '../types';
+import { sanitizeSearchTerm, isValidSearchTerm } from '../utils/sanitization';
+import { z } from 'zod';
+import {
+  validateApiResponse,
+  PlayersResponseSchema,
+  MetadataResponseSchema,
+  PositionStatsResponseSchema,
+  FirstPlayerDraftStatsSchema,
+  PositionRoundCountsResponseSchema,
+  CombinationsResponseSchema,
+  RosterConstructionResponseSchema,
+  RosterConstructionCountSchema,
+  TeamsResponseSchema,
+  PlayerDetailsSchema,
+  DraftSlotResponseSchema,
+  Week17BringBackResponseSchema,
+  SearchPlayersResponseSchema,
+} from '../utils/api-validation';
 
 // Create axios instance with base configuration
 // Determine API base URL dynamically
@@ -75,15 +93,19 @@ export const apiService = {
   // Get metadata
   async getMetadata(): Promise<MetadataResponse> {
     const response = await api.get('/metadata/');
-    return response.data;
+    return validateApiResponse(response.data, MetadataResponseSchema);
   },
 
   // Get players with filtering
   async getPlayers(filters: PlayerFilter = {}): Promise<PlayersResponse> {
     const params = new URLSearchParams();
 
-    if (filters.search_term) {
-      params.append('search_term', filters.search_term);
+    const sanitizedSearch =
+      filters.search_term && isValidSearchTerm(filters.search_term)
+        ? sanitizeSearchTerm(filters.search_term)
+        : undefined;
+    if (sanitizedSearch) {
+      params.append('search_term', sanitizedSearch);
     }
 
     if (filters.positions && filters.positions.length > 0) {
@@ -107,7 +129,7 @@ export const apiService = {
     }
 
     const response = await api.get(`/players/?${params.toString()}`);
-    return response.data;
+    return validateApiResponse(response.data, PlayersResponseSchema);
   },
 
   // Search players by name
@@ -120,21 +142,24 @@ export const apiService = {
     total_found: number;
   }> {
     const response = await api.get(
-      `/players/search?q=${encodeURIComponent(query)}&limit=${limit}`
+      `/players/search?q=${encodeURIComponent(sanitizeSearchTerm(isValidSearchTerm(query) ? query : ''))}&limit=${limit}`
     );
-    return response.data;
+    return validateApiResponse(response.data, SearchPlayersResponseSchema);
   },
 
   // Get position statistics
   async getPositionStats(): Promise<PositionStatsResponse> {
     const response = await api.get('/positions/stats');
-    return response.data;
+    return validateApiResponse(response.data, PositionStatsResponseSchema);
   },
 
   // Get first player draft stats
   async getFirstPlayerDraftStats(): Promise<FirstPlayerDraftStats[]> {
     const response = await api.get('/positions/stats/first_player');
-    return response.data;
+    return validateApiResponse(
+      response.data,
+      z.array(FirstPlayerDraftStatsSchema)
+    );
   },
 
   // Get position draft counts by round
@@ -145,7 +170,10 @@ export const apiService = {
     const response = await api.get(
       `/positions/stats/${position}/by_round?aggregation=${aggregation}`
     );
-    return response.data;
+    return validateApiResponse(
+      response.data,
+      PositionRoundCountsResponseSchema
+    );
   },
 
   // Get player combinations
@@ -159,13 +187,13 @@ export const apiService = {
       params.append('limit', filters.limit.toString());
     }
     const response = await api.get(`/combinations/?${params.toString()}`);
-    return response.data;
+    return validateApiResponse(response.data, CombinationsResponseSchema);
   },
 
   // Get roster construction data
   async getRosterConstruction(): Promise<RosterConstructionResponse> {
     const response = await api.get('/positions/roster-construction/');
-    return response.data;
+    return validateApiResponse(response.data, RosterConstructionResponseSchema);
   },
 
   // Get aggregated roster construction counts
@@ -179,7 +207,10 @@ export const apiService = {
     const response = await api.get(
       `/positions/roster-construction/counts?${params.toString()}`
     );
-    return response.data;
+    return validateApiResponse(
+      response.data,
+      z.array(RosterConstructionCountSchema)
+    );
   },
 
   // Get team data
@@ -187,7 +218,7 @@ export const apiService = {
     limit: number = 100
   ): Promise<{ teams: string[]; total_count: number }> {
     const response = await api.get(`/teams/?limit=${limit}`);
-    return response.data;
+    return validateApiResponse(response.data, TeamsResponseSchema);
   },
 
   // Get player details
@@ -202,7 +233,7 @@ export const apiService = {
       team: team,
     });
     const response = await api.get(`/players/details?${params.toString()}`);
-    return response.data;
+    return validateApiResponse(response.data, PlayerDetailsSchema);
   },
 
   // ---------------- Draft Slot Correlation ----------------
@@ -219,7 +250,7 @@ export const apiService = {
     const response = await api.get(
       `/analytics/draft-slot?${params.toString()}`
     );
-    return response.data;
+    return validateApiResponse(response.data, DraftSlotResponseSchema);
   },
 
   // ---------------- Week 17 Bring Back ----------------
@@ -236,7 +267,7 @@ export const apiService = {
     const response = await api.get(
       `/analytics/week17-bringback?${params.toString()}`
     );
-    return response.data;
+    return validateApiResponse(response.data, Week17BringBackResponseSchema);
   },
 };
 

@@ -9,64 +9,73 @@ importers:
     dependencies:
       '@emotion/react':
         specifier: ^11.14.0
-        version: 11.14.0(@types/react@19.1.8)(react@19.1.0)
+        version: 11.14.0(@types/react@19.1.8)(react@19.1.1)
       '@mantine/charts':
         specifier: ^8.2.1
-        version: 8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@mantine/hooks@8.2.1(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(recharts@3.1.0(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react-is@19.1.0)(react@19.1.0)(redux@5.0.1))
+        version: 8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mantine/hooks@8.2.1(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(recharts@3.1.0(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react-is@19.1.0)(react@19.1.1)(redux@5.0.1))
       '@mantine/core':
         specifier: ^8.2.1
-        version: 8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@mantine/hooks':
         specifier: ^8.2.1
-        version: 8.2.1(react@19.1.0)
+        version: 8.2.1(react@19.1.1)
       '@mantine/notifications':
         specifier: ^8.2.1
-        version: 8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@mantine/hooks@8.2.1(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mantine/hooks@8.2.1(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@mantine/spotlight':
         specifier: ^8.2.1
-        version: 8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@mantine/hooks@8.2.1(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mantine/hooks@8.2.1(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@tabler/icons-react':
         specifier: ^3.34.0
-        version: 3.34.1(react@19.1.0)
+        version: 3.34.1(react@19.1.1)
       '@tanstack/react-query':
         specifier: ^5.83.0
-        version: 5.83.0(react@19.1.0)
+        version: 5.83.0(react@19.1.1)
       '@tanstack/react-query-devtools':
         specifier: ^5.83.0
-        version: 5.83.0(@tanstack/react-query@5.83.0(react@19.1.0))(react@19.1.0)
+        version: 5.83.0(@tanstack/react-query@5.83.0(react@19.1.1))(react@19.1.1)
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.6)
       axios:
         specifier: ^1.10.0
         version: 1.10.0
+      d3-format:
+        specifier: ^3.1.0
+        version: 3.1.0
+      d3-time-format:
+        specifier: ^4.1.0
+        version: 4.1.0
       mantine-datatable:
         specifier: ^8.1.3
-        version: 8.1.3(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@mantine/hooks@8.2.1(react@19.1.0))(clsx@2.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 8.1.3(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mantine/hooks@8.2.1(react@19.1.1))(clsx@2.1.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
       react:
-        specifier: ^19.1.0
-        version: 19.1.0
+        specifier: ^19.1.1
+        version: 19.1.1
       react-dom:
-        specifier: ^19.1.0
-        version: 19.1.0(react@19.1.0)
+        specifier: ^19.1.1
+        version: 19.1.1(react@19.1.1)
       react-icons:
         specifier: ^5.5.0
-        version: 5.5.0(react@19.1.0)
+        version: 5.5.0(react@19.1.1)
       react-is:
         specifier: ^19.1.0
         version: 19.1.0
       recharts:
         specifier: ^3.1.0
-        version: 3.1.0(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react-is@19.1.0)(react@19.1.0)(redux@5.0.1)
+        version: 3.1.0(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react-is@19.1.0)(react@19.1.1)(redux@5.0.1)
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
       zustand:
         specifier: ^5.0.6
-        version: 5.0.6(@types/react@19.1.8)(immer@10.1.1)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
+        version: 5.0.6(@types/react@19.1.8)(immer@10.1.1)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
     devDependencies:
       '@eslint/js':
         specifier: ^9.30.1
@@ -76,7 +85,7 @@ importers:
         version: 6.6.3
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@types/node':
         specifier: ^24.0.15
         version: 24.0.15
@@ -119,6 +128,9 @@ importers:
       vite:
         specifier: ^7.0.3
         version: 7.0.5(@types/node@24.0.15)(jiti@1.21.7)(yaml@2.8.0)
+      vite-plugin-csp-guard:
+        specifier: ^2.1.1
+        version: 2.1.1(vite@7.0.5(@types/node@24.0.15)(jiti@1.21.7)(yaml@2.8.0))
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.15)(jiti@1.21.7)(jsdom@24.1.3)(yaml@2.8.0)
@@ -1652,6 +1664,12 @@ packages:
       }
     engines: { node: '>=8' }
 
+  boolbase@1.0.0:
+    resolution:
+      {
+        integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==,
+      }
+
   brace-expansion@1.1.12:
     resolution:
       {
@@ -1748,6 +1766,19 @@ packages:
       }
     engines: { node: '>= 16' }
 
+  cheerio-select@2.1.0:
+    resolution:
+      {
+        integrity: sha512-9v9kG0LvzrlcungtnJtpGNxY+fzECQKhK4EGJX2vByejiMX84MFNQw4UxPJl3bFbTMw+Dfs37XaIkCwTZfLh4g==,
+      }
+
+  cheerio@1.1.2:
+    resolution:
+      {
+        integrity: sha512-IkxPpb5rS/d1IiLbHMgfPuS0FgiWTtFIm/Nj+2woXDLTZ7fOT2eqzgYbdMlLweqlHbsZjxEChoVK+7iph7jyQg==,
+      }
+    engines: { node: '>=20.18.1' }
+
   chokidar@3.6.0:
     resolution:
       {
@@ -1820,6 +1851,25 @@ packages:
         integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==,
       }
     engines: { node: '>= 8' }
+
+  csp-toolkit@1.3.1:
+    resolution:
+      {
+        integrity: sha512-tSHFTNk9WiIpGaWBXsj65xwVPuNXfJg5CVmp7vam3HVZPTmFaEoZuXFdPJq4JBD2RxNQcuC2P8eM7sGwgxmt0A==,
+      }
+
+  css-select@5.2.2:
+    resolution:
+      {
+        integrity: sha512-TizTzUddG/xYLA3NXodFM0fSbNizXjOKhqiQQwvhlspadZokn1KDy0NZFS0wuEubIYAV5/c1/lAr0TaaFXEXzw==,
+      }
+
+  css-what@6.2.2:
+    resolution:
+      {
+        integrity: sha512-u/O3vwbptzhMs3L1fQE82ZSLHQQfto5gyZzwteVIEyeaY5Fc7R4dapF/BvRoSYFeqfBk4m0V1Vafq5Pjv25wvA==,
+      }
+    engines: { node: '>= 6' }
 
   css.escape@1.5.1:
     resolution:
@@ -2019,6 +2069,31 @@ packages:
         integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==,
       }
 
+  dom-serializer@2.0.0:
+    resolution:
+      {
+        integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==,
+      }
+
+  domelementtype@2.3.0:
+    resolution:
+      {
+        integrity: sha512-OLETBj6w0OsagBwdXnPdN0cnMfF9opN69co+7ZrbfPGrdpPVNBUj02spi6B1N7wChLQiPn4CSH/zJvXw56gmHw==,
+      }
+
+  domhandler@5.0.3:
+    resolution:
+      {
+        integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==,
+      }
+    engines: { node: '>= 4' }
+
+  domutils@3.2.2:
+    resolution:
+      {
+        integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==,
+      }
+
   dunder-proto@1.0.1:
     resolution:
       {
@@ -2049,6 +2124,19 @@ packages:
       {
         integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==,
       }
+
+  encoding-sniffer@0.2.1:
+    resolution:
+      {
+        integrity: sha512-5gvq20T6vfpekVtqrYQsSCFZ1wEg5+wW0/QaZMWkFr6BqD3NfKs0rLCx4rrVlSWJeZb5NBJgVLswK/w2MWU+Gw==,
+      }
+
+  entities@4.5.0:
+    resolution:
+      {
+        integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==,
+      }
+    engines: { node: '>=0.12' }
 
   entities@6.0.1:
     resolution:
@@ -2479,6 +2567,12 @@ packages:
     resolution:
       {
         integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==,
+      }
+
+  htmlparser2@10.0.0:
+    resolution:
+      {
+        integrity: sha512-TwAZM+zE5Tq3lrEHvOlvwgj1XLWQCtaaibSN11Q+gGBAS7Y1uZSWwXXRe4iF6OXnaq1riyQAPFOBtYc77Mxq0g==,
       }
 
   http-proxy-agent@7.0.2:
@@ -2944,6 +3038,12 @@ packages:
       }
     engines: { node: '>=0.10.0' }
 
+  nth-check@2.1.1:
+    resolution:
+      {
+        integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==,
+      }
+
   nwsapi@2.2.20:
     resolution:
       {
@@ -3004,6 +3104,18 @@ packages:
         integrity: sha512-ayCKvm/phCGxOkYRSCM82iDwct8/EonSEgCSxWxD7ve6jHggsFl4fZVQBPRNgQoKiuV/odhFrGzQXZwbifC8Rg==,
       }
     engines: { node: '>=8' }
+
+  parse5-htmlparser2-tree-adapter@7.1.0:
+    resolution:
+      {
+        integrity: sha512-ruw5xyKs6lrpo9x9rCZqZZnIUntICjQAd0Wsmp396Ul9lN/h+ifgVV1x1gZHi8euej6wTfpqX8j+BFQxF0NS/g==,
+      }
+
+  parse5-parser-stream@7.1.2:
+    resolution:
+      {
+        integrity: sha512-JyeQc9iwFLn5TbvvqACIF/VXG6abODeB3Fwmv/TGdLk2LfbWkaySGY72at4+Ty7EkPZj854u4CrICqNk2qIbow==,
+      }
 
   parse5@7.3.0:
     resolution:
@@ -3213,13 +3325,13 @@ packages:
         integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==,
       }
 
-  react-dom@19.1.0:
+  react-dom@19.1.1:
     resolution:
       {
-        integrity: sha512-Xs1hdnE+DyKgeHJeJznQmYMIBG3TKIHJJT95Q58nHLSrElKlGQqDTR2HQ9fx5CN/Gk6Vh/kupBTDLU11/nDk/g==,
+        integrity: sha512-Dlq/5LAZgF0Gaz6yiqZCf6VCcZs1ghAJyrsu84Q/GT0gV+mCxbfmKNoGRKBYMJ8IEdGPqu49YWXD02GCknEDkw==,
       }
     peerDependencies:
-      react: ^19.1.0
+      react: ^19.1.1
 
   react-icons@5.5.0:
     resolution:
@@ -3335,10 +3447,10 @@ packages:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
 
-  react@19.1.0:
+  react@19.1.1:
     resolution:
       {
-        integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==,
+        integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==,
       }
     engines: { node: '>=0.10.0' }
 
@@ -3776,6 +3888,13 @@ packages:
         integrity: sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw==,
       }
 
+  undici@7.13.0:
+    resolution:
+      {
+        integrity: sha512-l+zSMssRqrzDcb3fjMkjjLGmuiiK2pMIcV++mJaAc9vhjSGpvM7h43QgP+OAMb1GImHmbPyG2tBXeuyG5iY4gA==,
+      }
+    engines: { node: '>=20.18.1' }
+
   universalify@0.2.0:
     resolution:
       {
@@ -3893,6 +4012,14 @@ packages:
       }
     engines: { node: ^18.0.0 || ^20.0.0 || >=22.0.0 }
     hasBin: true
+
+  vite-plugin-csp-guard@2.1.1:
+    resolution:
+      {
+        integrity: sha512-7oloZ0NIYx9VNWGnkQqHKuZr7Pv35FjfSX4mu5huEYBfMjL25mV8oxpE51bLK3KS4pG9V70F+k7riQ9uqmeCJQ==,
+      }
+    peerDependencies:
+      vite: '>=5.0.0'
 
   vite@7.0.5:
     resolution:
@@ -4104,6 +4231,12 @@ packages:
       }
     engines: { node: '>=10' }
 
+  zod@3.25.76:
+    resolution:
+      {
+        integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==,
+      }
+
   zustand@5.0.6:
     resolution:
       {
@@ -4307,17 +4440,17 @@ snapshots:
 
   '@emotion/memoize@0.9.0': {}
 
-  '@emotion/react@11.14.0(@types/react@19.1.8)(react@19.1.0)':
+  '@emotion/react@11.14.0(@types/react@19.1.8)(react@19.1.1)':
     dependencies:
       '@babel/runtime': 7.27.6
       '@emotion/babel-plugin': 11.13.5
       '@emotion/cache': 11.14.0
       '@emotion/serialize': 1.3.3
-      '@emotion/use-insertion-effect-with-fallbacks': 1.2.0(react@19.1.0)
+      '@emotion/use-insertion-effect-with-fallbacks': 1.2.0(react@19.1.1)
       '@emotion/utils': 1.4.2
       '@emotion/weak-memoize': 0.4.0
       hoist-non-react-statics: 3.3.2
-      react: 19.1.0
+      react: 19.1.1
     optionalDependencies:
       '@types/react': 19.1.8
     transitivePeerDependencies:
@@ -4335,9 +4468,9 @@ snapshots:
 
   '@emotion/unitless@0.10.0': {}
 
-  '@emotion/use-insertion-effect-with-fallbacks@1.2.0(react@19.1.0)':
+  '@emotion/use-insertion-effect-with-fallbacks@1.2.0(react@19.1.1)':
     dependencies:
-      react: 19.1.0
+      react: 19.1.1
 
   '@emotion/utils@1.4.2': {}
 
@@ -4474,18 +4607,18 @@ snapshots:
       '@floating-ui/core': 1.7.2
       '@floating-ui/utils': 0.2.10
 
-  '@floating-ui/react-dom@2.1.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@floating-ui/react-dom@2.1.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
       '@floating-ui/dom': 1.7.2
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
 
-  '@floating-ui/react@0.26.28(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@floating-ui/react@0.26.28(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@floating-ui/react-dom': 2.1.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@floating-ui/react-dom': 2.1.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@floating-ui/utils': 0.2.10
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
       tabbable: 6.2.0
 
   '@floating-ui/utils@0.2.10': {}
@@ -4528,52 +4661,52 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.4
 
-  '@mantine/charts@8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@mantine/hooks@8.2.1(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(recharts@3.1.0(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react-is@19.1.0)(react@19.1.0)(redux@5.0.1))':
+  '@mantine/charts@8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mantine/hooks@8.2.1(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(recharts@3.1.0(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react-is@19.1.0)(react@19.1.1)(redux@5.0.1))':
     dependencies:
-      '@mantine/core': 8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@mantine/hooks': 8.2.1(react@19.1.0)
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      recharts: 3.1.0(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react-is@19.1.0)(react@19.1.0)(redux@5.0.1)
+      '@mantine/core': 8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@mantine/hooks': 8.2.1(react@19.1.1)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
+      recharts: 3.1.0(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react-is@19.1.0)(react@19.1.1)(redux@5.0.1)
 
-  '@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@floating-ui/react': 0.26.28(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@mantine/hooks': 8.2.1(react@19.1.0)
+      '@floating-ui/react': 0.26.28(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@mantine/hooks': 8.2.1(react@19.1.1)
       clsx: 2.1.1
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      react-number-format: 5.4.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      react-remove-scroll: 2.7.1(@types/react@19.1.8)(react@19.1.0)
-      react-textarea-autosize: 8.5.9(@types/react@19.1.8)(react@19.1.0)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
+      react-number-format: 5.4.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      react-remove-scroll: 2.7.1(@types/react@19.1.8)(react@19.1.1)
+      react-textarea-autosize: 8.5.9(@types/react@19.1.8)(react@19.1.1)
       type-fest: 4.41.0
     transitivePeerDependencies:
       - '@types/react'
 
-  '@mantine/hooks@8.2.1(react@19.1.0)':
+  '@mantine/hooks@8.2.1(react@19.1.1)':
     dependencies:
-      react: 19.1.0
+      react: 19.1.1
 
-  '@mantine/notifications@8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@mantine/hooks@8.2.1(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@mantine/notifications@8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mantine/hooks@8.2.1(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@mantine/core': 8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@mantine/hooks': 8.2.1(react@19.1.0)
-      '@mantine/store': 8.2.1(react@19.1.0)
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      react-transition-group: 4.4.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@mantine/core': 8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@mantine/hooks': 8.2.1(react@19.1.1)
+      '@mantine/store': 8.2.1(react@19.1.1)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
+      react-transition-group: 4.4.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
 
-  '@mantine/spotlight@8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@mantine/hooks@8.2.1(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@mantine/spotlight@8.2.1(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mantine/hooks@8.2.1(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
-      '@mantine/core': 8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@mantine/hooks': 8.2.1(react@19.1.0)
-      '@mantine/store': 8.2.1(react@19.1.0)
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      '@mantine/core': 8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@mantine/hooks': 8.2.1(react@19.1.1)
+      '@mantine/store': 8.2.1(react@19.1.1)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
 
-  '@mantine/store@8.2.1(react@19.1.0)':
+  '@mantine/store@8.2.1(react@19.1.1)':
     dependencies:
-      react: 19.1.0
+      react: 19.1.1
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -4590,7 +4723,7 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@reduxjs/toolkit@2.8.2(react-redux@9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1))(react@19.1.0)':
+  '@reduxjs/toolkit@2.8.2(react-redux@9.2.0(@types/react@19.1.8)(react@19.1.1)(redux@5.0.1))(react@19.1.1)':
     dependencies:
       '@standard-schema/spec': 1.0.0
       '@standard-schema/utils': 0.3.0
@@ -4599,8 +4732,8 @@ snapshots:
       redux-thunk: 3.1.0(redux@5.0.1)
       reselect: 5.1.1
     optionalDependencies:
-      react: 19.1.0
-      react-redux: 9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1)
+      react: 19.1.1
+      react-redux: 9.2.0(@types/react@19.1.8)(react@19.1.1)(redux@5.0.1)
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
@@ -4668,10 +4801,10 @@ snapshots:
 
   '@standard-schema/utils@0.3.0': {}
 
-  '@tabler/icons-react@3.34.1(react@19.1.0)':
+  '@tabler/icons-react@3.34.1(react@19.1.1)':
     dependencies:
       '@tabler/icons': 3.34.1
-      react: 19.1.0
+      react: 19.1.1
 
   '@tabler/icons@3.34.1': {}
 
@@ -4679,16 +4812,16 @@ snapshots:
 
   '@tanstack/query-devtools@5.81.2': {}
 
-  '@tanstack/react-query-devtools@5.83.0(@tanstack/react-query@5.83.0(react@19.1.0))(react@19.1.0)':
+  '@tanstack/react-query-devtools@5.83.0(@tanstack/react-query@5.83.0(react@19.1.1))(react@19.1.1)':
     dependencies:
       '@tanstack/query-devtools': 5.81.2
-      '@tanstack/react-query': 5.83.0(react@19.1.0)
-      react: 19.1.0
+      '@tanstack/react-query': 5.83.0(react@19.1.1)
+      react: 19.1.1
 
-  '@tanstack/react-query@5.83.0(react@19.1.0)':
+  '@tanstack/react-query@5.83.0(react@19.1.1)':
     dependencies:
       '@tanstack/query-core': 5.83.0
-      react: 19.1.0
+      react: 19.1.1
 
   '@testing-library/dom@10.4.0':
     dependencies:
@@ -4711,12 +4844,12 @@ snapshots:
       lodash: 4.17.21
       redent: 3.0.0
 
-  '@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
       '@babel/runtime': 7.27.6
       '@testing-library/dom': 10.4.0
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
     optionalDependencies:
       '@types/react': 19.1.8
       '@types/react-dom': 19.1.6(@types/react@19.1.8)
@@ -5044,6 +5177,8 @@ snapshots:
 
   binary-extensions@2.3.0: {}
 
+  boolbase@1.0.0: {}
+
   brace-expansion@1.1.12:
     dependencies:
       balanced-match: 1.0.2
@@ -5099,6 +5234,29 @@ snapshots:
 
   check-error@2.1.1: {}
 
+  cheerio-select@2.1.0:
+    dependencies:
+      boolbase: 1.0.0
+      css-select: 5.2.2
+      css-what: 6.2.2
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+      domutils: 3.2.2
+
+  cheerio@1.1.2:
+    dependencies:
+      cheerio-select: 2.1.0
+      dom-serializer: 2.0.0
+      domhandler: 5.0.3
+      domutils: 3.2.2
+      encoding-sniffer: 0.2.1
+      htmlparser2: 10.0.0
+      parse5: 7.3.0
+      parse5-htmlparser2-tree-adapter: 7.1.0
+      parse5-parser-stream: 7.1.2
+      undici: 7.13.0
+      whatwg-mimetype: 4.0.0
+
   chokidar@3.6.0:
     dependencies:
       anymatch: 3.1.3
@@ -5144,6 +5302,18 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  csp-toolkit@1.3.1: {}
+
+  css-select@5.2.2:
+    dependencies:
+      boolbase: 1.0.0
+      css-what: 6.2.2
+      domhandler: 5.0.3
+      domutils: 3.2.2
+      nth-check: 2.1.1
+
+  css-what@6.2.2: {}
 
   css.escape@1.5.1: {}
 
@@ -5230,6 +5400,24 @@ snapshots:
       '@babel/runtime': 7.27.6
       csstype: 3.1.3
 
+  dom-serializer@2.0.0:
+    dependencies:
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+      entities: 4.5.0
+
+  domelementtype@2.3.0: {}
+
+  domhandler@5.0.3:
+    dependencies:
+      domelementtype: 2.3.0
+
+  domutils@3.2.2:
+    dependencies:
+      dom-serializer: 2.0.0
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+
   dunder-proto@1.0.1:
     dependencies:
       call-bind-apply-helpers: 1.0.2
@@ -5243,6 +5431,13 @@ snapshots:
   emoji-regex@8.0.0: {}
 
   emoji-regex@9.2.2: {}
+
+  encoding-sniffer@0.2.1:
+    dependencies:
+      iconv-lite: 0.6.3
+      whatwg-encoding: 3.1.1
+
+  entities@4.5.0: {}
 
   entities@6.0.1: {}
 
@@ -5522,6 +5717,13 @@ snapshots:
 
   html-escaper@2.0.2: {}
 
+  htmlparser2@10.0.0:
+    dependencies:
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+      domutils: 3.2.2
+      entities: 6.0.1
+
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.4
@@ -5709,13 +5911,13 @@ snapshots:
     dependencies:
       semver: 7.7.2
 
-  mantine-datatable@8.1.3(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@mantine/hooks@8.2.1(react@19.1.0))(clsx@2.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  mantine-datatable@8.1.3(@mantine/core@8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(@mantine/hooks@8.2.1(react@19.1.1))(clsx@2.1.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
-      '@mantine/core': 8.2.1(@mantine/hooks@8.2.1(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@mantine/hooks': 8.2.1(react@19.1.0)
+      '@mantine/core': 8.2.1(@mantine/hooks@8.2.1(react@19.1.1))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@mantine/hooks': 8.2.1(react@19.1.1)
       clsx: 2.1.1
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
 
   math-intrinsics@1.1.0: {}
 
@@ -5762,6 +5964,10 @@ snapshots:
 
   normalize-range@0.1.2: {}
 
+  nth-check@2.1.1:
+    dependencies:
+      boolbase: 1.0.0
+
   nwsapi@2.2.20: {}
 
   object-assign@4.1.1: {}
@@ -5797,6 +6003,15 @@ snapshots:
       error-ex: 1.3.2
       json-parse-even-better-errors: 2.3.1
       lines-and-columns: 1.2.4
+
+  parse5-htmlparser2-tree-adapter@7.1.0:
+    dependencies:
+      domhandler: 5.0.3
+      parse5: 7.3.0
+
+  parse5-parser-stream@7.1.2:
+    dependencies:
+      parse5: 7.3.0
 
   parse5@7.3.0:
     dependencies:
@@ -5894,14 +6109,14 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
-  react-dom@19.1.0(react@19.1.0):
+  react-dom@19.1.1(react@19.1.1):
     dependencies:
-      react: 19.1.0
+      react: 19.1.1
       scheduler: 0.26.0
 
-  react-icons@5.5.0(react@19.1.0):
+  react-icons@5.5.0(react@19.1.1):
     dependencies:
-      react: 19.1.0
+      react: 19.1.1
 
   react-is@16.13.1: {}
 
@@ -5909,68 +6124,68 @@ snapshots:
 
   react-is@19.1.0: {}
 
-  react-number-format@5.4.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-number-format@5.4.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
 
-  react-redux@9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1):
+  react-redux@9.2.0(@types/react@19.1.8)(react@19.1.1)(redux@5.0.1):
     dependencies:
       '@types/use-sync-external-store': 0.0.6
-      react: 19.1.0
-      use-sync-external-store: 1.5.0(react@19.1.0)
+      react: 19.1.1
+      use-sync-external-store: 1.5.0(react@19.1.1)
     optionalDependencies:
       '@types/react': 19.1.8
       redux: 5.0.1
 
   react-refresh@0.17.0: {}
 
-  react-remove-scroll-bar@2.3.8(@types/react@19.1.8)(react@19.1.0):
+  react-remove-scroll-bar@2.3.8(@types/react@19.1.8)(react@19.1.1):
     dependencies:
-      react: 19.1.0
-      react-style-singleton: 2.2.3(@types/react@19.1.8)(react@19.1.0)
+      react: 19.1.1
+      react-style-singleton: 2.2.3(@types/react@19.1.8)(react@19.1.1)
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.8
 
-  react-remove-scroll@2.7.1(@types/react@19.1.8)(react@19.1.0):
+  react-remove-scroll@2.7.1(@types/react@19.1.8)(react@19.1.1):
     dependencies:
-      react: 19.1.0
-      react-remove-scroll-bar: 2.3.8(@types/react@19.1.8)(react@19.1.0)
-      react-style-singleton: 2.2.3(@types/react@19.1.8)(react@19.1.0)
+      react: 19.1.1
+      react-remove-scroll-bar: 2.3.8(@types/react@19.1.8)(react@19.1.1)
+      react-style-singleton: 2.2.3(@types/react@19.1.8)(react@19.1.1)
       tslib: 2.8.1
-      use-callback-ref: 1.3.3(@types/react@19.1.8)(react@19.1.0)
-      use-sidecar: 1.1.3(@types/react@19.1.8)(react@19.1.0)
+      use-callback-ref: 1.3.3(@types/react@19.1.8)(react@19.1.1)
+      use-sidecar: 1.1.3(@types/react@19.1.8)(react@19.1.1)
     optionalDependencies:
       '@types/react': 19.1.8
 
-  react-style-singleton@2.2.3(@types/react@19.1.8)(react@19.1.0):
+  react-style-singleton@2.2.3(@types/react@19.1.8)(react@19.1.1):
     dependencies:
       get-nonce: 1.0.1
-      react: 19.1.0
+      react: 19.1.1
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.8
 
-  react-textarea-autosize@8.5.9(@types/react@19.1.8)(react@19.1.0):
+  react-textarea-autosize@8.5.9(@types/react@19.1.8)(react@19.1.1):
     dependencies:
       '@babel/runtime': 7.27.6
-      react: 19.1.0
-      use-composed-ref: 1.4.0(@types/react@19.1.8)(react@19.1.0)
-      use-latest: 1.3.0(@types/react@19.1.8)(react@19.1.0)
+      react: 19.1.1
+      use-composed-ref: 1.4.0(@types/react@19.1.8)(react@19.1.1)
+      use-latest: 1.3.0(@types/react@19.1.8)(react@19.1.1)
     transitivePeerDependencies:
       - '@types/react'
 
-  react-transition-group@4.4.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-transition-group@4.4.5(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@babel/runtime': 7.27.6
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
 
-  react@19.1.0: {}
+  react@19.1.1: {}
 
   read-cache@1.0.0:
     dependencies:
@@ -5980,21 +6195,21 @@ snapshots:
     dependencies:
       picomatch: 2.3.1
 
-  recharts@3.1.0(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react-is@19.1.0)(react@19.1.0)(redux@5.0.1):
+  recharts@3.1.0(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react-is@19.1.0)(react@19.1.1)(redux@5.0.1):
     dependencies:
-      '@reduxjs/toolkit': 2.8.2(react-redux@9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1))(react@19.1.0)
+      '@reduxjs/toolkit': 2.8.2(react-redux@9.2.0(@types/react@19.1.8)(react@19.1.1)(redux@5.0.1))(react@19.1.1)
       clsx: 2.1.1
       decimal.js-light: 2.5.1
       es-toolkit: 1.39.7
       eventemitter3: 5.0.1
       immer: 10.1.1
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
       react-is: 19.1.0
-      react-redux: 9.2.0(@types/react@19.1.8)(react@19.1.0)(redux@5.0.1)
+      react-redux: 9.2.0(@types/react@19.1.8)(react@19.1.1)(redux@5.0.1)
       reselect: 5.1.1
       tiny-invariant: 1.3.3
-      use-sync-external-store: 1.5.0(react@19.1.0)
+      use-sync-external-store: 1.5.0(react@19.1.1)
       victory-vendor: 37.3.6
     transitivePeerDependencies:
       - '@types/react'
@@ -6243,6 +6458,8 @@ snapshots:
 
   undici-types@7.8.0: {}
 
+  undici@7.13.0: {}
+
   universalify@0.2.0: {}
 
   update-browserslist-db@1.1.3(browserslist@4.25.1):
@@ -6260,43 +6477,43 @@ snapshots:
       querystringify: 2.2.0
       requires-port: 1.0.0
 
-  use-callback-ref@1.3.3(@types/react@19.1.8)(react@19.1.0):
+  use-callback-ref@1.3.3(@types/react@19.1.8)(react@19.1.1):
     dependencies:
-      react: 19.1.0
+      react: 19.1.1
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.8
 
-  use-composed-ref@1.4.0(@types/react@19.1.8)(react@19.1.0):
+  use-composed-ref@1.4.0(@types/react@19.1.8)(react@19.1.1):
     dependencies:
-      react: 19.1.0
+      react: 19.1.1
     optionalDependencies:
       '@types/react': 19.1.8
 
-  use-isomorphic-layout-effect@1.2.1(@types/react@19.1.8)(react@19.1.0):
+  use-isomorphic-layout-effect@1.2.1(@types/react@19.1.8)(react@19.1.1):
     dependencies:
-      react: 19.1.0
+      react: 19.1.1
     optionalDependencies:
       '@types/react': 19.1.8
 
-  use-latest@1.3.0(@types/react@19.1.8)(react@19.1.0):
+  use-latest@1.3.0(@types/react@19.1.8)(react@19.1.1):
     dependencies:
-      react: 19.1.0
-      use-isomorphic-layout-effect: 1.2.1(@types/react@19.1.8)(react@19.1.0)
+      react: 19.1.1
+      use-isomorphic-layout-effect: 1.2.1(@types/react@19.1.8)(react@19.1.1)
     optionalDependencies:
       '@types/react': 19.1.8
 
-  use-sidecar@1.1.3(@types/react@19.1.8)(react@19.1.0):
+  use-sidecar@1.1.3(@types/react@19.1.8)(react@19.1.1):
     dependencies:
       detect-node-es: 1.1.0
-      react: 19.1.0
+      react: 19.1.1
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.1.8
 
-  use-sync-external-store@1.5.0(react@19.1.0):
+  use-sync-external-store@1.5.0(react@19.1.1):
     dependencies:
-      react: 19.1.0
+      react: 19.1.1
 
   util-deprecate@1.0.2: {}
 
@@ -6337,6 +6554,12 @@ snapshots:
       - terser
       - tsx
       - yaml
+
+  vite-plugin-csp-guard@2.1.1(vite@7.0.5(@types/node@24.0.15)(jiti@1.21.7)(yaml@2.8.0)):
+    dependencies:
+      cheerio: 1.1.2
+      csp-toolkit: 1.3.1
+      vite: 7.0.5(@types/node@24.0.15)(jiti@1.21.7)(yaml@2.8.0)
 
   vite@7.0.5(@types/node@24.0.15)(jiti@1.21.7)(yaml@2.8.0):
     dependencies:
@@ -6458,9 +6681,11 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zustand@5.0.6(@types/react@19.1.8)(immer@10.1.1)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0)):
+  zod@3.25.76: {}
+
+  zustand@5.0.6(@types/react@19.1.8)(immer@10.1.1)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1)):
     optionalDependencies:
       '@types/react': 19.1.8
       immer: 10.1.1
-      react: 19.1.0
-      use-sync-external-store: 1.5.0(react@19.1.0)
+      react: 19.1.1
+      use-sync-external-store: 1.5.0(react@19.1.1)

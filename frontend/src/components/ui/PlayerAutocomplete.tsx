@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
+import { useDebouncedValue } from '@mantine/hooks';
 import { MultiSelect } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { apiService } from '../../services/api';
+import { sanitizeSearchTerm } from '../../utils/sanitization';
 
 interface PlayerAutocompleteProps {
   value: string[];
@@ -19,6 +21,7 @@ const PlayerAutocomplete = ({
   className = '',
 }: PlayerAutocompleteProps) => {
   const [searchValue, setSearchValue] = useState('');
+  const [debouncedSearch] = useDebouncedValue(searchValue, 300);
 
   // Fetch all players for autocomplete using metadata endpoint
   const {
@@ -87,9 +90,9 @@ const PlayerAutocomplete = ({
   // Filter options based on search value
   const filteredOptions = useMemo(() => {
     try {
-      if (!searchValue) return playerOptions;
+      if (!debouncedSearch) return playerOptions;
 
-      const search = searchValue.toLowerCase();
+      const search = debouncedSearch.toLowerCase();
       return playerOptions.filter(
         playerName => playerName && playerName.toLowerCase().includes(search)
       );
@@ -115,7 +118,7 @@ const PlayerAutocomplete = ({
       value={value}
       onChange={onChange}
       searchValue={searchValue}
-      onSearchChange={setSearchValue}
+      onSearchChange={value => setSearchValue(sanitizeSearchTerm(value))}
       placeholder={isLoading ? 'Loading players...' : placeholder}
       searchable
       clearable

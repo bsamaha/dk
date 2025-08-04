@@ -10,7 +10,11 @@ export default defineConfig({
     setupFiles: './src/setupTests.ts',
     css: true,
   },
-  plugins: [react()],
+  plugins: [
+    react({
+      include: '**/*.{jsx,tsx}',
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -21,6 +25,46 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, 'index.html'),
       },
+    },
+  },
+  server: {
+    host: process.env.VITE_HOST || 'localhost',
+    port: parseInt(process.env.VITE_PORT || '5173'),
+    headers: {
+      // Security headers with proper CSP for Recharts
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      // Temporarily disable CSP to test chart functionality
+      // 'Content-Security-Policy': [
+      //   "default-src 'self'",
+      //   "script-src 'self' 'unsafe-eval' 'unsafe-inline' 'wasm-unsafe-eval' data: blob:", // Full eval support for Recharts
+      //   "style-src 'self' 'unsafe-inline' data: https://fonts.googleapis.com https:",
+      //   "font-src 'self' data: https://fonts.gstatic.com https:",
+      //   "img-src 'self' data: https: blob:",
+      //   "media-src 'self' data: blob:",
+      //   "connect-src 'self' http://localhost:* https://thesignalcallers.com ws://localhost:* wss://localhost:*",
+      //   "frame-ancestors 'none'",
+      //   "base-uri 'self'",
+      //   "form-action 'self'",
+      //   "object-src 'none'",
+      //   "worker-src 'self' blob: data:",
+      //   "child-src 'self' blob:"
+      // ].join('; '),
+      'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+      'X-Download-Options': 'noopen',
+      'X-Permitted-Cross-Domain-Policies': 'none',
+    },
+  },
+  preview: {
+    headers: {
+      // Production-like security headers (CSP handled by plugin)
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+      'X-Download-Options': 'noopen',
+      'X-Permitted-Cross-Domain-Policies': 'none',
     },
   },
 });
