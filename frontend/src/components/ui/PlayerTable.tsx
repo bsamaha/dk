@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Table,
   Anchor,
@@ -12,6 +12,7 @@ import {
   Stack,
 } from '@mantine/core';
 import { useResponsive } from '../../hooks/useResponsive';
+import { useColorScheme } from '../../contexts/ColorSchemeContext';
 import {
   BarChart,
   Bar,
@@ -40,6 +41,22 @@ const PlayerTable = ({
   onPlayerClick,
 }: PlayerTableProps) => {
   const { isMobile, responsive } = useResponsive();
+  const [chartKey, setChartKey] = useState(0);
+
+  // Theme-aware values
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const axisTickColor = isDark ? '#E5E7EB' : '#4B5563';
+
+  // Force re-render when color scheme changes
+  useEffect(() => {
+    setChartKey(prev => prev + 1);
+  }, [colorScheme]);
+
+  // Ensure we have a valid color scheme before rendering
+  if (!colorScheme) {
+    return <Loader />;
+  }
   const createHistogramData = (picks: number[]) => {
     if (!picks || picks.length === 0) return [];
 
@@ -148,7 +165,7 @@ const PlayerTable = ({
               in={selectedPlayer?.name === player.name}
               transitionDuration={300}
             >
-              <Paper p="md" m="md" withBorder>
+              <Paper p="md" m="md" withBorder bg={isDark ? 'dark.7' : 'white'}>
                 <Title order={4} mb="md">
                   {selectedPlayer.name} - Draft Analysis
                 </Title>
@@ -233,40 +250,85 @@ const PlayerTable = ({
                       <Text size="sm" fw={500} mb="xs">
                         Draft Pick Distribution (Dynamic Bucketing)
                       </Text>
-                      <div className="chart-container">
+                      <div
+                        className="chart-container"
+                        style={{
+                          backgroundColor: isDark
+                            ? 'transparent'
+                            : 'transparent',
+                          borderRadius: '6px',
+                        }}
+                      >
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
+                            key={`chart-${colorScheme}-${chartKey}`}
                             data={createHistogramData(
                               playerDetailsData.picks || []
                             )}
                           >
-                            <CartesianGrid strokeDasharray="3 3" />
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke={isDark ? '#555' : '#e5e7eb'}
+                            />
                             <XAxis
                               dataKey="range"
                               angle={-45}
                               textAnchor="end"
                               height={60}
                               fontSize={12}
+                              tick={{ fill: axisTickColor }}
+                              axisLine={{ stroke: axisTickColor }}
+                              tickLine={{ stroke: axisTickColor }}
                             />
-                            <YAxis />
+                            <YAxis
+                              fontSize={12}
+                              tick={{ fill: axisTickColor }}
+                              axisLine={{ stroke: axisTickColor }}
+                              tickLine={{ stroke: axisTickColor }}
+                            />
                             <Tooltip
-                              formatter={(value, name) => {
-                                if (name === 'count') {
-                                  return [`${value} drafts`, 'Count'];
+                              content={({ active, payload, label }) => {
+                                if (active && payload && payload.length) {
+                                  const data = payload[0].payload;
+                                  return (
+                                    <div
+                                      style={{
+                                        backgroundColor: isDark
+                                          ? '#1E1E1E'
+                                          : '#FFFFFF',
+                                        border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
+                                        borderRadius: '6px',
+                                        boxShadow: isDark
+                                          ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                                          : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                        color: isDark ? '#FFFFFF' : '#1F2937',
+                                        padding: '10px',
+                                        whiteSpace: 'nowrap',
+                                      }}
+                                    >
+                                      <p
+                                        style={{
+                                          margin: '0 0 6px 0',
+                                          fontWeight: 600,
+                                        }}
+                                      >
+                                        Pick Range: {label}
+                                      </p>
+                                      <p
+                                        style={{ margin: 0, color: '#00A86B' }}
+                                      >
+                                        {data.count} drafts ({data.percentage}%)
+                                      </p>
+                                    </div>
+                                  );
                                 }
-                                return [value, name];
-                              }}
-                              labelFormatter={label => `Pick Range: ${label}`}
-                              contentStyle={{
-                                backgroundColor: '#f8fafc',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '8px',
+                                return null;
                               }}
                             />
                             <Legend />
                             <Bar
                               dataKey="count"
-                              fill="#3b82f6"
+                              fill="#00A86B"
                               name="Draft Count"
                               radius={[2, 2, 0, 0]}
                             />

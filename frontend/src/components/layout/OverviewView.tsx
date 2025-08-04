@@ -24,8 +24,9 @@ const OverviewView = () => {
   const { isMobile, responsive } = useResponsive();
   const { colorScheme } = useColorScheme();
 
-  // Theme-aware tick color
-  const tickColor = colorScheme === 'dark' ? '#ffffff' : '#374151';
+  // Theme-aware values
+  const isDark = colorScheme === 'dark';
+  const tickColor = isDark ? '#ffffff' : '#374151';
 
   const { data: metadata, isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
@@ -243,6 +244,15 @@ const OverviewView = () => {
                 </Pie>
                 <Tooltip
                   formatter={(value: number) => `${value.toFixed(2)}%`}
+                  contentStyle={{
+                    backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                    border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
+                    borderRadius: '6px',
+                    boxShadow: isDark
+                      ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                      : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    color: isDark ? '#FFFFFF' : '#1F2937',
+                  }}
                 />
                 <Legend
                   verticalAlign="bottom"
@@ -262,18 +272,40 @@ const OverviewView = () => {
           <div className={responsive.chartHeight}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={isDark ? '#555' : '#e5e7eb'}
+                />
                 <XAxis
                   dataKey="position"
                   fontSize={responsive.fontSize.medium}
                   tick={{ fill: tickColor }}
+                  axisLine={{ stroke: tickColor }}
+                  tickLine={{ stroke: tickColor }}
                 />
                 <YAxis
                   fontSize={responsive.fontSize.medium}
                   tick={{ fill: tickColor }}
+                  axisLine={{ stroke: tickColor }}
+                  tickLine={{ stroke: tickColor }}
                 />
-                <Tooltip formatter={(v: number) => v.toFixed(2)} />
-                <Bar dataKey="medianDraftCount" fill="#00A86B" />
+                <Tooltip
+                  formatter={(v: number) => v.toFixed(2)}
+                  contentStyle={{
+                    backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                    border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
+                    borderRadius: '6px',
+                    boxShadow: isDark
+                      ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                      : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    color: isDark ? '#FFFFFF' : '#1F2937',
+                  }}
+                />
+                <Bar
+                  dataKey="medianDraftCount"
+                  name="Median Draft Count"
+                  fill="#00A86B"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -319,7 +351,10 @@ const OverviewView = () => {
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={roundBarData}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={isDark ? '#555' : '#e5e7eb'}
+                    />
                     <XAxis
                       dataKey="round"
                       fontSize={responsive.fontSize.small}
@@ -327,13 +362,28 @@ const OverviewView = () => {
                       textAnchor={responsive.chartTextAnchor}
                       height={responsive.chartAxisHeight}
                       tick={{ fill: tickColor }}
+                      axisLine={{ stroke: tickColor }}
+                      tickLine={{ stroke: tickColor }}
                     />
                     <YAxis
                       fontSize={responsive.fontSize.small}
                       tick={{ fill: tickColor }}
+                      axisLine={{ stroke: tickColor }}
+                      tickLine={{ stroke: tickColor }}
                     />
-                    <Tooltip formatter={(v: number) => v.toFixed(2)} />
-                    <Bar dataKey="count" fill="#00A86B" />
+                    <Tooltip
+                      formatter={(v: number) => v.toFixed(2)}
+                      contentStyle={{
+                        backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                        border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
+                        borderRadius: '6px',
+                        boxShadow: isDark
+                          ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                          : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        color: isDark ? '#FFFFFF' : '#1F2937',
+                      }}
+                    />
+                    <Bar dataKey="count" name="Count" fill="#00A86B" />
                   </BarChart>
                 </ResponsiveContainer>
               )}

@@ -29,9 +29,16 @@ function App() {
   const { currentView, isMobileMenuOpen } = useAppStore();
   const { isMobile } = useResponsive();
 
+  // Detect preferred color scheme on first load
+  const getPreferredScheme = () =>
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+
   const [colorScheme, setColorScheme] = useLocalStorage<'light' | 'dark'>({
     key: 'sc-color-scheme',
-    defaultValue: 'dark',
+    defaultValue: getPreferredScheme(),
   });
 
   const toggleColorScheme = (value?: 'light' | 'dark') =>

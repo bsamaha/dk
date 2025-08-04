@@ -465,14 +465,13 @@ const Week17BringBackTab = () => {
                     return (
                       <div
                         style={{
-                          backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-                          borderColor: isDark ? '#525252' : '#e5e7eb',
-                          color: isDark ? '#ffffff' : '#000000',
-                          border: '1px solid',
-                          borderRadius: '8px',
+                          backgroundColor: '#1E1E1E',
+                          border: '1px solid #016140',
+                          color: '#FFFFFF',
+                          borderRadius: '6px',
                           padding: windowWidth < 640 ? '8px' : '12px',
                           fontSize: windowWidth < 640 ? '12px' : '13px',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
                           maxWidth: windowWidth < 640 ? '250px' : '300px',
                         }}
                       >
@@ -522,7 +521,7 @@ const Week17BringBackTab = () => {
                   return null;
                 }}
                 cursor={{
-                  fill: isDark ? '#383838' : '#f3f4f6',
+                  fill: '#383838',
                   opacity: 0.3,
                 }}
               />

@@ -3,6 +3,10 @@ import PlayersView from '../../layout/PlayersView';
 import { vi, describe, it, expect } from 'vitest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MantineProvider } from '@mantine/core';
+import {
+  ColorSchemeContext,
+  type ColorSchemeContextValue,
+} from '../../../contexts/ColorSchemeContext';
 import type { UseQueryResult, QueryClient } from '@tanstack/react-query';
 
 vi.mock('@tanstack/react-query');
@@ -32,22 +36,27 @@ vi.mocked(useQueryClient).mockReturnValue({
   invalidateQueries: vi.fn(),
 } as unknown as QueryClient);
 
+const mockColorSchemeContext: ColorSchemeContextValue = {
+  colorScheme: 'light',
+  toggleColorScheme: vi.fn(),
+};
+
+const renderWithContext = (component: React.ReactElement) => {
+  return render(
+    <ColorSchemeContext.Provider value={mockColorSchemeContext}>
+      <MantineProvider>{component}</MantineProvider>
+    </ColorSchemeContext.Provider>
+  );
+};
+
 describe('PlayersView', () => {
   it('renders player table', () => {
-    render(
-      <MantineProvider>
-        <PlayersView />
-      </MantineProvider>
-    );
+    renderWithContext(<PlayersView />);
     expect(screen.getByText('Test')).toBeInTheDocument();
   });
 
   it('handles search', () => {
-    render(
-      <MantineProvider>
-        <PlayersView />
-      </MantineProvider>
-    );
+    renderWithContext(<PlayersView />);
     const searchInput = screen.getByPlaceholderText(
       'Search by player name (e.g., Dobbins)...'
     );

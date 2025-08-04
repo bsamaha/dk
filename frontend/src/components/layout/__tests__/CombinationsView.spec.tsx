@@ -31,19 +31,24 @@ describe('CombinationsView', () => {
   const mockCombinationsData = {
     combinations: [
       {
-        draft_id: '1',
+        draft_id: 1,
         draft_position: 1,
         players: ['Player A', 'Player B'],
-        position_counts: { QB: 1, RB: 1 },
+        position_counts: 'QB: 1, RB: 1',
       },
       {
-        draft_id: '2',
+        draft_id: 2,
         draft_position: 2,
         players: ['Player C', 'Player D'],
-        position_counts: { WR: 2, TE: 1 },
+        position_counts: 'WR: 2, TE: 1',
       },
     ],
     total_combinations: 2,
+    filter_applied: {
+      required_players: ['Player A', 'Player B'],
+      n_rounds: 20,
+      limit: 100,
+    },
   };
 
   beforeEach(() => {

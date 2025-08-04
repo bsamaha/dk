@@ -226,16 +226,18 @@ const DraftSlotTab = () => {
               <RechartsTooltip
                 formatter={(v: number) => (v as number).toFixed(3)}
                 contentStyle={{
-                  backgroundColor: isDark ? '#262626' : '#ffffff',
-                  borderColor: isDark ? '#525252' : '#e5e7eb',
-                  color: isDark ? '#ffffff' : '#000000',
+                  backgroundColor: '#1E1E1E',
+                  border: '1px solid #016140',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+                  color: '#FFFFFF',
                 }}
                 cursor={{
-                  fill: isDark ? '#383838' : '#c7c7c7',
+                  fill: '#383838',
                   opacity: 0.2,
                 }}
               />
-              <Bar dataKey="value" fill="#00A86B" />
+              <Bar dataKey="value" name="Count" fill="#00A86B" />
             </BarChart>
           </ResponsiveContainer>
         )}

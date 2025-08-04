@@ -615,24 +615,23 @@ class QueryService:
         sql: str = f"""
         WITH filtered AS (
             SELECT draft,
-                   team_id,
+                   draft_position,
                    player,
                    Position,
-                   round,
-                   draft_position
+                   round
             FROM picks
             WHERE round <= ?
         ), target_teams AS (
-            SELECT team_id
+            SELECT draft, draft_position
             FROM filtered
             WHERE player IN ({placeholders})
-            GROUP BY team_id
+            GROUP BY draft, draft_position
             HAVING COUNT(DISTINCT player) = ?
         )
         SELECT *
         FROM filtered
-        WHERE team_id IN (SELECT team_id FROM target_teams)
-        ORDER BY draft, draft_position, team_id, round;
+        WHERE (draft, draft_position) IN (SELECT draft, draft_position FROM target_teams)
+        ORDER BY draft, draft_position, round;
         """
 
         # Build parameters list: [n_rounds, *required_players, num_required]
@@ -651,12 +650,11 @@ class QueryService:
         # Aggregate per team using Polars
         result_df: pl.DataFrame = (
             df.lazy()
-            .group_by("team_id")
+            .group_by(["draft", "draft_position"])
             .agg(
                 pl.col("player").alias("players"),
                 pl.col("Position").alias("positions"),
                 pl.col("draft").first().alias("draft_id"),
-                pl.col("draft_position").first(),
             )
             .collect()
             .sort(["draft_id", "draft_position"])
@@ -669,12 +667,12 @@ class QueryService:
         # Calculate position counts
         position_counts_df: pl.DataFrame = (
             result_df.lazy()
-            .select(["team_id", "positions"])
+            .select(["draft", "draft_position", "positions"])
             .explode("positions")
-            .group_by(["team_id", "positions"])
+            .group_by(["draft", "draft_position", "positions"])
             .agg(pl.len().alias("count"))
             .collect()
-            .pivot(index="team_id", on="positions", values="count")
+            .pivot(index=["draft", "draft_position"], on="positions", values="count")
             .fill_null(0)
         )
 
@@ -682,7 +680,9 @@ class QueryService:
         final_result_df: pl.DataFrame
         if not position_counts_df.is_empty():
             pos_cols: List[str] = [
-                c for c in position_counts_df.columns if c != "team_id"
+                c
+                for c in position_counts_df.columns
+                if c not in ["draft", "draft_position"]
             ]
             position_counts_str_df: pl.DataFrame = (
                 position_counts_df.lazy()
@@ -692,11 +692,11 @@ class QueryService:
                         separator=", ",
                     ).alias("position_counts")
                 )
-                .select(["team_id", "position_counts"])
+                .select(["draft", "draft_position", "position_counts"])
                 .collect()
             )
             final_result_df = result_df.join(
-                position_counts_str_df, on="team_id", how="left"
+                position_counts_str_df, on=["draft", "draft_position"], how="left"
             )
         else:
             final_result_df = result_df.with_columns(
@@ -918,7 +918,7 @@ class QueryService:
         return [
             RosterConstruction(
                 draft_id=0,  # Dummy as it's aggregated
-                team_id=0,  # Dummy
+                draft_position=0,  # Dummy
                 position_counts={pos: row.get(pos, 0) for pos in position_columns},
             )
             for row in roster_counts.to_dicts()
