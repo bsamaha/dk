@@ -34,10 +34,13 @@ async def get_player_combinations(
             limit=params.limit,
         )
         return {
-            "required_players": params.required_players,
-            "n_rounds": params.n_rounds,
             "combinations": combinations,
-            "total_found": len(combinations),
+            "total_combinations": len(combinations),
+            "filter_applied": {
+                "required_players": params.required_players,
+                "n_rounds": params.n_rounds,
+                "limit": params.limit,
+            },
         }
     except Exception:
         logger.exception("Error getting player combinations")

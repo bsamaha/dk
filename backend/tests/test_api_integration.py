@@ -145,7 +145,9 @@ def test_player_combinations():
     assert response.status_code == 200
     data = response.json()
     assert "combinations" in data
-    assert "required_players" in data
+    assert "total_combinations" in data
+    assert "filter_applied" in data
+    assert "required_players" in data["filter_applied"]
 
 
 def test_player_combinations_missing_required_players():

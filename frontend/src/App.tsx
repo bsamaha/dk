@@ -29,9 +29,23 @@ function App() {
   const { currentView, isMobileMenuOpen } = useAppStore();
   const { isMobile } = useResponsive();
 
+  // Detect preferred color scheme on first load
+  const getPreferredScheme = () => {
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function'
+    ) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+    }
+    // Fallback for SSR/non-browser environments
+    return 'light';
+  };
+
   const [colorScheme, setColorScheme] = useLocalStorage<'light' | 'dark'>({
     key: 'sc-color-scheme',
-    defaultValue: 'dark',
+    defaultValue: getPreferredScheme(),
   });
 
   const toggleColorScheme = (value?: 'light' | 'dark') =>

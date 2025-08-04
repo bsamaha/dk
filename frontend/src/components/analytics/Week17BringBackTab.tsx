@@ -25,6 +25,13 @@ import {
 } from 'recharts';
 import type { Week17BringBackPlayer, Week17Scope } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import {
+  getResponsiveTooltipStyle,
+  getCursorStyle,
+  getBarChartProps,
+  getGridStroke,
+  POSITION_COLORS,
+} from '../../utils/chartTheme';
 
 // Custom hook for window size
 const useWindowSize = () => {
@@ -48,16 +55,6 @@ const useWindowSize = () => {
   }, []);
 
   return windowSize;
-};
-
-// Position colors based on brand book
-const POSITION_COLORS = {
-  QB: '#00A86B', // Signal Green
-  RB: '#FFC300', // Audible Gold
-  WR: '#016140', // Turf Dark Green
-  TE: '#1E1E1E', // Gridiron Graphite
-  K: '#89C4AA', // Lighter green
-  DST: '#0891b2', // Blue-ish
 };
 
 // Sample teams and players for demo (in production, these would come from metadata)
@@ -411,7 +408,7 @@ const Week17BringBackTab = () => {
             >
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke={isDark ? '#555' : '#e5e7eb'}
+                stroke={getGridStroke(isDark)}
                 horizontal={true}
                 vertical={false}
               />
@@ -464,17 +461,7 @@ const Week17BringBackTab = () => {
                     const data = payload[0].payload;
                     return (
                       <div
-                        style={{
-                          backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-                          borderColor: isDark ? '#525252' : '#e5e7eb',
-                          color: isDark ? '#ffffff' : '#000000',
-                          border: '1px solid',
-                          borderRadius: '8px',
-                          padding: windowWidth < 640 ? '8px' : '12px',
-                          fontSize: windowWidth < 640 ? '12px' : '13px',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                          maxWidth: windowWidth < 640 ? '250px' : '300px',
-                        }}
+                        style={getResponsiveTooltipStyle(isDark, windowWidth)}
                       >
                         <p
                           style={{
@@ -521,14 +508,11 @@ const Week17BringBackTab = () => {
                   }
                   return null;
                 }}
-                cursor={{
-                  fill: isDark ? '#383838' : '#f3f4f6',
-                  opacity: 0.3,
-                }}
+                cursor={getCursorStyle(isDark)}
               />
               <Bar
                 dataKey="value"
-                fill="#00A86B"
+                fill={getBarChartProps().fill}
                 radius={[
                   0,
                   windowWidth < 640 ? 4 : 6,

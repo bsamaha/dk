@@ -9,6 +9,12 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { useMemo } from 'react';
+import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import {
+  getBarChartProps,
+  getGridStroke,
+  getChartBackground,
+} from '../../utils/chartTheme';
 
 type DistributionChartProps = {
   title: string;
@@ -21,6 +27,10 @@ const DistributionChart = ({
   data,
   position,
 }: DistributionChartProps) => {
+  // Theme-aware values
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   const chartData = useMemo(() => {
     return data.map(item => ({
       count: item.count,
@@ -71,18 +81,20 @@ const DistributionChart = ({
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#E5E7EB"
+                  stroke={getGridStroke(isDark)}
                   strokeOpacity={0.5}
                 />
                 <XAxis
                   dataKey="count"
                   tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
-                  axisLine={{ stroke: '#9CA3AF' }}
+                  axisLine={{ stroke: isDark ? '#555' : '#9CA3AF' }}
+                  tickLine={{ stroke: isDark ? '#555' : '#9CA3AF' }}
                 />
                 <YAxis
                   tickFormatter={yAxisTickFormatter}
                   tick={{ fontSize: 12, fill: 'var(--color-text-secondary)' }}
-                  axisLine={{ stroke: '#9CA3AF' }}
+                  axisLine={{ stroke: isDark ? '#555' : '#9CA3AF' }}
+                  tickLine={{ stroke: isDark ? '#555' : '#9CA3AF' }}
                   domain={[0, maxValue]}
                 />
                 <Tooltip
@@ -92,14 +104,20 @@ const DistributionChart = ({
                   ]}
                   labelFormatter={label => `Number of ${position}s: ${label}`}
                   contentStyle={{
-                    backgroundColor: '#1E1E1E',
-                    border: '1px solid #016140',
+                    ...getChartBackground(isDark),
                     borderRadius: '6px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-                    color: '#FFFFFF',
+                    boxShadow: isDark
+                      ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                      : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    color: isDark ? '#FFFFFF' : '#1F2937',
                   }}
                 />
-                <Bar dataKey="teams" fill="#00A86B" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="teams"
+                  name="Teams"
+                  fill={getBarChartProps().fill}
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>

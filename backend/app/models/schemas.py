@@ -117,7 +117,6 @@ class PositionStatsResponse(BaseModel):
 class TeamCombination(BaseModel):
     """Detailed model for a team with a specific player combination."""
 
-    team_id: int = Field(..., description="Unique team identifier")
     draft_id: int = Field(..., description="Draft identifier")
     draft_position: int = Field(..., description="Draft position of the team owner")
     players: List[str] = Field(..., description="Full list of players on the team")
@@ -219,7 +218,7 @@ class RosterConstruction(BaseModel):
     """Model for a single team's roster construction."""
 
     draft_id: int = Field(..., description="Draft identifier")
-    team_id: int = Field(..., description="Unique team identifier")
+    draft_position: int = Field(..., description="Draft position of the team owner")
     position_counts: Dict[str, int] = Field(
         ..., description="Counts of players per position"
     )
@@ -281,7 +280,7 @@ class DraftSlotResponse(BaseModel):
 
 class StackEntry(BaseModel):
     draft_id: int
-    team_id: int
+    draft_position: int
     nfl_team: str  # e.g., PHI
     qb: str
     receiver: str  # WR or TE

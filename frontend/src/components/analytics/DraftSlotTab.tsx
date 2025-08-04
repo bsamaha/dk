@@ -23,6 +23,12 @@ import {
 } from 'recharts';
 import type { DraftSlotRow, DraftSlotMetric } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import {
+  getTooltipStyle,
+  getCursorStyle,
+  getBarChartProps,
+  getGridStroke,
+} from '../../utils/chartTheme';
 
 const metricOptions: { label: string; value: DraftSlotMetric }[] = [
   { label: 'Count', value: 'count' },
@@ -199,7 +205,7 @@ const DraftSlotTab = () => {
             <BarChart data={chartData} layout="vertical" margin={{ left: 60 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke={isDark ? '#555' : '#e5e7eb'}
+                stroke={getGridStroke(isDark)}
               />
               <XAxis
                 type="number"
@@ -225,17 +231,10 @@ const DraftSlotTab = () => {
               />
               <RechartsTooltip
                 formatter={(v: number) => (v as number).toFixed(3)}
-                contentStyle={{
-                  backgroundColor: isDark ? '#262626' : '#ffffff',
-                  borderColor: isDark ? '#525252' : '#e5e7eb',
-                  color: isDark ? '#ffffff' : '#000000',
-                }}
-                cursor={{
-                  fill: isDark ? '#383838' : '#c7c7c7',
-                  opacity: 0.2,
-                }}
+                contentStyle={getTooltipStyle(isDark)}
+                cursor={{ ...getCursorStyle(isDark), opacity: 0.2 }}
               />
-              <Bar dataKey="value" fill="#00A86B" />
+              <Bar dataKey="value" name="Count" {...getBarChartProps()} />
             </BarChart>
           </ResponsiveContainer>
         )}

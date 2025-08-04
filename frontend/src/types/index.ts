@@ -70,7 +70,6 @@ export interface PositionRoundCount {
 export type PositionRoundCountsResponse = PositionRoundCount[];
 
 export interface TeamCombination {
-  team_id: number;
   draft_id: number;
   draft_position: number;
   players: string[];
@@ -89,7 +88,7 @@ export interface CombinationsResponse {
 
 export interface RosterConstruction {
   draft_id: number;
-  team_id: number;
+  draft_position: number;
   position_counts: Record<string, number>;
 }
 
@@ -191,8 +190,8 @@ export interface Week17BringBackPlayer {
   player: string;
   position: string;
   percentage: number;
-  draft_count?: number;
-  co_occurrence_count?: number;
+  draft_count?: number | null;
+  co_occurrence_count?: number | null;
 }
 
 export interface Week17BringBackResponse {
