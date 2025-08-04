@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 
 /**
  * Custom hook for debouncing function calls
@@ -27,16 +27,15 @@ export const useDebounce = <T extends (...args: unknown[]) => void>(
     [callback, delay]
   ) as T;
 
-  // Cleanup on unmount
-  const cleanup = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
+  // Cleanup on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
   }, []);
-
-  // Return both the debounced function and cleanup
-  (debouncedCallback as T & { cleanup: () => void }).cleanup = cleanup;
 
   return debouncedCallback;
 };
@@ -68,6 +67,16 @@ export const useAnalyticsDebounce = <T extends (...args: any[]) => void>(
     },
     [trackingFunction, delay]
   ) as T;
+
+  // Cleanup on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 
   return debouncedCallback;
 };

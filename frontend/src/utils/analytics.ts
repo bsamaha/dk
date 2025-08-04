@@ -8,6 +8,11 @@ const isProduction = import.meta.env.PROD;
 
 // Google Analytics Tracking ID (can be set dynamically)
 export const getGATrackingId = (): string | null => {
+  // Guard against SSR and non-browser environments
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
   // Try to get from window (set by HTML script) or environment
   const trackingId = (window as unknown as Record<string, unknown>)
     ?._gaTrackingId;
@@ -33,6 +38,9 @@ export const getGATrackingId = (): string | null => {
  * Disabled in development to avoid polluting analytics data
  */
 export const isAnalyticsEnabled = () => {
+  // Guard against SSR and non-browser environments
+  if (typeof window === 'undefined') return false;
+
   // Enable in production, disable in development
   if (!isProduction) return false;
 
@@ -111,10 +119,13 @@ export const logAnalyticsEvent = (eventName: string, data?: unknown) => {
  * Consent management for GDPR compliance
  */
 export const setAnalyticsConsent = (consent: boolean) => {
+  // Guard against SSR and non-browser environments
+  if (typeof window === 'undefined') return;
+
   localStorage.setItem('analytics-consent', consent.toString());
 
   // Integrate with Google Analytics Consent Mode
-  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+  if (typeof window.gtag === 'function') {
     window.gtag('consent', 'update', {
       analytics_storage: consent ? 'granted' : 'denied',
     });
@@ -122,6 +133,9 @@ export const setAnalyticsConsent = (consent: boolean) => {
 };
 
 export const getAnalyticsConsent = (): boolean => {
+  // Guard against SSR and non-browser environments
+  if (typeof window === 'undefined') return false;
+
   return localStorage.getItem('analytics-consent') === 'true';
 };
 
