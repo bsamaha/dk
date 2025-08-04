@@ -10,6 +10,11 @@ import {
 } from 'recharts';
 import { useMemo } from 'react';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import {
+  getBarChartProps,
+  getGridStroke,
+  getChartBackground,
+} from '../../utils/chartTheme';
 
 type DistributionChartProps = {
   title: string;
@@ -76,7 +81,7 @@ const DistributionChart = ({
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke={isDark ? '#555' : '#e5e7eb'}
+                  stroke={getGridStroke(isDark)}
                   strokeOpacity={0.5}
                 />
                 <XAxis
@@ -99,8 +104,7 @@ const DistributionChart = ({
                   ]}
                   labelFormatter={label => `Number of ${position}s: ${label}`}
                   contentStyle={{
-                    backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-                    border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
+                    ...getChartBackground(isDark),
                     borderRadius: '6px',
                     boxShadow: isDark
                       ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
@@ -111,7 +115,7 @@ const DistributionChart = ({
                 <Bar
                   dataKey="teams"
                   name="Teams"
-                  fill="#00A86B"
+                  fill={getBarChartProps().fill}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>

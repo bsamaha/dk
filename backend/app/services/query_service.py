@@ -628,10 +628,10 @@ class QueryService:
             GROUP BY draft, draft_position
             HAVING COUNT(DISTINCT player) = ?
         )
-        SELECT *
-        FROM filtered
-        WHERE (draft, draft_position) IN (SELECT draft, draft_position FROM target_teams)
-        ORDER BY draft, draft_position, round;
+        SELECT f.*
+        FROM filtered f
+        INNER JOIN target_teams tt ON f.draft = tt.draft AND f.draft_position = tt.draft_position
+        ORDER BY f.draft, f.draft_position, f.round;
         """
 
         # Build parameters list: [n_rounds, *required_players, num_required]

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Table,
   Anchor,
@@ -13,6 +13,11 @@ import {
 } from '@mantine/core';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import {
+  getBarChartProps,
+  getGridStroke,
+  getAxisTickColor,
+} from '../../utils/chartTheme';
 import {
   BarChart,
   Bar,
@@ -41,17 +46,10 @@ const PlayerTable = ({
   onPlayerClick,
 }: PlayerTableProps) => {
   const { isMobile, responsive } = useResponsive();
-  const [chartKey, setChartKey] = useState(0);
-
   // Theme-aware values
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const axisTickColor = isDark ? '#E5E7EB' : '#4B5563';
-
-  // Force re-render when color scheme changes
-  useEffect(() => {
-    setChartKey(prev => prev + 1);
-  }, [colorScheme]);
+  const axisTickColor = getAxisTickColor(isDark);
 
   // Ensure we have a valid color scheme before rendering
   if (!colorScheme) {
@@ -259,14 +257,13 @@ const PlayerTable = ({
                       >
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
-                            key={`chart-${colorScheme}-${chartKey}`}
                             data={createHistogramData(
                               playerDetailsData.picks || []
                             )}
                           >
                             <CartesianGrid
                               strokeDasharray="3 3"
-                              stroke={isDark ? '#555' : '#e5e7eb'}
+                              stroke={getGridStroke(isDark)}
                             />
                             <XAxis
                               dataKey="range"
@@ -326,9 +323,8 @@ const PlayerTable = ({
                             <Legend />
                             <Bar
                               dataKey="count"
-                              fill="#00A86B"
+                              {...getBarChartProps()}
                               name="Draft Count"
-                              radius={[2, 2, 0, 0]}
                             />
                           </BarChart>
                         </ResponsiveContainer>

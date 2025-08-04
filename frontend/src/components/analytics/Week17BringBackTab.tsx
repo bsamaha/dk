@@ -28,6 +28,9 @@ import { useColorScheme } from '../../contexts/ColorSchemeContext';
 import {
   getResponsiveTooltipStyle,
   getCursorStyle,
+  getBarChartProps,
+  getGridStroke,
+  POSITION_COLORS,
 } from '../../utils/chartTheme';
 
 // Custom hook for window size
@@ -52,16 +55,6 @@ const useWindowSize = () => {
   }, []);
 
   return windowSize;
-};
-
-// Position colors based on brand book
-const POSITION_COLORS = {
-  QB: '#00A86B', // Signal Green
-  RB: '#FFC300', // Audible Gold
-  WR: '#016140', // Turf Dark Green
-  TE: '#1E1E1E', // Gridiron Graphite
-  K: '#89C4AA', // Lighter green
-  DST: '#0891b2', // Blue-ish
 };
 
 // Sample teams and players for demo (in production, these would come from metadata)
@@ -415,7 +408,7 @@ const Week17BringBackTab = () => {
             >
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke={isDark ? '#555' : '#e5e7eb'}
+                stroke={getGridStroke(isDark)}
                 horizontal={true}
                 vertical={false}
               />
@@ -519,7 +512,7 @@ const Week17BringBackTab = () => {
               />
               <Bar
                 dataKey="value"
-                fill="#00A86B"
+                fill={getBarChartProps().fill}
                 radius={[
                   0,
                   windowWidth < 640 ? 4 : 6,
