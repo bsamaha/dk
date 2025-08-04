@@ -10,7 +10,8 @@
     "install:all": "cd backend && pip install -r requirements.txt && cd ../frontend && pnpm install",
     "build": "cd frontend && pnpm run build",
     "test": "cd backend && pytest && cd ../frontend && pnpm run test --run",
-    "lint": "cd backend && ruff check . && ruff format --check . && cd ../frontend && pnpm run lint"
+    "lint": "cd backend && ruff check . && ruff format --check . && cd ../frontend && pnpm run lint",
+    "generate-csp": "node scripts/generate-csp.js"
   },
   "repository": {
     "type": "git",

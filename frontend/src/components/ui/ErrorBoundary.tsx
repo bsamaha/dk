@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react';
 import { Alert, Button } from '@mantine/core';
+import { trackError } from '../../utils/analytics';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -33,6 +34,9 @@ export default class ErrorBoundary extends Component<
       error,
       errorInfo
     );
+
+    // Track error in Google Analytics
+    trackError('React Error Boundary', `${error.name}: ${error.message}`);
   }
 
   private handleReload = () => {

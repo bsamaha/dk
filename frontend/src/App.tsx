@@ -9,6 +9,7 @@ import Sidebar from './components/layout/Sidebar';
 import MainContent from './components/layout/MainContent';
 import { useAppStore } from './store/appStore';
 import { useResponsive } from './hooks/useResponsive';
+import { usePageTracking } from './hooks/useGoogleAnalytics';
 
 // Import Mantine styles
 import '@mantine/core/styles.css';
@@ -28,6 +29,9 @@ const queryClient = new QueryClient({
 function App() {
   const { currentView, isMobileMenuOpen } = useAppStore();
   const { isMobile } = useResponsive();
+
+  // Initialize Google Analytics page tracking
+  usePageTracking(currentView);
 
   // Detect preferred color scheme on first load
   const getPreferredScheme = () => {
