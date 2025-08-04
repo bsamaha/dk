@@ -8,32 +8,33 @@
 
     <!-- Google Analytics -->
     <script>
-      // Only load Google Analytics in production environments
-      const isDevelopment =
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1' ||
-        window.location.hostname.endsWith('.local') ||
-        window.location.hostname.includes('dev') ||
-        window.location.port !== '' && parseInt(window.location.port) >= 3000;
+      // Only load Google Analytics in production
+      // This will be replaced by Vite during build with actual boolean value
+      const isProduction = import.meta.env.PROD;
 
-      if (!isDevelopment) {
-        // Get GA tracking ID from environment or use default
-        const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID || 'G-951R3NH68H';
+            if (isProduction) {
+        // Get GA tracking ID from environment
+        const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID;
 
-        // Load Google Analytics script
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = `https://www.googletagmanager.com/gtag/js?id=${gaTrackingId}`;
-        document.head.appendChild(script);
+        // Only load if tracking ID is provided
+        if (gaTrackingId) {
+          // Load Google Analytics script
+          const script = document.createElement('script');
+          script.async = true;
+          script.src = `https://www.googletagmanager.com/gtag/js?id=${gaTrackingId}`;
+          document.head.appendChild(script);
 
-        // Initialize Google Analytics
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', gaTrackingId);
+          // Initialize Google Analytics
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', gaTrackingId);
 
-        // Make gtag globally available for React app
-        window._gaTrackingId = gaTrackingId;
+          // Make gtag globally available for React app
+          window._gaTrackingId = gaTrackingId;
+        } else {
+          console.warn('Google Analytics: No tracking ID configured (VITE_GA_TRACKING_ID)');
+        }
       }
     </script>
 

@@ -22,6 +22,7 @@ import PlayerTable from '../ui/PlayerTable';
 import type { Player, Position } from '../../types';
 import { sanitizeSearchTerm } from '../../utils/sanitization';
 import { useGoogleAnalytics } from '../../hooks/useGoogleAnalytics';
+import { useAnalyticsDebounce } from '../../hooks/useDebounce';
 
 // Custom hook for fetching player data
 const usePlayers = (
@@ -62,6 +63,12 @@ const PlayersView = () => {
   const { isMobile, responsive } = useResponsive();
   const { trackPlayerSearch, trackPlayerDetails, trackPositionFilter } =
     useGoogleAnalytics();
+
+  // Create debounced version of trackPlayerSearch
+  const debouncedTrackPlayerSearch = useAnalyticsDebounce(
+    trackPlayerSearch,
+    2000
+  );
 
   // State for filters
   const [activePage, setActivePage] = useState(1);
@@ -107,13 +114,12 @@ const PlayersView = () => {
   // Track search results when data loads (debounced)
   useEffect(() => {
     if (playersData && searchTerm.trim()) {
-      const timeoutId = setTimeout(() => {
-        trackPlayerSearch(searchTerm.trim(), playersData.total_count || 0);
-      }, 2000); // 2 second debounce to reduce multiple events for slow typists
-
-      return () => clearTimeout(timeoutId);
+      debouncedTrackPlayerSearch(
+        searchTerm.trim(),
+        playersData.total_count || 0
+      );
     }
-  }, [playersData, searchTerm, trackPlayerSearch]);
+  }, [playersData, searchTerm, debouncedTrackPlayerSearch]);
 
   // Handlers
   const handleClearFilters = () => {

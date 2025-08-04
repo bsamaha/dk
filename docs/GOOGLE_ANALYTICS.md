@@ -44,22 +44,18 @@ export const CSP_DIRECTIVES = {
 
 ### 1. HTML Integration
 
-Google Analytics is loaded conditionally in `frontend/index.html` with comprehensive development environment detection:
+Google Analytics is loaded conditionally in `frontend/index.html` using proper environment detection:
 
 ```html
 <!-- Google Analytics -->
 <script>
-  // Only load Google Analytics in production environments
-  const isDevelopment =
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname.endsWith('.local') ||
-    window.location.hostname.includes('dev') ||
-    window.location.port !== '' && parseInt(window.location.port) >= 3000;
+  // Only load Google Analytics in production
+  // This will be replaced by Vite during build with actual boolean value
+  const isProduction = import.meta.env.PROD;
 
-  if (!isDevelopment) {
-    // Get GA tracking ID from environment or use default
-    const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID || 'G-951R3NH68H';
+  if (isProduction) {
+    // Get GA tracking ID from environment
+    const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID;
 
     // Load Google Analytics script
     const script = document.createElement('script');
@@ -164,7 +160,7 @@ export const trackError = (errorType: string, errorMessage: string) => {
 
 ### Player Interactions
 
-- **Player Search**: Tracks search terms and actual result counts (2-second debounce to accommodate slow typists)
+- **Player Search**: Tracks search terms and actual result counts (2-second debounce using reusable hook)
 - **Player Details**: Tracks when users view specific player details
 - **Position Filters**: Tracks position filter usage with selected positions
 
@@ -179,7 +175,7 @@ export const trackError = (errorType: string, errorMessage: string) => {
 
 - **Sorting**: Tracks table column sorting
 - **Export**: Tracks data export actions
-- **Errors**: Tracks application errors (React errors, API errors, validation errors)
+- **Errors**: Tracks application errors with sanitized messages (React errors, API errors, validation errors)
 - **Performance**: Tracks API call performance and response times
 - **API Monitoring**: Automatic tracking of all API requests/responses
 - **Filter Clearing**: Tracks when position filters are cleared (not just applied)
@@ -306,14 +302,41 @@ setAnalyticsConsent(false); // Disables analytics and updates GA consent mode
 
 ### Search Result Tracking
 
-Player searches now track actual result counts when data loads:
+Player searches now track actual result counts using a reusable debounced hook:
 
 ```typescript
+import { useAnalyticsDebounce } from '../../hooks/useDebounce';
+
+// Create debounced version of trackPlayerSearch
+const debouncedTrackPlayerSearch = useAnalyticsDebounce(trackPlayerSearch, 2000);
+
 useEffect(() => {
   if (playersData && searchTerm.trim()) {
-    trackPlayerSearch(searchTerm.trim(), playersData.total_count || 0);
+    debouncedTrackPlayerSearch(searchTerm.trim(), playersData.total_count || 0);
   }
-}, [playersData, searchTerm, trackPlayerSearch]);
+}, [playersData, searchTerm, debouncedTrackPlayerSearch]);
+```
+
+### Error Message Sanitization
+
+All error messages are sanitized before being sent to analytics to prevent sensitive data leakage:
+
+```typescript
+import { sanitizeErrorMessage, sanitizeErrorType } from '../utils/errorSanitization';
+
+const trackError = useCallback(
+  (errorType: string, errorMessage: string) => {
+    const sanitizedType = sanitizeErrorType(errorType);
+    const sanitizedMessage = sanitizeErrorMessage(errorMessage);
+
+    trackEvent({
+      category: 'Error',
+      action: 'error',
+      label: `${sanitizedType}: ${sanitizedMessage}`,
+    });
+  },
+  [trackEvent]
+);
 ```
 
 ## Future Enhancements

@@ -4,6 +4,10 @@ import {
   trackEvent as safeTrackEvent,
   logAnalyticsEvent,
 } from '../utils/analytics';
+import {
+  sanitizeErrorMessage,
+  sanitizeErrorType,
+} from '../utils/errorSanitization';
 
 // Type definitions for Google Analytics
 declare global {
@@ -133,13 +137,16 @@ export const useGoogleAnalytics = () => {
     [trackEvent]
   );
 
-  // Track error
+  // Track error with sanitization
   const trackError = useCallback(
     (errorType: string, errorMessage: string) => {
+      const sanitizedType = sanitizeErrorType(errorType);
+      const sanitizedMessage = sanitizeErrorMessage(errorMessage);
+
       trackEvent({
         category: 'Error',
         action: 'error',
-        label: `${errorType}: ${errorMessage}`,
+        label: `${sanitizedType}: ${sanitizedMessage}`,
       });
     },
     [trackEvent]
