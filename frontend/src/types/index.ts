@@ -191,8 +191,8 @@ export interface Week17BringBackPlayer {
   player: string;
   position: string;
   percentage: number;
-  draft_count?: number;
-  co_occurrence_count?: number;
+  draft_count?: number | null;
+  co_occurrence_count?: number | null;
 }
 
 export interface Week17BringBackResponse {

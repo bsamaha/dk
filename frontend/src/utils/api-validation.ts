@@ -171,8 +171,8 @@ export const Week17BringBackPlayerSchema = z.object({
   player: z.string(),
   position: z.string(),
   percentage: z.number(),
-  draft_count: z.number().optional(),
-  co_occurrence_count: z.number().optional(),
+  draft_count: z.number().nullable().optional(),
+  co_occurrence_count: z.number().nullable().optional(),
 });
 export const Week17BringBackResponseSchema = z.object({
   scope: z.string(),
