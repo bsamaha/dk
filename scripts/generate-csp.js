@@ -5,9 +5,65 @@
  * This ensures consistency between frontend Vite config and nginx production config
  */
 
-import { buildCSPHeader } from '../frontend/src/utils/csp.js';
 import fs from 'fs';
 import path from 'path';
+
+// Import the CSP directives directly to avoid TypeScript import issues
+const CSP_DIRECTIVES = {
+  'default-src': ["'self'"],
+  'script-src': [
+    "'self'",
+    "'unsafe-eval'", // Required for Vite dev server and some chart libraries
+    "'unsafe-inline'", // Required for Mantine components and inline scripts
+    "'wasm-unsafe-eval'", // Required for Vite
+    'data:',
+    'blob:',
+    'https://www.googletagmanager.com',
+    'https://www.google-analytics.com',
+  ],
+  'style-src': [
+    "'self'",
+    "'unsafe-inline'", // Required for Mantine components
+    'data:',
+    'https://fonts.googleapis.com',
+    'https:',
+  ],
+  'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com', 'https:'],
+  'img-src': [
+    "'self'",
+    'data:',
+    'https:',
+    'blob:',
+    'https://www.google-analytics.com',
+    'https://stats.g.doubleclick.net',
+  ],
+  'media-src': ["'self'", 'data:', 'blob:'],
+  'connect-src': [
+    "'self'",
+    'http://localhost:*',
+    'https://thesignalcallers.com',
+    'ws://localhost:*',
+    'wss://localhost:*',
+    'https://www.google-analytics.com',
+    'https://analytics.google.com',
+    'https://stats.g.doubleclick.net',
+  ],
+  'frame-ancestors': ["'none'"],
+  'base-uri': ["'self'"],
+  'form-action': ["'self'"],
+  'object-src': ["'none'"],
+  'worker-src': ["'self'", 'blob:', 'data:'],
+  'child-src': ["'self'", 'blob:'],
+};
+
+/**
+ * Build CSP header value from directives
+ */
+const buildCSPHeader = () => {
+  return Object.entries(CSP_DIRECTIVES)
+    .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
+    .join('; ');
+};
 
 const generateNginxCSP = () => {
   try {

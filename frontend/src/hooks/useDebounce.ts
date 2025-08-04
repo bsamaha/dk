@@ -51,32 +51,6 @@ export const useAnalyticsDebounce = <T extends (...args: any[]) => void>(
   trackingFunction: T,
   delay: number = 2000
 ): T => {
-  const timeoutRef = useRef<number | null>(null);
-
-  const debouncedCallback = useCallback(
-    (...args: Parameters<T>) => {
-      // Clear existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      // Set new timeout
-      timeoutRef.current = window.setTimeout(() => {
-        trackingFunction(...args);
-      }, delay);
-    },
-    [trackingFunction, delay]
-  ) as T;
-
-  // Cleanup on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    };
-  }, []);
-
-  return debouncedCallback;
+  // Use the consolidated useDebounce hook
+  return useDebounce(trackingFunction, delay);
 };

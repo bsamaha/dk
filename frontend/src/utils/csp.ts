@@ -1,6 +1,9 @@
 /**
  * Content Security Policy configuration
  * Centralized CSP directives to avoid duplication and drift
+ *
+ * NOTE: Changes to CSP_DIRECTIVES must be manually synced to scripts/generate-csp.js
+ * TODO: Consider creating a shared JSON config file that both can import
  */
 
 export const CSP_DIRECTIVES = {

@@ -183,17 +183,52 @@ export const useGoogleAnalytics = () => {
 /**
  * Hook to automatically track page views on view changes
  * Use this in your main App component
+ * Waits for GA to be available to avoid dropping initial page view
  */
 export const usePageTracking = (currentView?: string) => {
   const { trackPageView } = useGoogleAnalytics();
 
   useEffect(() => {
-    // Track page view with current view context
-    trackPageView({
-      page_title: currentView
-        ? `${currentView.charAt(0).toUpperCase() + currentView.slice(1)} - TheSignalCallers`
-        : 'TheSignalCallers',
-      page_path: currentView ? `/${currentView}` : '/',
-    });
+    // Wait for GA to be available before tracking, with fallback timeout
+    const waitForGA = () => {
+      let attempts = 0;
+      const maxAttempts = 50; // Wait up to 5 seconds (50 * 100ms)
+
+      const checkGA = () => {
+        attempts++;
+
+        // Check if GA is available or we've exceeded max attempts
+        if (
+          typeof window !== 'undefined' &&
+          typeof window.gtag === 'function'
+        ) {
+          // GA is ready, track the page view
+          trackPageView({
+            page_title: currentView
+              ? `${currentView.charAt(0).toUpperCase() + currentView.slice(1)} - TheSignalCallers`
+              : 'TheSignalCallers',
+            page_path: currentView ? `/${currentView}` : '/',
+          });
+        } else if (attempts < maxAttempts) {
+          // GA not ready yet, wait and try again
+          setTimeout(checkGA, 100);
+        } else {
+          // Timeout reached, track anyway (analytics utils handle missing gtag gracefully)
+          console.warn(
+            '[GA] Timeout waiting for gtag to be available, tracking anyway'
+          );
+          trackPageView({
+            page_title: currentView
+              ? `${currentView.charAt(0).toUpperCase() + currentView.slice(1)} - TheSignalCallers`
+              : 'TheSignalCallers',
+            page_path: currentView ? `/${currentView}` : '/',
+          });
+        }
+      };
+
+      checkGA();
+    };
+
+    waitForGA();
   }, [currentView, trackPageView]);
 };
