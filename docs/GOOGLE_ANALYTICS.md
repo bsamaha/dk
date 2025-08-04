@@ -44,18 +44,19 @@ export const CSP_DIRECTIVES = {
 
 ### 1. HTML Integration
 
-Google Analytics is loaded conditionally in `frontend/index.html` using proper environment detection:
+Google Analytics is loaded using a separate TypeScript module that's processed by Vite:
 
 ```html
-<!-- Google Analytics -->
-<script>
-  // Only load Google Analytics in production
-  // This will be replaced by Vite during build with actual boolean value
-  const isProduction = import.meta.env.PROD;
+<!-- Google Analytics initialization (processed by Vite) -->
+<script type="module" src="/src/ga-init.ts"></script>
+```
 
-  if (isProduction) {
-    // Get GA tracking ID from environment
-    const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID;
+The initialization script (`frontend/src/ga-init.ts`) handles environment detection and setup:
+
+```typescript
+// Environment detection
+const isProduction = import.meta.env.PROD;
+const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID;
 
     // Load Google Analytics script
     const script = document.createElement('script');
@@ -302,7 +303,7 @@ setAnalyticsConsent(false); // Disables analytics and updates GA consent mode
 
 ### Search Result Tracking
 
-Player searches now track actual result counts using a reusable debounced hook:
+Player searches now track actual result counts using a reusable debounced hook with browser-compatible timeouts:
 
 ```typescript
 import { useAnalyticsDebounce } from '../../hooks/useDebounce';
@@ -315,6 +316,21 @@ useEffect(() => {
     debouncedTrackPlayerSearch(searchTerm.trim(), playersData.total_count || 0);
   }
 }, [playersData, searchTerm, debouncedTrackPlayerSearch]);
+```
+
+### Environment Variable Processing
+
+Google Analytics initialization now uses proper Vite environment variable processing:
+
+```typescript
+// This is processed by Vite build system
+const isProduction = import.meta.env.PROD;
+const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID;
+
+// Only load GA in production with valid tracking ID
+if (isProduction && gaTrackingId) {
+  // Initialize Google Analytics
+}
 ```
 
 ### Error Message Sanitization

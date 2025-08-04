@@ -18,18 +18,32 @@ const generateNginxCSP = () => {
     const nginxConfigPath = path.join(process.cwd(), 'nginx.conf');
     let nginxConfig = fs.readFileSync(nginxConfigPath, 'utf8');
 
-    // Replace the CSP header line
-    const cspLinePattern = /add_header Content-Security-Policy ".*?" always;/;
-    const newCSPLine = `add_header Content-Security-Policy "${cspHeader}" always;`;
+        // Look for template markers for safer replacement
+    const startMarker = '# BEGIN_CSP_HEADER';
+    const endMarker = '# END_CSP_HEADER';
+    const newCSPBlock = `${startMarker}
+    add_header Content-Security-Policy "${cspHeader}" always;
+    ${endMarker}`;
 
-    if (cspLinePattern.test(nginxConfig)) {
-      nginxConfig = nginxConfig.replace(cspLinePattern, newCSPLine);
-      console.log('✅ Updated existing CSP header in nginx.conf');
+    if (nginxConfig.includes(startMarker) && nginxConfig.includes(endMarker)) {
+      // Replace content between markers
+      const regex = new RegExp(`${startMarker}[\\s\\S]*?${endMarker}`, 'g');
+      nginxConfig = nginxConfig.replace(regex, newCSPBlock);
+      console.log('✅ Updated CSP header using template markers');
     } else {
-      console.log('⚠️  CSP header pattern not found in nginx.conf');
-      console.log('📋 Generated CSP header:');
-      console.log(newCSPLine);
-      return;
+      // Fallback to regex pattern for backward compatibility
+      const cspLinePattern = /add_header Content-Security-Policy ".*?" always;/;
+      const newCSPLine = `add_header Content-Security-Policy "${cspHeader}" always;`;
+
+      if (cspLinePattern.test(nginxConfig)) {
+        nginxConfig = nginxConfig.replace(cspLinePattern, newCSPLine);
+        console.log('✅ Updated existing CSP header using regex fallback');
+      } else {
+        console.log('⚠️  No CSP markers or pattern found in nginx.conf');
+        console.log('📋 Add these markers around your CSP header:');
+        console.log(newCSPBlock);
+        return;
+      }
     }
 
     // Write back to nginx.conf

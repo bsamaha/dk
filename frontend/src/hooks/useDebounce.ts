@@ -10,7 +10,7 @@ export const useDebounce = <T extends (...args: unknown[]) => void>(
   callback: T,
   delay: number
 ): T => {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const debouncedCallback = useCallback(
     (...args: Parameters<T>) => {
@@ -20,7 +20,7 @@ export const useDebounce = <T extends (...args: unknown[]) => void>(
       }
 
       // Set new timeout
-      timeoutRef.current = setTimeout(() => {
+      timeoutRef.current = window.setTimeout(() => {
         callback(...args);
       }, delay);
     },
@@ -47,24 +47,23 @@ export const useDebounce = <T extends (...args: unknown[]) => void>(
  * @param delay - Delay in milliseconds (default: 2000ms)
  * @returns Debounced tracking function
  */
-export const useAnalyticsDebounce = <
-  T extends (searchTerm: string, resultsCount: number) => void,
->(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const useAnalyticsDebounce = <T extends (...args: any[]) => void>(
   trackingFunction: T,
   delay: number = 2000
 ): T => {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const debouncedCallback = useCallback(
-    (searchTerm: string, resultsCount: number) => {
+    (...args: Parameters<T>) => {
       // Clear existing timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
 
       // Set new timeout
-      timeoutRef.current = setTimeout(() => {
-        trackingFunction(searchTerm, resultsCount);
+      timeoutRef.current = window.setTimeout(() => {
+        trackingFunction(...args);
       }, delay);
     },
     [trackingFunction, delay]
