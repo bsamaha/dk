@@ -42,6 +42,9 @@ vi.mock('../utils/analytics', () => ({
   trackError: vi.fn(),
   trackPerformance: vi.fn(),
   logAnalyticsEvent: vi.fn(),
+  // Add the new debug functions
+  debugGAStatus: vi.fn(),
+  testGAEvent: vi.fn(),
 }));
 
 // Test component to wrap the hook

@@ -3,6 +3,8 @@ import {
   trackPageView as safeTrackPageView,
   trackEvent as safeTrackEvent,
   logAnalyticsEvent,
+  debugGAStatus,
+  testGAEvent,
 } from '../utils/analytics';
 import {
   sanitizeErrorMessage,
@@ -177,6 +179,9 @@ export const useGoogleAnalytics = () => {
     trackExport,
     trackError,
     trackPerformance,
+    // Debug helpers
+    debugGAStatus,
+    testGAEvent,
   };
 };
 

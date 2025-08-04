@@ -61,8 +61,12 @@ const positionOrder: Position[] = ['QB', 'RB', 'WR', 'TE'];
 
 const PlayersView = () => {
   const { isMobile, responsive } = useResponsive();
-  const { trackPlayerSearch, trackPlayerDetails, trackPositionFilter } =
-    useGoogleAnalytics();
+  const {
+    trackPlayerSearch,
+    trackPlayerDetails,
+    trackPositionFilter,
+    debugGAStatus,
+  } = useGoogleAnalytics();
 
   // Create debounced version of trackPlayerSearch
   const debouncedTrackPlayerSearch = useAnalyticsDebounce(
@@ -110,6 +114,12 @@ const PlayersView = () => {
     () => playersData?.page_info?.total_pages ?? 1,
     [playersData]
   );
+
+  // Debug GA status on component mount
+  useEffect(() => {
+    // Run debug status check
+    debugGAStatus();
+  }, [debugGAStatus]);
 
   // Track search results when data loads (debounced)
   useEffect(() => {

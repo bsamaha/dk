@@ -58,8 +58,18 @@ const initializeGoogleAnalytics = (): void => {
     // Make tracking ID globally available for React app
     window._gaTrackingId = gaTrackingId;
 
+    // Set default analytics consent if not already set
+    if (!localStorage.getItem('analytics-consent')) {
+      localStorage.setItem('analytics-consent', 'true');
+      console.log('[GA] Default analytics consent set to true');
+    }
+
     console.log('[GA] Analytics initialized with ID:', gaTrackingId);
     console.log('[GA] gtag function available:', typeof window.gtag);
+    console.log(
+      '[GA] Analytics consent:',
+      localStorage.getItem('analytics-consent')
+    );
   };
 
   script.onerror = error => {

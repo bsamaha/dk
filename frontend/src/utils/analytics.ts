@@ -50,7 +50,8 @@ export const isAnalyticsEnabled = () => {
 
   // Analytics are enabled by default unless the user has explicitly opted out.
   const hasConsent = localStorage.getItem('analytics-consent');
-  return hasConsent !== 'false';
+  // Fix: Default to enabled if no consent preference is set (null) or explicitly true
+  return hasConsent === null || hasConsent === 'true';
 };
 
 /**
@@ -165,5 +166,61 @@ export const trackError = (errorType: string, errorMessage: string) => {
       event_category: 'Error',
       event_label: `${errorType}: ${errorMessage}`,
     });
+  }
+};
+
+/**
+ * Debug helper to check current GA status
+ */
+export const debugGAStatus = () => {
+  if (typeof window === 'undefined') {
+    console.log('[GA Debug] Running in non-browser environment');
+    return;
+  }
+
+  console.group('[GA Debug] Current Status');
+  console.log('Environment:', {
+    isDevelopment,
+    isProduction,
+    NODE_ENV: import.meta.env.MODE,
+  });
+  console.log('Tracking ID:', getGATrackingId());
+  console.log('Analytics enabled:', isAnalyticsEnabled());
+  console.log('Analytics consent:', localStorage.getItem('analytics-consent'));
+  console.log('gtag available:', typeof window.gtag);
+  console.log('dataLayer available:', Array.isArray(window.dataLayer));
+  console.groupEnd();
+};
+
+/**
+ * Test helper to manually fire a GA event
+ */
+export const testGAEvent = (eventName = 'test_event') => {
+  if (typeof window === 'undefined') {
+    console.log('[GA Test] Cannot test in non-browser environment');
+    return;
+  }
+
+  console.log(`[GA Test] Attempting to fire test event: ${eventName}`);
+
+  if (!window.gtag) {
+    console.error('[GA Test] gtag not available');
+    return;
+  }
+
+  if (!isAnalyticsEnabled()) {
+    console.warn('[GA Test] Analytics not enabled');
+    return;
+  }
+
+  try {
+    window.gtag('event', eventName, {
+      event_category: 'Test',
+      event_label: 'Manual Test from debugGAStatus',
+      value: 1,
+    });
+    console.log(`[GA Test] Successfully fired event: ${eventName}`);
+  } catch (error) {
+    console.error('[GA Test] Error firing event:', error);
   }
 };
