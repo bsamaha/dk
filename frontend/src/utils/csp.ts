@@ -41,6 +41,7 @@ export const CSP_DIRECTIVES = {
     'https://thesignalcallers.com',
     'ws://localhost:*',
     'wss://localhost:*',
+    'https://*.google-analytics.com',
     'https://www.google-analytics.com',
     'https://analytics.google.com',
     'https://stats.g.doubleclick.net',
