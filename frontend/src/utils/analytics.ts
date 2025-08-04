@@ -7,11 +7,25 @@ const isDevelopment = import.meta.env.DEV;
 const isProduction = import.meta.env.PROD;
 
 // Google Analytics Tracking ID (can be set dynamically)
-export const getGATrackingId = (): string => {
-  // Try to get from window (set by HTML script) or use default
+export const getGATrackingId = (): string | null => {
+  // Try to get from window (set by HTML script) or environment
   const trackingId = (window as unknown as Record<string, unknown>)
     ?._gaTrackingId;
-  return typeof trackingId === 'string' ? trackingId : 'G-951R3NH68H';
+  const envTrackingId = import.meta.env.VITE_GA_TRACKING_ID;
+
+  // Return the first available tracking ID
+  if (typeof trackingId === 'string' && trackingId) {
+    return trackingId;
+  }
+  if (typeof envTrackingId === 'string' && envTrackingId) {
+    return envTrackingId;
+  }
+
+  // No tracking ID available - this prevents data pollution
+  console.warn(
+    'Google Analytics: No tracking ID configured. Analytics disabled.'
+  );
+  return null;
 };
 
 /**
@@ -50,11 +64,13 @@ export const trackPageView = (options?: {
 }) => {
   if (isAnalyticsEnabled() && typeof window !== 'undefined' && window.gtag) {
     const trackingId = getGATrackingId();
-    window.gtag('config', trackingId, {
-      page_title: options?.page_title || document.title,
-      page_location: options?.page_location || window.location.href,
-      page_path: options?.page_path || window.location.pathname,
-    });
+    if (trackingId) {
+      window.gtag('config', trackingId, {
+        page_title: options?.page_title || document.title,
+        page_location: options?.page_location || window.location.href,
+        page_path: options?.page_path || window.location.pathname,
+      });
+    }
   }
 };
 

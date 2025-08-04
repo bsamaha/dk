@@ -10,19 +10,35 @@ Google Analytics has been integrated to track user interactions and provide insi
 
 ### Tracking ID
 
-- **GA4 Property ID**: `G-951R3NH68H` (configurable via environment)
+- **GA4 Property ID**: Configurable via environment variables
 - **Environment**: Production only (disabled in development)
 - **Dynamic Configuration**: Supports build-time environment variable override
 - **Environment Variable**: `VITE_GA_TRACKING_ID` for custom tracking IDs
+- **Data Pollution Prevention**: No hardcoded fallback - analytics disabled if no ID configured
 
 ### Security Headers
 
-The Content Security Policy (CSP) has been updated to allow Google Analytics domains:
+The Content Security Policy (CSP) has been centralized to avoid duplication and ensure consistency across environments. CSP directives are managed in `frontend/src/utils/csp.ts`:
 
-```nginx
-# Nginx CSP Configuration
-add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://www.google-analytics.com https://stats.g.doubleclick.net; connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net;" always;
+```typescript
+// Centralized CSP configuration
+export const CSP_DIRECTIVES = {
+  'script-src': [
+    "'self'",
+    "'unsafe-eval'", // Required for Vite dev server and chart libraries
+    "'unsafe-inline'", // Required for Mantine components
+    'https://www.googletagmanager.com',
+    'https://www.google-analytics.com',
+  ],
+  // ... other directives
+};
 ```
+
+**Security Notes:**
+
+- `'unsafe-eval'` and `'unsafe-inline'` are required for Vite development server and Mantine UI components
+- These directives are documented and should be reviewed periodically for removal opportunities
+- CSP configuration is shared between Vite dev/preview and Nginx production
 
 ## Implementation Details
 

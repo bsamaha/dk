@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useResponsive } from '../../hooks/useResponsive';
 import {
@@ -104,26 +104,16 @@ const PlayersView = () => {
     [playersData]
   );
 
-  // Debounced search tracking to avoid excessive events
-  const debouncedSearchTracking = useCallback(
-    (term: string, count: number) => {
-      const timeoutId = setTimeout(() => {
-        if (term.trim()) {
-          trackPlayerSearch(term.trim(), count);
-        }
-      }, 1000); // 1 second debounce
-
-      return () => clearTimeout(timeoutId);
-    },
-    [trackPlayerSearch]
-  );
-
   // Track search results when data loads (debounced)
   useEffect(() => {
     if (playersData && searchTerm.trim()) {
-      debouncedSearchTracking(searchTerm.trim(), playersData.total_count || 0);
+      const timeoutId = setTimeout(() => {
+        trackPlayerSearch(searchTerm.trim(), playersData.total_count || 0);
+      }, 1000); // 1 second debounce
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [playersData, searchTerm, debouncedSearchTracking]);
+  }, [playersData, searchTerm, trackPlayerSearch]);
 
   // Handlers
   const handleClearFilters = () => {
