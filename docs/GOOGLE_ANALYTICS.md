@@ -44,15 +44,22 @@ export const CSP_DIRECTIVES = {
 
 ### 1. HTML Integration
 
-Google Analytics is loaded conditionally in `frontend/index.html`:
+Google Analytics is loaded conditionally in `frontend/index.html` with comprehensive development environment detection:
 
 ```html
 <!-- Google Analytics -->
 <script>
-  // Only load Google Analytics in production
-  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+  // Only load Google Analytics in production environments
+  const isDevelopment =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.endsWith('.local') ||
+    window.location.hostname.includes('dev') ||
+    window.location.port !== '' && parseInt(window.location.port) >= 3000;
+
+  if (!isDevelopment) {
     // Get GA tracking ID from environment or use default
-    const gaTrackingId = 'G-951R3NH68H'; // Default ID, can be overridden via build process
+    const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID || 'G-951R3NH68H';
 
     // Load Google Analytics script
     const script = document.createElement('script');
@@ -77,9 +84,12 @@ Google Analytics is loaded conditionally in `frontend/index.html`:
 The `useGoogleAnalytics` hook provides easy-to-use tracking functions:
 
 ```typescript
-import { useGoogleAnalytics } from '../hooks/useGoogleAnalytics';
+import { useGoogleAnalytics, usePageTracking } from '../hooks/useGoogleAnalytics';
 
 const { trackPlayerSearch, trackPlayerDetails, trackEvent } = useGoogleAnalytics();
+
+// Automatic page tracking (pass current view)
+usePageTracking(currentView);
 
 // Track player search
 trackPlayerSearch('Dobbins', 5);
@@ -154,7 +164,7 @@ export const trackError = (errorType: string, errorMessage: string) => {
 
 ### Player Interactions
 
-- **Player Search**: Tracks search terms and actual result counts (debounced to avoid excessive events)
+- **Player Search**: Tracks search terms and actual result counts (2-second debounce to accommodate slow typists)
 - **Player Details**: Tracks when users view specific player details
 - **Position Filters**: Tracks position filter usage with selected positions
 

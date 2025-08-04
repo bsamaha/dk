@@ -1,9 +1,12 @@
 import axios from 'axios';
 
+// Create a unique symbol for metadata to prevent conflicts
+const METADATA_SYMBOL = Symbol('analytics-metadata');
+
 // Extend axios config to include metadata for performance tracking
 declare module 'axios' {
   interface AxiosRequestConfig {
-    metadata?: {
+    [METADATA_SYMBOL]?: {
       startTime: number;
     };
   }
@@ -130,8 +133,8 @@ function findSchemaForUrl(url: string): z.ZodSchema | null {
 api.interceptors.request.use(
   config => {
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
-    // Add timestamp for performance tracking
-    config.metadata = { startTime: performance.now() };
+    // Add timestamp for performance tracking using symbol
+    config[METADATA_SYMBOL] = { startTime: performance.now() };
     return config;
   },
   error => {
@@ -147,8 +150,9 @@ api.interceptors.response.use(
     console.log(`API Response: ${response.status} ${response.config.url}`);
 
     // Track performance if we have start time
-    if (response.config.metadata?.startTime) {
-      const duration = performance.now() - response.config.metadata.startTime;
+    if (response.config[METADATA_SYMBOL]?.startTime) {
+      const duration =
+        performance.now() - response.config[METADATA_SYMBOL].startTime;
       const endpoint = response.config.url?.split('?')[0] || 'unknown';
       trackPerformance(`API ${endpoint}`, duration);
     }

@@ -8,8 +8,15 @@
 
     <!-- Google Analytics -->
     <script>
-      // Only load Google Analytics in production
-      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      // Only load Google Analytics in production environments
+      const isDevelopment =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.endsWith('.local') ||
+        window.location.hostname.includes('dev') ||
+        window.location.port !== '' && parseInt(window.location.port) >= 3000;
+
+      if (!isDevelopment) {
         // Get GA tracking ID from environment or use default
         const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID || 'G-951R3NH68H';
 

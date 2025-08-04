@@ -174,45 +174,19 @@ export const useGoogleAnalytics = () => {
 };
 
 /**
- * Hook to automatically track page views on route changes
- * Use this in your main App component or router
+ * Hook to automatically track page views on view changes
+ * Use this in your main App component
  */
-export const usePageTracking = () => {
+export const usePageTracking = (currentView?: string) => {
   const { trackPageView } = useGoogleAnalytics();
 
   useEffect(() => {
-    // Track initial page view
-    trackPageView();
-
-    // Track page views on navigation
-    const handleRouteChange = () => {
-      trackPageView();
-    };
-
-    // Listen for popstate events (browser back/forward)
-    window.addEventListener('popstate', handleRouteChange);
-
-    // Listen for pushState/replaceState events (client-side routing)
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
-
-    history.pushState = function (...args) {
-      originalPushState.apply(history, args);
-      // Small delay to ensure DOM is updated
-      setTimeout(handleRouteChange, 0);
-    };
-
-    history.replaceState = function (...args) {
-      originalReplaceState.apply(history, args);
-      // Small delay to ensure DOM is updated
-      setTimeout(handleRouteChange, 0);
-    };
-
-    return () => {
-      window.removeEventListener('popstate', handleRouteChange);
-      // Restore original history methods
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
-    };
-  }, [trackPageView]);
+    // Track page view with current view context
+    trackPageView({
+      page_title: currentView
+        ? `${currentView.charAt(0).toUpperCase() + currentView.slice(1)} - TheSignalCallers`
+        : 'TheSignalCallers',
+      page_path: currentView ? `/${currentView}` : '/',
+    });
+  }, [currentView, trackPageView]);
 };

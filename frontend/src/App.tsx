@@ -31,7 +31,7 @@ function App() {
   const { isMobile } = useResponsive();
 
   // Initialize Google Analytics page tracking
-  usePageTracking();
+  usePageTracking(currentView);
 
   // Detect preferred color scheme on first load
   const getPreferredScheme = () => {

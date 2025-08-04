@@ -109,7 +109,7 @@ const PlayersView = () => {
     if (playersData && searchTerm.trim()) {
       const timeoutId = setTimeout(() => {
         trackPlayerSearch(searchTerm.trim(), playersData.total_count || 0);
-      }, 1000); // 1 second debounce
+      }, 2000); // 2 second debounce to reduce multiple events for slow typists
 
       return () => clearTimeout(timeoutId);
     }
