@@ -16,6 +16,23 @@ import type {
   RosterConstructionCount,
   Week17BringBackResponse,
 } from '../types';
+import { sanitizeSearchTerm, isValidSearchTerm } from '../utils/sanitization';
+import { z } from 'zod';
+import {
+  validateApiResponse,
+  PlayersResponseSchema,
+  MetadataResponseSchema,
+  PositionStatsResponseSchema,
+  FirstPlayerDraftStatsSchema,
+  CombinationsResponseSchema,
+  RosterConstructionResponseSchema,
+  RosterConstructionCountSchema,
+  TeamsResponseSchema,
+  PlayerDetailsSchema,
+  DraftSlotResponseSchema,
+  Week17BringBackResponseSchema,
+  SearchPlayersResponseSchema,
+} from '../utils/api-validation';
 
 // Create axios instance with base configuration
 // Determine API base URL dynamically
@@ -23,8 +40,7 @@ import type {
 const isLocalhost =
   window.location.hostname === 'localhost' ||
   window.location.hostname === '127.0.0.1';
-const isDevServerPort =
-  window.location.port === '5173' || window.location.port === '3000';
+const isDevServerPort = window.location.port === '5173';
 
 // 1) Prefer explicit build-time environment variable (defined in .env or CI)
 const baseURL =
@@ -43,6 +59,63 @@ const api = axios.create({
   },
 });
 
+// Schema mapping for centralized validation
+const endpointSchemas: Record<string, z.ZodSchema> = {
+  '/metadata/': MetadataResponseSchema,
+  '/players/': PlayersResponseSchema,
+  '/players/search': SearchPlayersResponseSchema,
+  '/positions/stats': PositionStatsResponseSchema,
+  '/positions/stats/first_player': z.array(FirstPlayerDraftStatsSchema),
+  '/combinations/': CombinationsResponseSchema,
+  '/positions/roster-construction/': RosterConstructionResponseSchema,
+  '/positions/roster-construction/counts': z.array(
+    RosterConstructionCountSchema
+  ),
+  '/teams/': TeamsResponseSchema,
+  '/players/details': PlayerDetailsSchema,
+  '/analytics/draft-slot': DraftSlotResponseSchema,
+  '/analytics/week17-bringback': Week17BringBackResponseSchema,
+};
+
+// Helper function to find matching schema for URL
+function findSchemaForUrl(url: string): z.ZodSchema | null {
+  // Remove query parameters for matching
+  const path = url.split('?')[0];
+
+  // Try exact match first
+  if (endpointSchemas[path]) {
+    return endpointSchemas[path];
+  }
+
+  // Try pattern matching for dynamic routes
+  for (const [pattern, schema] of Object.entries(endpointSchemas)) {
+    if (pattern.includes('{') || pattern.includes('*')) {
+      // Simple pattern matching - could be enhanced with regex
+      const patternParts = pattern.split('/');
+      const pathParts = path.split('/');
+
+      if (patternParts.length === pathParts.length) {
+        let matches = true;
+        for (let i = 0; i < patternParts.length; i++) {
+          if (
+            patternParts[i] !== pathParts[i] &&
+            !patternParts[i].startsWith('{') &&
+            patternParts[i] !== '*'
+          ) {
+            matches = false;
+            break;
+          }
+        }
+        if (matches) {
+          return schema;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 // Add request interceptor for logging
 api.interceptors.request.use(
   config => {
@@ -55,10 +128,22 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor for error handling
+// Add response interceptor for centralized validation and error handling
 api.interceptors.response.use(
   response => {
     console.log(`API Response: ${response.status} ${response.config.url}`);
+
+    // Apply schema validation if schema exists for this endpoint
+    const schema = findSchemaForUrl(response.config.url || '');
+    if (schema) {
+      try {
+        response.data = validateApiResponse(response.data, schema);
+      } catch (error) {
+        console.error('Schema validation failed:', error);
+        return Promise.reject(error);
+      }
+    }
+
     return response;
   },
   error => {
@@ -83,8 +168,12 @@ export const apiService = {
   async getPlayers(filters: PlayerFilter = {}): Promise<PlayersResponse> {
     const params = new URLSearchParams();
 
-    if (filters.search_term) {
-      params.append('search_term', filters.search_term);
+    const sanitizedSearch =
+      filters.search_term && isValidSearchTerm(filters.search_term)
+        ? sanitizeSearchTerm(filters.search_term)
+        : undefined;
+    if (sanitizedSearch) {
+      params.append('search_term', sanitizedSearch);
     }
 
     if (filters.positions && filters.positions.length > 0) {
@@ -121,7 +210,7 @@ export const apiService = {
     total_found: number;
   }> {
     const response = await api.get(
-      `/players/search?q=${encodeURIComponent(query)}&limit=${limit}`
+      `/players/search?q=${encodeURIComponent(sanitizeSearchTerm(isValidSearchTerm(query) ? query : ''))}&limit=${limit}`
     );
     return response.data;
   },

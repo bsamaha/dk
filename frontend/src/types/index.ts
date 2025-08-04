@@ -47,8 +47,6 @@ export interface PositionStats {
   position: Position;
   total_drafted: number;
   unique_players: number;
-  avg_pick: number;
-  avg_draft_position: number;
   median_draft_count: number;
 }
 

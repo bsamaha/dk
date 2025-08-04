@@ -32,7 +32,11 @@ const OverviewView = () => {
     queryFn: apiService.getMetadata,
   });
 
-  const { data: positionStats, isLoading: positionStatsLoading } = useQuery({
+  const {
+    data: positionStats,
+    isLoading: positionStatsLoading,
+    error: positionStatsError,
+  } = useQuery({
     queryKey: ['positionStats'],
     queryFn: apiService.getPositionStats,
   });
@@ -60,6 +64,18 @@ const OverviewView = () => {
       })) || [],
     [roundCountsData]
   );
+
+  // Handle error state for position stats query
+  if (positionStatsError) {
+    if (import.meta.env.DEV) {
+      console.error('Position Stats Query Error:', positionStatsError);
+    }
+    return (
+      <div className="text-red-600 dark:text-red-400">
+        Error loading position statistics. Please try again later.
+      </div>
+    );
+  }
 
   const colors = [
     '#00A86B',

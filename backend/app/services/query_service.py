@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 import duckdb  # type: ignore
 import polars as pl
 
+from ..core.config import settings
 from ..models.schemas import (
     AggregationType,
     Player,
@@ -148,21 +149,32 @@ class QueryService:
 
     @staticmethod
     def _get_data_path() -> str:
-        """Return absolute path to the parquet data file."""
-        # From backend/app/services/query_service.py, go up to project root
-        project_root: Path = Path(__file__).parent.parent.parent.parent
-        data_dir: Path = project_root / "data"
-        data_path: Path = data_dir / "updated_bestball_data.parquet"
+        """Return absolute path to the parquet data file defined by settings.DATA_PATH."""
+        data_dir: Path = Path(settings.DATA_PATH).expanduser()
 
-        # Validate the path is safe
+        # If the path is /app/data (container path) but we're running locally,
+        # try to find the data directory relative to project root
+        if str(data_dir) == "/app/data" and not data_dir.exists():
+            # Try project root (one level up from backend/app/services/)
+            project_root = Path(__file__).parent.parent.parent.parent
+            data_dir = project_root / "data"
+
+        data_path: Path = data_dir / "updated_bestball_data.parquet"
         validated_path = QueryService._validate_and_sanitize_path(data_path, data_dir)
         return str(validated_path)
 
     def _load_week17_matchups(self) -> None:
         """Load Week 17 matchups data into DuckDB."""
         # Get path to Week 17 matchups file
-        project_root: Path = Path(__file__).parent.parent.parent.parent
-        data_dir: Path = project_root / "data"
+        data_dir: Path = Path(settings.DATA_PATH).expanduser()
+
+        # If the path is /app/data (container path) but we're running locally,
+        # try to find the data directory relative to project root
+        if str(data_dir) == "/app/data" and not data_dir.exists():
+            # Try project root (one level up from backend/app/services/)
+            project_root = Path(__file__).parent.parent.parent.parent
+            data_dir = project_root / "data"
+
         matchups_path: Path = data_dir / "week17_matchups.json"
 
         try:
@@ -1083,5 +1095,17 @@ class QueryService:
         return result.to_dicts()
 
 
-# Global singleton instance
-query_service: QueryService = QueryService()
+# Global singleton instance - lazy loaded
+_query_service_instance: Optional[QueryService] = None
+
+
+def get_query_service() -> QueryService:
+    """Get the global singleton QueryService instance."""
+    global _query_service_instance
+    if _query_service_instance is None:
+        _query_service_instance = QueryService()
+    return _query_service_instance
+
+
+# For backward compatibility
+query_service = get_query_service()

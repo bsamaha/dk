@@ -43,23 +43,37 @@
 
 ### Security & Configuration
 
-- [ ] **Fix CORS configuration**
+- [x] **Fix CORS configuration** ✅ **COMPLETED**
   - Location: `backend/app/core/config.py` lines 79-80
-  - Remove `0.0.0.0` from allowed hosts
-  - Use explicit localhost addresses
-  - Priority: **HIGH**
+  - ✅ Removed `0.0.0.0` from allowed hosts
+  - ✅ Use explicit localhost addresses
+  - ✅ Trimmed unused ports (3000, 8080) from ALLOWED_ORIGINS
+  - ✅ Updated frontend port detection to only check 5173
+  - ✅ Added environment variable support for VITE_API_BASE_URL
+  - ✅ Fixed DATA_PATH configuration to use directory instead of file
+  - ✅ Added local development path resolution for tests
+  - Priority: **COMPLETED**
 
-- [ ] **Add rate limiting middleware**
-  - Location: `backend/app/main.py`
-  - Implement SlowAPI or similar rate limiting
-  - Add per-IP rate limits
-  - Priority: **HIGH**
+- [x] **Implement Nginx rate limiting** ✅ **COMPLETED**
+  - Location: `nginx.conf`
+  - ✅ Implemented granular rate limiting by endpoint type
+  - ✅ Analytics: 2r/s (heavy computations)
+  - ✅ Combinations: 3r/s (complex queries)
+  - ✅ Search: 5r/s (user-driven)
+  - ✅ Metadata: 5r/s (lightweight)
+  - ✅ General: 3r/s (health/static)
+  - ✅ Token bucket algorithm with burst allowances
+  - ✅ Decision: Skip application-level rate limiting (see [ADR-0003](adr/ADR-0003-rate-limiting.md))
+  - Priority: **COMPLETED**
 
-- [ ] **Add security headers**
+- [x] **Add security headers** ✅ **COMPLETED**
   - Location: `frontend/vite.config.ts`
-  - Add X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
-  - Configure CSP headers
-  - Priority: **HIGH**
+  - ✅ Added X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
+  - ✅ Configured comprehensive CSP headers with proper resource allowances
+  - ✅ Added security meta tags to index.html
+  - ✅ Created security headers test suite
+  - ✅ Protected against XSS, clickjacking, MIME sniffing, and content injection
+  - Priority: **COMPLETED**
 
 ### Resource Management
 

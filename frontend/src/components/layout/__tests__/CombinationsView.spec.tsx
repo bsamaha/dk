@@ -7,6 +7,7 @@ import type { UseQueryResult } from '@tanstack/react-query';
 
 // Mock Mantine hooks that might cause issues in jsdom
 vi.mock('@mantine/hooks', () => ({
+  useDebouncedValue: vi.fn((val: unknown) => [val, vi.fn()]),
   useMediaQuery: vi.fn(() => false),
   useLocalStorage: vi.fn(() => [null, vi.fn()]),
   useViewportSize: vi.fn(() => ({ width: 1024, height: 768 })),
