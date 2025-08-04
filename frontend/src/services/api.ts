@@ -24,7 +24,6 @@ import {
   MetadataResponseSchema,
   PositionStatsResponseSchema,
   FirstPlayerDraftStatsSchema,
-  PositionRoundCountsResponseSchema,
   CombinationsResponseSchema,
   RosterConstructionResponseSchema,
   RosterConstructionCountSchema,
@@ -60,6 +59,63 @@ const api = axios.create({
   },
 });
 
+// Schema mapping for centralized validation
+const endpointSchemas: Record<string, z.ZodSchema> = {
+  '/metadata/': MetadataResponseSchema,
+  '/players/': PlayersResponseSchema,
+  '/players/search': SearchPlayersResponseSchema,
+  '/positions/stats': PositionStatsResponseSchema,
+  '/positions/stats/first_player': z.array(FirstPlayerDraftStatsSchema),
+  '/combinations/': CombinationsResponseSchema,
+  '/positions/roster-construction/': RosterConstructionResponseSchema,
+  '/positions/roster-construction/counts': z.array(
+    RosterConstructionCountSchema
+  ),
+  '/teams/': TeamsResponseSchema,
+  '/players/details': PlayerDetailsSchema,
+  '/analytics/draft-slot': DraftSlotResponseSchema,
+  '/analytics/week17-bringback': Week17BringBackResponseSchema,
+};
+
+// Helper function to find matching schema for URL
+function findSchemaForUrl(url: string): z.ZodSchema | null {
+  // Remove query parameters for matching
+  const path = url.split('?')[0];
+
+  // Try exact match first
+  if (endpointSchemas[path]) {
+    return endpointSchemas[path];
+  }
+
+  // Try pattern matching for dynamic routes
+  for (const [pattern, schema] of Object.entries(endpointSchemas)) {
+    if (pattern.includes('{') || pattern.includes('*')) {
+      // Simple pattern matching - could be enhanced with regex
+      const patternParts = pattern.split('/');
+      const pathParts = path.split('/');
+
+      if (patternParts.length === pathParts.length) {
+        let matches = true;
+        for (let i = 0; i < patternParts.length; i++) {
+          if (
+            patternParts[i] !== pathParts[i] &&
+            !patternParts[i].startsWith('{') &&
+            patternParts[i] !== '*'
+          ) {
+            matches = false;
+            break;
+          }
+        }
+        if (matches) {
+          return schema;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 // Add request interceptor for logging
 api.interceptors.request.use(
   config => {
@@ -72,10 +128,22 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor for error handling
+// Add response interceptor for centralized validation and error handling
 api.interceptors.response.use(
   response => {
     console.log(`API Response: ${response.status} ${response.config.url}`);
+
+    // Apply schema validation if schema exists for this endpoint
+    const schema = findSchemaForUrl(response.config.url || '');
+    if (schema) {
+      try {
+        response.data = validateApiResponse(response.data, schema);
+      } catch (error) {
+        console.error('Schema validation failed:', error);
+        return Promise.reject(error);
+      }
+    }
+
     return response;
   },
   error => {
@@ -93,7 +161,7 @@ export const apiService = {
   // Get metadata
   async getMetadata(): Promise<MetadataResponse> {
     const response = await api.get('/metadata/');
-    return validateApiResponse(response.data, MetadataResponseSchema);
+    return response.data;
   },
 
   // Get players with filtering
@@ -129,7 +197,7 @@ export const apiService = {
     }
 
     const response = await api.get(`/players/?${params.toString()}`);
-    return validateApiResponse(response.data, PlayersResponseSchema);
+    return response.data;
   },
 
   // Search players by name
@@ -144,22 +212,19 @@ export const apiService = {
     const response = await api.get(
       `/players/search?q=${encodeURIComponent(sanitizeSearchTerm(isValidSearchTerm(query) ? query : ''))}&limit=${limit}`
     );
-    return validateApiResponse(response.data, SearchPlayersResponseSchema);
+    return response.data;
   },
 
   // Get position statistics
   async getPositionStats(): Promise<PositionStatsResponse> {
     const response = await api.get('/positions/stats');
-    return validateApiResponse(response.data, PositionStatsResponseSchema);
+    return response.data;
   },
 
   // Get first player draft stats
   async getFirstPlayerDraftStats(): Promise<FirstPlayerDraftStats[]> {
     const response = await api.get('/positions/stats/first_player');
-    return validateApiResponse(
-      response.data,
-      z.array(FirstPlayerDraftStatsSchema)
-    );
+    return response.data;
   },
 
   // Get position draft counts by round
@@ -170,10 +235,7 @@ export const apiService = {
     const response = await api.get(
       `/positions/stats/${position}/by_round?aggregation=${aggregation}`
     );
-    return validateApiResponse(
-      response.data,
-      PositionRoundCountsResponseSchema
-    );
+    return response.data;
   },
 
   // Get player combinations
@@ -187,13 +249,13 @@ export const apiService = {
       params.append('limit', filters.limit.toString());
     }
     const response = await api.get(`/combinations/?${params.toString()}`);
-    return validateApiResponse(response.data, CombinationsResponseSchema);
+    return response.data;
   },
 
   // Get roster construction data
   async getRosterConstruction(): Promise<RosterConstructionResponse> {
     const response = await api.get('/positions/roster-construction/');
-    return validateApiResponse(response.data, RosterConstructionResponseSchema);
+    return response.data;
   },
 
   // Get aggregated roster construction counts
@@ -207,10 +269,7 @@ export const apiService = {
     const response = await api.get(
       `/positions/roster-construction/counts?${params.toString()}`
     );
-    return validateApiResponse(
-      response.data,
-      z.array(RosterConstructionCountSchema)
-    );
+    return response.data;
   },
 
   // Get team data
@@ -218,7 +277,7 @@ export const apiService = {
     limit: number = 100
   ): Promise<{ teams: string[]; total_count: number }> {
     const response = await api.get(`/teams/?limit=${limit}`);
-    return validateApiResponse(response.data, TeamsResponseSchema);
+    return response.data;
   },
 
   // Get player details
@@ -233,7 +292,7 @@ export const apiService = {
       team: team,
     });
     const response = await api.get(`/players/details?${params.toString()}`);
-    return validateApiResponse(response.data, PlayerDetailsSchema);
+    return response.data;
   },
 
   // ---------------- Draft Slot Correlation ----------------
@@ -250,7 +309,7 @@ export const apiService = {
     const response = await api.get(
       `/analytics/draft-slot?${params.toString()}`
     );
-    return validateApiResponse(response.data, DraftSlotResponseSchema);
+    return response.data;
   },
 
   // ---------------- Week 17 Bring Back ----------------
@@ -267,7 +326,7 @@ export const apiService = {
     const response = await api.get(
       `/analytics/week17-bringback?${params.toString()}`
     );
-    return validateApiResponse(response.data, Week17BringBackResponseSchema);
+    return response.data;
   },
 };
 

@@ -100,7 +100,7 @@ const PlayerAutocomplete = ({
       console.error('Error filtering options:', err);
       return playerOptions;
     }
-  }, [playerOptions, searchValue]);
+  }, [playerOptions, debouncedSearch]);
 
   // Show error state if API call failed
   if (error) {
