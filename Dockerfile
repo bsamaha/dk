@@ -13,6 +13,11 @@ RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the frontend source and build
 COPY frontend .
+
+# Pass environment variables during build
+ARG VITE_GA_TRACKING_ID
+ENV VITE_GA_TRACKING_ID=$VITE_GA_TRACKING_ID
+
 RUN pnpm run build
 
 # ---------- Stage 2: production image ----------
