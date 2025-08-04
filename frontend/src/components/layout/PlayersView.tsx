@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useResponsive } from '../../hooks/useResponsive';
 import {
@@ -21,6 +21,7 @@ import PlayerAutocomplete from '../ui/PlayerAutocomplete';
 import PlayerTable from '../ui/PlayerTable';
 import type { Player, Position } from '../../types';
 import { sanitizeSearchTerm } from '../../utils/sanitization';
+import { useGoogleAnalytics } from '../../hooks/useGoogleAnalytics';
 
 // Custom hook for fetching player data
 const usePlayers = (
@@ -59,6 +60,8 @@ const positionOrder: Position[] = ['QB', 'RB', 'WR', 'TE'];
 
 const PlayersView = () => {
   const { isMobile, responsive } = useResponsive();
+  const { trackPlayerSearch, trackPlayerDetails, trackPositionFilter } =
+    useGoogleAnalytics();
 
   // State for filters
   const [activePage, setActivePage] = useState(1);
@@ -101,6 +104,27 @@ const PlayersView = () => {
     [playersData]
   );
 
+  // Debounced search tracking to avoid excessive events
+  const debouncedSearchTracking = useCallback(
+    (term: string, count: number) => {
+      const timeoutId = setTimeout(() => {
+        if (term.trim()) {
+          trackPlayerSearch(term.trim(), count);
+        }
+      }, 1000); // 1 second debounce
+
+      return () => clearTimeout(timeoutId);
+    },
+    [trackPlayerSearch]
+  );
+
+  // Track search results when data loads (debounced)
+  useEffect(() => {
+    if (playersData && searchTerm.trim()) {
+      debouncedSearchTracking(searchTerm.trim(), playersData.total_count || 0);
+    }
+  }, [playersData, searchTerm, debouncedSearchTracking]);
+
   // Handlers
   const handleClearFilters = () => {
     setActivePositions([]);
@@ -121,6 +145,15 @@ const PlayersView = () => {
       selectedPlayer?.name === player.name ? null : player;
     console.log('Setting selectedPlayer to:', newSelectedPlayer);
     setSelectedPlayer(newSelectedPlayer);
+
+    // Track player details view
+    if (newSelectedPlayer) {
+      trackPlayerDetails(
+        newSelectedPlayer.name,
+        newSelectedPlayer.position,
+        newSelectedPlayer.team
+      );
+    }
   };
 
   return (
@@ -193,7 +226,13 @@ const PlayersView = () => {
           <MultiSelect
             data={positionOrder.map(pos => ({ label: pos, value: pos }))}
             value={activePositions}
-            onChange={value => setActivePositions(value as Position[])}
+            onChange={value => {
+              setActivePositions(value as Position[]);
+              // Track position filter changes
+              if (value.length > 0) {
+                trackPositionFilter(value.join(', '));
+              }
+            }}
             placeholder="Filter by position..."
             clearable
           />

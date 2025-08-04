@@ -5,6 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Temporarily disabled CSP meta tag for testing -->
     <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' 'wasm-unsafe-eval' data: blob:; style-src 'self' 'unsafe-inline' data: https://fonts.googleapis.com https:; font-src 'self' data: https://fonts.gstatic.com https:; img-src 'self' data: https: blob:; media-src 'self' data: blob:; connect-src 'self' http://localhost:* https://thesignalcallers.com ws://localhost:* wss://localhost:*; base-uri 'self'; form-action 'self'; object-src 'none'; worker-src 'self' blob: data:; child-src 'self' blob:" /> -->
+
+    <!-- Google Analytics -->
+    <script>
+      // Only load Google Analytics in production
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        // Get GA tracking ID from environment or use default
+        const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID || 'G-951R3NH68H';
+
+        // Load Google Analytics script
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${gaTrackingId}`;
+        document.head.appendChild(script);
+
+        // Initialize Google Analytics
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', gaTrackingId);
+
+        // Make gtag globally available for React app
+        window._gaTrackingId = gaTrackingId;
+      }
+    </script>
+
     <!-- Brand Icons -->
     <link
       rel="icon"

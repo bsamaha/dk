@@ -1,4 +1,13 @@
 import axios from 'axios';
+
+// Extend axios config to include metadata for performance tracking
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    metadata?: {
+      startTime: number;
+    };
+  }
+}
 import type {
   MetadataResponse,
   PlayersResponse,
@@ -17,6 +26,7 @@ import type {
   Week17BringBackResponse,
 } from '../types';
 import { sanitizeSearchTerm, isValidSearchTerm } from '../utils/sanitization';
+import { trackPerformance, trackError } from '../utils/analytics';
 import { z } from 'zod';
 import {
   validateApiResponse,
@@ -116,14 +126,17 @@ function findSchemaForUrl(url: string): z.ZodSchema | null {
   return null;
 }
 
-// Add request interceptor for logging
+// Add request interceptor for logging and performance tracking
 api.interceptors.request.use(
   config => {
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    // Add timestamp for performance tracking
+    config.metadata = { startTime: performance.now() };
     return config;
   },
   error => {
     console.error('API Request Error:', error);
+    trackError('API Request', error.message);
     return Promise.reject(error);
   }
 );
@@ -133,6 +146,13 @@ api.interceptors.response.use(
   response => {
     console.log(`API Response: ${response.status} ${response.config.url}`);
 
+    // Track performance if we have start time
+    if (response.config.metadata?.startTime) {
+      const duration = performance.now() - response.config.metadata.startTime;
+      const endpoint = response.config.url?.split('?')[0] || 'unknown';
+      trackPerformance(`API ${endpoint}`, duration);
+    }
+
     // Apply schema validation if schema exists for this endpoint
     const schema = findSchemaForUrl(response.config.url || '');
     if (schema) {
@@ -140,6 +160,10 @@ api.interceptors.response.use(
         response.data = validateApiResponse(response.data, schema);
       } catch (error) {
         console.error('Schema validation failed:', error);
+        trackError(
+          'API Validation',
+          `Schema validation failed for ${response.config.url}`
+        );
         return Promise.reject(error);
       }
     }
@@ -152,6 +176,12 @@ api.interceptors.response.use(
       error.response?.status,
       error.response?.data
     );
+
+    // Track API errors
+    const endpoint = error.config?.url?.split('?')[0] || 'unknown';
+    const status = error.response?.status || 'network_error';
+    trackError('API Response', `${status} - ${endpoint}`);
+
     return Promise.reject(error);
   }
 );
