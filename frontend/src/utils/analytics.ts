@@ -45,11 +45,17 @@ export const isAnalyticsEnabled = () => {
  * Safe gtag function that checks if analytics is enabled
  */
 export const safeGtag = (
-  command: 'config' | 'event' | 'js',
+  command: 'config' | 'event' | 'js' | 'consent',
   targetId: string,
   config?: Record<string, unknown>
 ) => {
-  if (isAnalyticsEnabled() && typeof window !== 'undefined' && window.gtag) {
+  const isValidTrackingId = typeof targetId === 'string' && !!targetId.trim();
+  if (
+    isAnalyticsEnabled() &&
+    isValidTrackingId &&
+    typeof window !== 'undefined' &&
+    window.gtag
+  ) {
     window.gtag(command, targetId, config);
   }
 };
@@ -106,6 +112,13 @@ export const logAnalyticsEvent = (eventName: string, data?: unknown) => {
  */
 export const setAnalyticsConsent = (consent: boolean) => {
   localStorage.setItem('analytics-consent', consent.toString());
+
+  // Integrate with Google Analytics Consent Mode
+  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+    window.gtag('consent', 'update', {
+      analytics_storage: consent ? 'granted' : 'denied',
+    });
+  }
 };
 
 export const getAnalyticsConsent = (): boolean => {

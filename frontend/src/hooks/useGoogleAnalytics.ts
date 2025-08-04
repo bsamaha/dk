@@ -9,7 +9,7 @@ import {
 declare global {
   interface Window {
     gtag: (
-      command: 'config' | 'event' | 'js',
+      command: 'config' | 'event' | 'js' | 'consent',
       targetId: string,
       config?: Record<string, unknown>
     ) => void;
@@ -184,7 +184,7 @@ export const usePageTracking = () => {
     // Track initial page view
     trackPageView();
 
-    // Track page views on navigation (if using React Router)
+    // Track page views on navigation
     const handleRouteChange = () => {
       trackPageView();
     };
@@ -192,8 +192,27 @@ export const usePageTracking = () => {
     // Listen for popstate events (browser back/forward)
     window.addEventListener('popstate', handleRouteChange);
 
+    // Listen for pushState/replaceState events (client-side routing)
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    history.pushState = function (...args) {
+      originalPushState.apply(history, args);
+      // Small delay to ensure DOM is updated
+      setTimeout(handleRouteChange, 0);
+    };
+
+    history.replaceState = function (...args) {
+      originalReplaceState.apply(history, args);
+      // Small delay to ensure DOM is updated
+      setTimeout(handleRouteChange, 0);
+    };
+
     return () => {
       window.removeEventListener('popstate', handleRouteChange);
+      // Restore original history methods
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
     };
   }, [trackPageView]);
 };

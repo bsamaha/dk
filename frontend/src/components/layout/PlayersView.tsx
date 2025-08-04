@@ -218,9 +218,11 @@ const PlayersView = () => {
             value={activePositions}
             onChange={value => {
               setActivePositions(value as Position[]);
-              // Track position filter changes
+              // Track position filter changes (including clearing)
               if (value.length > 0) {
                 trackPositionFilter(value.join(', '));
+              } else {
+                trackPositionFilter('none'); // Track when filter is cleared
               }
             }}
             placeholder="Filter by position..."

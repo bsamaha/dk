@@ -150,6 +150,7 @@ export const trackError = (errorType: string, errorMessage: string) => {
 
 - **Automatic**: All page views are tracked via `usePageTracking` hook
 - **Manual**: Custom page views can be tracked with `trackPageView()`
+- **Client-Side Routing**: Tracks both browser navigation and programmatic route changes
 
 ### Player Interactions
 
@@ -171,6 +172,7 @@ export const trackError = (errorType: string, errorMessage: string) => {
 - **Errors**: Tracks application errors (React errors, API errors, validation errors)
 - **Performance**: Tracks API call performance and response times
 - **API Monitoring**: Automatic tracking of all API requests/responses
+- **Filter Clearing**: Tracks when position filters are cleared (not just applied)
 
 ## Event Categories
 
@@ -225,7 +227,7 @@ The test suite covers:
 2. **No User Identification**: No user accounts or personal information tracked
 3. **GDPR Compliant**: Implements consent management and standard Google Analytics privacy controls
 4. **Development Safe**: No tracking in development environment
-5. **Consent Management**: Users can opt-out via `setAnalyticsConsent(false)`
+5. **Consent Management**: Users can opt-out via `setAnalyticsConsent(false)` with GA consent mode integration
 
 ## Troubleshooting
 
@@ -282,6 +284,14 @@ React ErrorBoundary automatically tracks render errors:
 componentDidCatch(error: Error, errorInfo: unknown) {
   trackError('React Error Boundary', `${error.name}: ${error.message}`);
 }
+```
+
+### Consent Management Integration
+
+Google Analytics consent mode is automatically updated when user consent changes:
+
+```typescript
+setAnalyticsConsent(false); // Disables analytics and updates GA consent mode
 ```
 
 ### Search Result Tracking
