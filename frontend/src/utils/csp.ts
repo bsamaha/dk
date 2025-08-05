@@ -17,6 +17,8 @@ export const CSP_DIRECTIVES = {
     'blob:',
     'https://www.googletagmanager.com',
     'https://www.google-analytics.com',
+    'https://*.google-analytics.com', // Regional GA endpoints
+    'https://region1.google-analytics.com',
   ],
   'style-src': [
     "'self'",
@@ -45,6 +47,8 @@ export const CSP_DIRECTIVES = {
     'https://www.google-analytics.com',
     'https://analytics.google.com',
     'https://stats.g.doubleclick.net',
+    'https://region1.google-analytics.com',
+    'https://region1.analytics.google.com',
   ],
   'frame-ancestors': ["'none'"],
   'base-uri': ["'self'"],
