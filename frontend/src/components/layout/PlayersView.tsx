@@ -115,10 +115,11 @@ const PlayersView = () => {
     [playersData]
   );
 
-  // Debug GA status on component mount
+  // Debug GA status on component mount (development only)
   useEffect(() => {
-    // Run debug status check
-    debugGAStatus();
+    if (import.meta.env.DEV && debugGAStatus) {
+      debugGAStatus();
+    }
   }, [debugGAStatus]);
 
   // Track search results when data loads (debounced)

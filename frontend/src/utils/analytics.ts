@@ -171,26 +171,36 @@ export const trackError = (errorType: string, errorMessage: string) => {
 
 /**
  * Debug helper to check current GA status
+ * Only available in development mode.
  */
-export const debugGAStatus = () => {
-  if (typeof window === 'undefined') {
-    console.log('[GA Debug] Running in non-browser environment');
-    return;
-  }
+let debugGAStatus: (() => void) | undefined;
 
-  console.group('[GA Debug] Current Status');
-  console.log('Environment:', {
-    isDevelopment,
-    isProduction,
-    NODE_ENV: import.meta.env.MODE,
-  });
-  console.log('Tracking ID:', getGATrackingId());
-  console.log('Analytics enabled:', isAnalyticsEnabled());
-  console.log('Analytics consent:', localStorage.getItem('analytics-consent'));
-  console.log('gtag available:', typeof window.gtag);
-  console.log('dataLayer available:', Array.isArray(window.dataLayer));
-  console.groupEnd();
-};
+if (import.meta.env.DEV) {
+  debugGAStatus = () => {
+    if (typeof window === 'undefined') {
+      console.log('[GA Debug] Running in non-browser environment');
+      return;
+    }
+
+    console.group('[GA Debug] Current Status');
+    console.log('Environment:', {
+      isDevelopment,
+      isProduction,
+      NODE_ENV: import.meta.env.MODE,
+    });
+    console.log('Tracking ID:', getGATrackingId());
+    console.log('Analytics enabled:', isAnalyticsEnabled());
+    console.log(
+      'Analytics consent:',
+      localStorage.getItem('analytics-consent')
+    );
+    console.log('gtag available:', typeof window.gtag);
+    console.log('dataLayer available:', Array.isArray(window.dataLayer));
+    console.groupEnd();
+  };
+}
+
+export { debugGAStatus };
 
 /**
  * Test helper to manually fire a GA event
