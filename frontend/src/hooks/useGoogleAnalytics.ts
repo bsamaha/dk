@@ -198,6 +198,7 @@ export const usePageTracking = (currentView?: string) => {
     const waitForGA = () => {
       let attempts = 0;
       const maxAttempts = 50; // Wait up to 5 seconds (50 * 100ms)
+      let timeoutId: NodeJS.Timeout | null = null;
 
       const checkGA = () => {
         attempts++;
@@ -216,7 +217,7 @@ export const usePageTracking = (currentView?: string) => {
           });
         } else if (attempts < maxAttempts) {
           // GA not ready yet, wait and try again
-          setTimeout(checkGA, 100);
+          timeoutId = setTimeout(checkGA, 100);
         } else {
           // Timeout reached, track anyway (analytics utils handle missing gtag gracefully)
           console.warn(
@@ -232,8 +233,16 @@ export const usePageTracking = (currentView?: string) => {
       };
 
       checkGA();
+
+      // Cleanup function to clear timeout if component unmounts
+      return () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      };
     };
 
-    waitForGA();
+    const cleanup = waitForGA();
+    return cleanup;
   }, [currentView, trackPageView]);
 };

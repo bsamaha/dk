@@ -19,6 +19,7 @@ import {
 import { Select, SegmentedControl, Loader } from '@mantine/core';
 import type { Position } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import { getTooltipStyle } from '../../utils/chartTheme';
 
 const OverviewView = () => {
   const { isMobile, responsive } = useResponsive();
@@ -243,15 +244,38 @@ const OverviewView = () => {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => `${value.toFixed(2)}%`}
-                  contentStyle={{
-                    backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-                    border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
-                    borderRadius: '6px',
-                    boxShadow: isDark
-                      ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                      : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    color: isDark ? '#FFFFFF' : '#1F2937',
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0];
+                      return (
+                        <div
+                          style={{
+                            backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                            border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
+                            borderRadius: '6px',
+                            boxShadow: isDark
+                              ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                              : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                            color: isDark ? '#FFFFFF' : '#1F2937',
+                            padding: '10px',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <p
+                            style={{
+                              margin: '0 0 6px 0',
+                              fontWeight: 600,
+                            }}
+                          >
+                            {data.name}
+                          </p>
+                          <p style={{ margin: 0, color: '#00A86B' }}>
+                            {data.value?.toFixed(2)}%
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
                   }}
                 />
                 <Legend
@@ -291,15 +315,7 @@ const OverviewView = () => {
                 />
                 <Tooltip
                   formatter={(v: number) => v.toFixed(2)}
-                  contentStyle={{
-                    backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-                    border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
-                    borderRadius: '6px',
-                    boxShadow: isDark
-                      ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                      : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    color: isDark ? '#FFFFFF' : '#1F2937',
-                  }}
+                  contentStyle={getTooltipStyle(isDark)}
                 />
                 <Bar
                   dataKey="medianDraftCount"
@@ -373,15 +389,7 @@ const OverviewView = () => {
                     />
                     <Tooltip
                       formatter={(v: number) => v.toFixed(2)}
-                      contentStyle={{
-                        backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-                        border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
-                        borderRadius: '6px',
-                        boxShadow: isDark
-                          ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                          : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                        color: isDark ? '#FFFFFF' : '#1F2937',
-                      }}
+                      contentStyle={getTooltipStyle(isDark)}
                     />
                     <Bar dataKey="count" name="Count" fill="#00A86B" />
                   </BarChart>

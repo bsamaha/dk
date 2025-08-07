@@ -16,10 +16,10 @@ import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary>
-      <MantineProvider>
+    <MantineProvider>
+      <ErrorBoundary>
         <App />
-      </MantineProvider>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </MantineProvider>
   </StrictMode>
 );

@@ -14,6 +14,8 @@ services:
       - .env.development
     ports:
       - "8000:8000"
+    networks:
+      - app-network
 
   # Optional: separate container that runs the Vite dev server
   frontend:
@@ -26,3 +28,9 @@ services:
     command: sh -c "npm install -g pnpm && pnpm install && VITE_HOST=0.0.0.0 VITE_PORT=5173 pnpm run dev"
     env_file:
       - .env.development
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
