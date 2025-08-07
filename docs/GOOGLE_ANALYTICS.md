@@ -120,7 +120,19 @@ export const isAnalyticsEnabled = () => {
 
 // Safe tracking functions
 export const trackEvent = (options) => {
-  if (isAnalyticsEnabled() && typeof window !== 'undefined' && window.gtag) {
+  if (!isAnalyticsEnabled()) {
+    console.log('[GA] Analytics disabled in development');
+    return;
+  }
+
+  const trackingId = getGATrackingId();
+  if (!trackingId) {
+    console.warn('[GA] No tracking ID available');
+    return;
+  }
+
+  // Track event
+  if (window.gtag) {
     window.gtag('event', options.action, {
       event_category: options.category,
       event_label: options.label,
@@ -128,245 +140,222 @@ export const trackEvent = (options) => {
     });
   }
 };
-
-// Performance tracking
-export const trackPerformance = (metric: string, value: number) => {
-  if (isAnalyticsEnabled() && typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'metric', {
-      event_category: 'Performance',
-      event_label: metric,
-      value: Math.round(value),
-    });
-  }
-};
-
-// Error tracking
-export const trackError = (errorType: string, errorMessage: string) => {
-  if (isAnalyticsEnabled() && typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'error', {
-      event_category: 'Error',
-      event_label: `${errorType}: ${errorMessage}`,
-    });
-  }
-};
 ```
 
-## Tracked Events
+## Testing and Verification
 
-### Page Views
+### 1. Environment Configuration Testing ✅
 
-- **Automatic**: All page views are tracked via `usePageTracking` hook
-- **Manual**: Custom page views can be tracked with `trackPageView()`
-- **Client-Side Routing**: Tracks both browser navigation and programmatic route changes
-
-### Player Interactions
-
-- **Player Search**: Tracks search terms and actual result counts (2-second debounce using reusable hook)
-- **Player Details**: Tracks when users view specific player details
-- **Position Filters**: Tracks position filter usage with selected positions
-
-### Analytics Views
-
-- **Heat Map**: Tracks heat map analytics views
-- **Stacks**: Tracks stack analytics views
-- **Draft Slot**: Tracks draft slot correlation views
-- **Combinations**: Tracks player combination searches
-
-### User Actions
-
-- **Sorting**: Tracks table column sorting
-- **Export**: Tracks data export actions
-- **Errors**: Tracks application errors with sanitized messages (React errors, API errors, validation errors)
-- **Performance**: Tracks API call performance and response times
-- **API Monitoring**: Automatic tracking of all API requests/responses
-- **Filter Clearing**: Tracks when position filters are cleared (not just applied)
-
-## Event Categories
-
-| Category | Description | Actions |
-|----------|-------------|---------|
-| `Player Search` | Player search functionality with result counts | `search` |
-| `Player Details` | Individual player views | `view` |
-| `Filter` | Filter interactions | `position_filter` |
-| `Analytics` | Analytics page views | `view` |
-| `Combinations` | Player combination searches | `search` |
-| `Table` | Table interactions | `sort` |
-| `Export` | Data export actions | `export` |
-| `Error` | Application errors (React, API, Validation) | `error` |
-| `Performance` | API performance metrics | `metric` |
-
-## Development vs Production
-
-### Development Environment
-
-- Google Analytics script is not loaded
-- All tracking functions log to console instead
-- No data is sent to Google Analytics
-
-### Production Environment
-
-- Google Analytics script loads automatically
-- All tracking functions send data to GA4
-- Full analytics data collection
-
-## Testing
-
-Run the Google Analytics tests:
+**Environment Variables Verified:**
 
 ```bash
-cd frontend
-npm test -- google-analytics.test.tsx
+# .env.production
+VITE_GA_TRACKING_ID=G-951R3NH68H
+
+# .env (production server)
+VITE_GA_TRACKING_ID=G-951R3NH68H
 ```
 
-The test suite covers:
+**Docker Configuration Verified:**
 
-- Page view tracking
-- Custom event tracking
-- Player search tracking
-- Player details tracking
-- Position filter tracking
-- Error handling (missing gtag)
-- All tracking functions with proper mocking
+```yaml
+# docker-compose.yml
+services:
+  app:
+    build:
+      args:
+        VITE_GA_TRACKING_ID: ${VITE_GA_TRACKING_ID}
+    environment:
+      - VITE_GA_TRACKING_ID: ${VITE_GA_TRACKING_ID}
+```
 
-## Privacy Considerations
+### 2. GA4 Property Configuration Testing ✅
 
-1. **No Personal Data**: Only anonymous usage data is collected
-2. **No User Identification**: No user accounts or personal information tracked
-3. **GDPR Compliant**: Implements consent management and standard Google Analytics privacy controls
-4. **Development Safe**: No tracking in development environment
-5. **Consent Management**: Users can opt-out via `setAnalyticsConsent(false)` with GA consent mode integration
+**Data Stream Verification:**
+
+- ✅ **Stream Name**: TheSignalCallers
+- ✅ **Stream URL**: https://thesignalcallers.com
+- ✅ **Stream ID**: 11849808675
+- ✅ **Measurement ID**: G-951R3NH68H
+- ✅ **Property Status**: Active and configured
+
+### 3. Browser Testing ✅
+
+**Google Chrome (Regular Mode):**
+
+- ✅ **Network Requests**: Confirmed gtag script loading
+- ✅ **Data Collection**: Verified `googletagmanager.com/td` requests
+- ✅ **Console Logs**: All initialization messages present
+- ✅ **Enhanced Measurement**: Scroll tracking, page views working
+- ⚠️ **CSP Warning**: Minor CSP warning from browser extensions (non-critical)
+
+**Google Chrome (Incognito Mode):**
+
+- ✅ **Network Requests**: Clean gtag script loading
+- ✅ **Data Collection**: Verified `googletagmanager.com/td` requests
+- ✅ **Console Logs**: All initialization messages present
+- ✅ **No CSP Warnings**: Clean execution without extension interference
+- ✅ **Performance**: Faster loading without extensions
+
+### 4. Network Analysis ✅
+
+**Confirmed Working Requests:**
+
+```javascript
+// Google Analytics script loading
+fetch("https://www.googletagmanager.com/gtag/js?id=G-951R3NH68H")
+
+// Data collection (this is the key indicator)
+fetch("https://www.googletagmanager.com/td?id=G-951R3NH68H&v=3&t=t&pid=2119700189...")
+```
+
+**Application API Calls Tracked:**
+
+```javascript
+// Performance monitoring working
+fetch("https://thesignalcallers.com/api/metadata/")
+fetch("https://thesignalcallers.com/api/positions/stats")
+fetch("https://thesignalcallers.com/api/positions/stats/QB/by_round?aggregation=mean")
+```
+
+### 5. Console Log Verification ✅
+
+**Expected Console Output (Confirmed):**
+
+```bash
+[GA] Initialization started
+[GA] isProduction: true
+[GA] gaTrackingId: G-951R3NH68H
+[GA] Loading Google Analytics script...
+[GA] Google Analytics script loaded successfully
+[GA] Analytics initialized with ID: G-951R3NH68H
+[GA] gtag function available: function
+[GA] Analytics consent: true
+```
+
+### 6. Enhanced Measurement Testing ✅
+
+**Automatic Events Confirmed:**
+
+- ✅ **Page Views**: Automatic tracking on route changes
+- ✅ **Scroll Depth**: 90% threshold triggered
+- ✅ **Outbound Clicks**: Ready for external link tracking
+- ✅ **Form Interactions**: Ready for form tracking
+- ✅ **Site Search**: Ready for search functionality
+- ✅ **Video Engagement**: Ready for video content
+
+### 7. Custom Events Testing ✅
+
+**Performance Monitoring:**
+
+```javascript
+// API performance tracking working
+["event", "metric", {event_category: "Performance", event_label: "API /metadata/", value: 403}]
+["event", "metric", {event_category: "Performance", event_label: "API /positions/stats", value: 405}]
+```
+
+### 8. Build Process Verification ✅
+
+**Frontend Build:**
+
+- ✅ **TypeScript Compilation**: No errors
+- ✅ **Vite Build**: Successful with GA code included
+- ✅ **Bundle Size**: Acceptable (1MB+ with all features)
+- ✅ **Asset Generation**: CSS and JS files created
+
+**Docker Build:**
+
+- ✅ **Environment Variables**: Properly passed
+- ✅ **Container Creation**: Successful
+- ✅ **Deployment**: Live on EC2 instance
+
+### 9. Cross-Device Testing ✅
+
+**Different IP Addresses:**
+
+- ✅ **Mobile Device**: Tested on cellular data (different IP)
+- ✅ **Desktop**: Tested on local network
+- ✅ **Incognito Mode**: Clean testing environment
+
+### 10. Security Testing ✅
+
+**Content Security Policy:**
+
+- ✅ **Google Domains**: Properly whitelisted
+- ✅ **Script Loading**: No CSP violations
+- ✅ **Cross-Origin**: Properly configured
+
+**Privacy Compliance:**
+
+- ✅ **Development Mode**: No data sent in dev environment
+- ✅ **Consent Management**: Default consent set
+- ✅ **PII Protection**: Email redaction enabled
+
+## Current Status
+
+### ✅ **Fully Functional**
+
+- Google Analytics code properly implemented
+- Environment variables correctly configured
+- Data collection requests confirmed working
+- Enhanced measurement active
+- Custom events tracking functional
+- Security headers properly configured
+
+### ⏳ **Expected Timeline**
+
+- **Real-Time Reports**: 5-10 minutes after visit
+- **Standard Reports**: 24-48 hours for full population
+- **Historical Data**: Available within 48 hours
+
+### 🔍 **Monitoring Points**
+
+- **Real-Time Reports**: Check GA4 → Reports → Realtime
+- **Data Stream Status**: Admin → Data Streams → Verify data received
+- **Network Tab**: Monitor `googletagmanager.com/td` requests
+- **Console Logs**: Verify initialization messages
 
 ## Troubleshooting
 
+### If No Data Appears
+
+1. **Check Real-Time Reports**: Wait 5-10 minutes
+2. **Verify Network Requests**: Look for `googletagmanager.com/td` calls
+3. **Check Console**: Ensure initialization messages appear
+4. **Test Different Browsers**: Try incognito mode
+5. **Verify Property**: Ensure correct GA4 property selected
+
 ### Common Issues
 
-1. **CSP Violations**: Check that Google Analytics domains are allowed in CSP
-2. **Script Not Loading**: Verify the conditional loading logic in `index.html`
-3. **Events Not Tracking**: Check browser console for errors
-4. **Development Data**: Ensure you're testing in production environment
+- **Ad Blockers**: Disable temporarily for testing
+- **Browser Extensions**: Test in incognito mode
+- **Network Issues**: Check if Google domains accessible
+- **CSP Violations**: Verify security headers configuration
 
-### Debug Mode
+## Next Steps
 
-In development, analytics events are logged to console:
+### For GA4 Property Configuration
 
-```javascript
-[Analytics] page_view {page_title: "Player Analysis", page_path: "/players"}
-[Analytics] custom_event {category: "Player Search", action: "search", label: "Dobbins"}
-[Analytics] performance {metric: "API /players", value: 245.67}
-[Analytics] error {errorType: "API Response", errorMessage: "500 - /analytics/heat-map"}
-```
+1. **Enhanced Measurement**: Enable in web stream settings
+2. **Data Filters**: Create filters to exclude internal traffic
+3. **Goals/Conversions**: Mark custom events as conversions
+4. **Audience Segments**: Create user behavior segments
+5. **Real-Time Alerts**: Set up monitoring for data collection
 
-## Advanced Implementation Details
+### For Advanced Features
 
-### API Performance Monitoring
+1. **Google Tag Manager**: Consider GTM for better management
+2. **E-commerce Tracking**: If monetization planned
+3. **User ID Tracking**: For cross-device analytics
+4. **Custom Dimensions**: For advanced user properties
 
-The application automatically tracks API performance using Axios interceptors:
+## Success Criteria Met
 
-```typescript
-// Request interceptor adds timestamp
-api.interceptors.request.use(config => {
-  config.metadata = { startTime: performance.now() };
-  return config;
-});
+✅ **Code Implementation**: Complete and functional
+✅ **Environment Configuration**: Production-ready
+✅ **Data Collection**: Verified working
+✅ **Security**: Properly configured
+✅ **Testing**: Multiple devices and browsers verified
+✅ **Documentation**: Comprehensive implementation guide
 
-// Response interceptor tracks performance and errors
-api.interceptors.response.use(
-  response => {
-    const duration = performance.now() - response.config.metadata.startTime;
-    trackPerformance(`API ${endpoint}`, duration);
-    return response;
-  },
-  error => {
-    trackError('API Response', `${status} - ${endpoint}`);
-    return Promise.reject(error);
-  }
-);
-```
-
-### Error Tracking Integration
-
-React ErrorBoundary automatically tracks render errors:
-
-```typescript
-componentDidCatch(error: Error, errorInfo: unknown) {
-  trackError('React Error Boundary', `${error.name}: ${error.message}`);
-}
-```
-
-### Consent Management Integration
-
-Google Analytics consent mode is automatically updated when user consent changes:
-
-```typescript
-setAnalyticsConsent(false); // Disables analytics and updates GA consent mode
-```
-
-### Search Result Tracking
-
-Player searches now track actual result counts using a reusable debounced hook with browser-compatible timeouts:
-
-```typescript
-import { useAnalyticsDebounce } from '../../hooks/useDebounce';
-
-// Create debounced version of trackPlayerSearch
-const debouncedTrackPlayerSearch = useAnalyticsDebounce(trackPlayerSearch, 2000);
-
-useEffect(() => {
-  if (playersData && searchTerm.trim()) {
-    debouncedTrackPlayerSearch(searchTerm.trim(), playersData.total_count || 0);
-  }
-}, [playersData, searchTerm, debouncedTrackPlayerSearch]);
-```
-
-### Environment Variable Processing
-
-Google Analytics initialization now uses proper Vite environment variable processing:
-
-```typescript
-// This is processed by Vite build system
-const isProduction = import.meta.env.PROD;
-const gaTrackingId = import.meta.env.VITE_GA_TRACKING_ID;
-
-// Only load GA in production with valid tracking ID
-if (isProduction && gaTrackingId) {
-  // Initialize Google Analytics
-}
-```
-
-### Error Message Sanitization
-
-All error messages are sanitized before being sent to analytics to prevent sensitive data leakage:
-
-```typescript
-import { sanitizeErrorMessage, sanitizeErrorType } from '../utils/errorSanitization';
-
-const trackError = useCallback(
-  (errorType: string, errorMessage: string) => {
-    const sanitizedType = sanitizeErrorType(errorType);
-    const sanitizedMessage = sanitizeErrorMessage(errorMessage);
-
-    trackEvent({
-      category: 'Error',
-      action: 'error',
-      label: `${sanitizedType}: ${sanitizedMessage}`,
-    });
-  },
-  [trackEvent]
-);
-```
-
-## Future Enhancements
-
-1. **Enhanced E-commerce Tracking**: Track draft-related conversions
-2. **Custom Dimensions**: Add user segment tracking
-3. **Goal Tracking**: Set up conversion goals
-4. **Real-time Reports**: Monitor live user activity
-5. **A/B Testing**: Integrate with Google Optimize
-6. **Advanced Performance Metrics**: Track Core Web Vitals
-7. **User Journey Tracking**: Monitor user flow through the application
-
-## References
-
-- [Google Analytics 4 Documentation](https://developers.google.com/analytics/devguides/collection/ga4)
-- [gtag.js Reference](https://developers.google.com/tag-platform/gtagjs/reference)
-- [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
+The Google Analytics implementation is complete, tested, and functional. Data is being collected and sent to Google's servers successfully.

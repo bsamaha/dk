@@ -497,3 +497,14 @@ body {
 .mantine-DataTable-root .mantine-DataTable-table .mantine-DataTable-cell {
   border-color: rgba(0, 168, 107, 0.1);
 }
+
+/* Player Autocomplete Option Styles */
+.player-autocomplete-option[data-selected] {
+  background-color: #00a86b !important; /* Signal Green from brand book */
+  color: #ffffff !important;
+}
+
+.player-autocomplete-option[data-hover] {
+  background-color: #e6f9f2 !important; /* Light green tint */
+  color: #016140 !important; /* Turf Dark Green from brand book */
+}

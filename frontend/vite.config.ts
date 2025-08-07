@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { getDevCSPHeader, getProdCSPHeader } from './src/utils/csp';
+import { VitePluginRadar } from 'vite-plugin-radar';
 
 // Shared security headers configuration
 const securityHeaders = {
@@ -24,6 +25,22 @@ export default defineConfig({
   plugins: [
     react({
       include: '**/*.{jsx,tsx}',
+    }),
+    VitePluginRadar({
+      // Google Analytics tag injection
+      analytics: {
+        id: 'G-951R3NH68H',
+        config: {
+          send_page_view: true,
+          allow_google_signals: true,
+          allow_ad_personalization_signals: true,
+        },
+        consentDefaults: {
+          analytics_storage: 'granted',
+          ad_storage: 'denied',
+          wait_for_update: 500,
+        },
+      },
     }),
   ],
   resolve: {

@@ -55,7 +55,7 @@ describe('PlayersView', () => {
   it('handles search', () => {
     renderWithContext(<PlayersView />);
     const searchInput = screen.getByPlaceholderText(
-      'Search by player name (e.g., Dobbins)...'
+      'Search and select a player...'
     );
     fireEvent.change(searchInput, { target: { value: 'Test' } });
     expect(searchInput).toHaveValue('Test');

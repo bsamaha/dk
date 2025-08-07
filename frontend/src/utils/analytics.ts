@@ -39,14 +39,19 @@ export const getGATrackingId = (): string | null => {
  */
 export const isAnalyticsEnabled = () => {
   // Guard against SSR and non-browser environments
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {
+    return false;
+  }
 
-  // Enable in production, disable in development
-  if (!isProduction) return false;
+  // Analytics are disabled in development to avoid polluting data
+  if (!isProduction) {
+    return false;
+  }
 
-  // Check for user consent (GDPR compliance)
-  const hasConsent = localStorage.getItem('analytics-consent') === 'true';
-  return hasConsent !== false; // Default to true if not set
+  // Analytics are enabled by default unless the user has explicitly opted out.
+  const hasConsent = localStorage.getItem('analytics-consent');
+  // Fix: Default to enabled if no consent preference is set (null) or explicitly true
+  return hasConsent === null || hasConsent === 'true';
 };
 
 /**
@@ -161,5 +166,71 @@ export const trackError = (errorType: string, errorMessage: string) => {
       event_category: 'Error',
       event_label: `${errorType}: ${errorMessage}`,
     });
+  }
+};
+
+/**
+ * Debug helper to check current GA status
+ * Only available in development mode.
+ */
+let debugGAStatus: (() => void) | undefined;
+
+if (import.meta.env.DEV) {
+  debugGAStatus = () => {
+    if (typeof window === 'undefined') {
+      console.log('[GA Debug] Running in non-browser environment');
+      return;
+    }
+
+    console.group('[GA Debug] Current Status');
+    console.log('Environment:', {
+      isDevelopment,
+      isProduction,
+      NODE_ENV: import.meta.env.MODE,
+    });
+    console.log('Tracking ID:', getGATrackingId());
+    console.log('Analytics enabled:', isAnalyticsEnabled());
+    console.log(
+      'Analytics consent:',
+      localStorage.getItem('analytics-consent')
+    );
+    console.log('gtag available:', typeof window.gtag);
+    console.log('dataLayer available:', Array.isArray(window.dataLayer));
+    console.groupEnd();
+  };
+}
+
+export { debugGAStatus };
+
+/**
+ * Test helper to manually fire a GA event
+ */
+export const testGAEvent = (eventName = 'test_event') => {
+  if (typeof window === 'undefined') {
+    console.log('[GA Test] Cannot test in non-browser environment');
+    return;
+  }
+
+  console.log(`[GA Test] Attempting to fire test event: ${eventName}`);
+
+  if (!window.gtag) {
+    console.error('[GA Test] gtag not available');
+    return;
+  }
+
+  if (!isAnalyticsEnabled()) {
+    console.warn('[GA Test] Analytics not enabled');
+    return;
+  }
+
+  try {
+    window.gtag('event', eventName, {
+      event_category: 'Test',
+      event_label: 'Manual Test from debugGAStatus',
+      value: 1,
+    });
+    console.log(`[GA Test] Successfully fired event: ${eventName}`);
+  } catch (error) {
+    console.error('[GA Test] Error firing event:', error);
   }
 };

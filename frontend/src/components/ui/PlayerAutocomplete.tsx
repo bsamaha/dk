@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { MultiSelect } from '@mantine/core';
+import { Select } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { apiService } from '../../services/api';
 import { sanitizeSearchTerm } from '../../utils/sanitization';
 
 interface PlayerAutocompleteProps {
-  value: string[];
-  onChange: (value: string[]) => void;
+  value: string;
+  onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -58,12 +58,6 @@ const PlayerAutocomplete = ({
         return [];
       }
 
-      console.log(
-        'Processing player options from',
-        metadataData.all_players.length,
-        'players'
-      );
-
       // Use Set to track unique player names and prevent duplicates
       const uniqueNames = new Set<string>();
       const options: string[] = [];
@@ -79,7 +73,6 @@ const PlayerAutocomplete = ({
         }
       });
 
-      console.log('Generated', options.length, 'unique player options');
       return options.sort();
     } catch (error) {
       console.error('Error processing player options:', error);
@@ -113,10 +106,14 @@ const PlayerAutocomplete = ({
   }
 
   return (
-    <MultiSelect
+    <Select
       data={filteredOptions}
       value={value}
-      onChange={onChange}
+      onChange={newValue => {
+        onChange(newValue || '');
+        // Clear the search value after selection for better UX
+        setSearchValue('');
+      }}
       searchValue={searchValue}
       onSearchChange={value => setSearchValue(sanitizeSearchTerm(value))}
       placeholder={isLoading ? 'Loading players...' : placeholder}
@@ -130,16 +127,6 @@ const PlayerAutocomplete = ({
         transitionProps: { duration: 200, transition: 'pop' },
       }}
       styles={{
-        pill: {
-          backgroundColor: '#FFC300',
-          color: '#1E1E1E',
-          '&:hover': {
-            backgroundColor: '#d9a000',
-          },
-        },
-        pillsList: {
-          gap: '4px',
-        },
         dropdown: {
           border: '1px solid #e5e7eb',
           boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
@@ -151,17 +138,9 @@ const PlayerAutocomplete = ({
           },
         },
       }}
-      renderOption={({ option, checked }) => (
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={() => {}}
-            className="text-signal-green focus:ring-signal-green"
-          />
-          <span className="flex-1">{option.label}</span>
-        </div>
-      )}
+      classNames={{
+        option: 'player-autocomplete-option',
+      }}
     />
   );
 };

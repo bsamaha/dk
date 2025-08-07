@@ -1,0 +1,135 @@
+# Cursor Index Ignore File
+# Excludes files and directories from Cursor's indexing to improve performance
+
+# Build artifacts and dependencies
+node_modules/
+dist/
+build/
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment and configuration files
+.env
+.env.local
+.env.production
+.env.development
+*.env
+
+# Logs and temporary files
+*.log
+logs/
+tmp/
+temp/
+.tmp/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker and container files
+.dockerignore
+docker-compose.override.yml
+
+# Git and version control
+.git/
+.gitignore
+.gitattributes
+
+# Documentation build artifacts
+docs/_build/
+docs/.doctrees/
+docs/html/
+docs/pdf/
+
+# Data files (large datasets)
+*.parquet
+*.csv
+*.json
+data/
+datasets/
+
+# Certificate and security files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+certbot/
+ssl/
+
+# Backup and archive files
+*.bak
+*.backup
+*.old
+*.orig
+*.zip
+*.tar.gz
+*.rar
+
+# Test coverage and reports
+coverage/
+.nyc_output/
+junit.xml
+test-results/
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+poetry.lock
+Pipfile.lock
+
+# Runtime and process files
+*.pid
+*.sock
+*.lock
+
+# Large binary files
+*.bin
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Cache directories
+.cache/
+cache/
+.npm/
+.yarn/
+
+# Local development files
+local/
+dev/
+development/
+
+# Generated documentation
+docs/generated/
+docs/api/
+
+# Analytics and tracking files
+analytics/
+tracking/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration overrides
+config.local.*
+settings.local.*
