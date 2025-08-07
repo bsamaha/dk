@@ -8,7 +8,7 @@
     "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
     "dev:frontend": "cd frontend && pnpm run dev",
     "install:all": "cd backend && pip install -r requirements.txt && cd ../frontend && pnpm install",
-    "build": "cd frontend && pnpm run build",
+    "build": "npm run generate-csp && cd frontend && pnpm run build",
     "test": "cd backend && pytest && cd ../frontend && pnpm run test --run",
     "lint": "cd backend && ruff check . && ruff format --check . && cd ../frontend && pnpm run lint",
     "generate-csp": "node scripts/generate-csp.js"

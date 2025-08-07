@@ -150,7 +150,6 @@ This document captures proposed improvements across the frontend, backend, and i
 - GA via Vite Radar: now prod-only and env-driven (`VITE_GA_TRACKING_ID`) in `frontend/vite.config.ts`; removed hard-coded ID.
 - Nginx: corrected TLS comment, added `server_tokens off;` and `Permissions-Policy` header.
 - Tooling: removed root `package-lock.json` to avoid npm/pnpm conflicts.
-
 ## Medium
 
 - Add React Router with Suspense/lazy and deep-link state.

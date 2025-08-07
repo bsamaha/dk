@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { loadEnv, type PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { getDevCSPHeader, getProdCSPHeader } from './src/utils/csp';
@@ -15,64 +16,70 @@ const securityHeaders = {
 };
 
 // https://vite.dev/config/
-export default defineConfig({
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/setupTests.ts',
-    css: true,
-  },
-  plugins: [
-    react({
-      include: '**/*.{jsx,tsx}',
-    }),
-    // Enable GA only in production and when a tracking ID is provided
-    ...(process.env.NODE_ENV === 'production' && process.env.VITE_GA_TRACKING_ID
-      ? [
-          VitePluginRadar({
-            analytics: {
-              id: process.env.VITE_GA_TRACKING_ID,
-              config: {
-                send_page_view: true,
-                allow_google_signals: true,
-                allow_ad_personalization_signals: true,
-              },
-              consentDefaults: {
-                analytics_storage: 'granted',
-                ad_storage: 'denied',
-                wait_for_update: 500,
-              },
-            },
-          }),
-        ]
-      : []),
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  const isProduction = mode === 'production';
+  const gaTrackingId = env.VITE_GA_TRACKING_ID;
+
+  const withGAPlugin = (plugins: PluginOption[]): PluginOption[] => {
+    if (!isProduction || !gaTrackingId) return plugins;
+    return [
+      ...plugins,
+      VitePluginRadar({
+        analytics: {
+          id: gaTrackingId,
+          config: {
+            send_page_view: true,
+            allow_google_signals: true,
+            allow_ad_personalization_signals: true,
+          },
+          consentDefaults: {
+            analytics_storage: 'granted',
+            ad_storage: 'denied',
+            wait_for_update: 500,
+          },
+        },
+      }),
+    ];
+  };
+
+  return {
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: './src/setupTests.ts',
+      css: true,
     },
-  },
-  build: {
-    rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'index.html'),
+    plugins: withGAPlugin([
+      react({
+        include: '**/*.{jsx,tsx}',
+      }),
+    ]),
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
       },
     },
-  },
-  server: {
-    host: process.env.VITE_HOST || 'localhost',
-    port: parseInt(process.env.VITE_PORT || '5173'),
-    headers: {
-      // Security headers with centralized CSP configuration
-      ...securityHeaders,
-      'Content-Security-Policy': getDevCSPHeader(),
+    build: {
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+        },
+      },
     },
-  },
-  preview: {
-    headers: {
-      // Production-like security headers with centralized CSP configuration
-      ...securityHeaders,
-      'Content-Security-Policy': getProdCSPHeader(),
+    server: {
+      host: env.VITE_HOST || 'localhost',
+      port: parseInt(env.VITE_PORT || '5173'),
+      headers: {
+        ...securityHeaders,
+        'Content-Security-Policy': getDevCSPHeader(),
+      },
     },
-  },
+    preview: {
+      headers: {
+        ...securityHeaders,
+        'Content-Security-Policy': getProdCSPHeader(),
+      },
+    },
+  };
 });
