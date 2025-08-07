@@ -26,22 +26,26 @@ export default defineConfig({
     react({
       include: '**/*.{jsx,tsx}',
     }),
-    VitePluginRadar({
-      // Google Analytics tag injection
-      analytics: {
-        id: 'G-951R3NH68H',
-        config: {
-          send_page_view: true,
-          allow_google_signals: true,
-          allow_ad_personalization_signals: true,
-        },
-        consentDefaults: {
-          analytics_storage: 'granted',
-          ad_storage: 'denied',
-          wait_for_update: 500,
-        },
-      },
-    }),
+    // Enable GA only in production and when a tracking ID is provided
+    ...(process.env.NODE_ENV === 'production' && process.env.VITE_GA_TRACKING_ID
+      ? [
+          VitePluginRadar({
+            analytics: {
+              id: process.env.VITE_GA_TRACKING_ID,
+              config: {
+                send_page_view: true,
+                allow_google_signals: true,
+                allow_ad_personalization_signals: true,
+              },
+              consentDefaults: {
+                analytics_storage: 'granted',
+                ad_storage: 'denied',
+                wait_for_update: 500,
+              },
+            },
+          }),
+        ]
+      : []),
   ],
   resolve: {
     alias: {
