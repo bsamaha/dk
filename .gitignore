@@ -162,3 +162,8 @@ frontend/*.local
 !.vscode/extensions.json
 .idea/
 .DS_Store
+
+
+# AI stuff
+prompt_template.md
+prompt.md

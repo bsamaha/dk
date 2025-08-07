@@ -1,8 +1,9 @@
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
+from ..dependencies import get_query_service
 from ..models.schemas import (
     PageInfo,
     PlayerDetailsResponse,
@@ -16,7 +17,7 @@ from ..models.validation import (
     PlayerSearchQueryParams,
     PlayersQueryParams,
 )
-from ..services.query_service import query_service
+from ..services.query_service import QueryService
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ async def get_players(
     offset: int = Query(0, ge=0),
     sort_by: SortableColumn = Query(SortableColumn.AVG_PICK),
     sort_order: SortOrder = Query(SortOrder.ASC),
+    qs: QueryService = Depends(get_query_service),
 ):
     """Get players with optional filtering and pagination."""
     try:
@@ -45,7 +47,7 @@ async def get_players(
             sort_order=sort_order,
         )
 
-        players, total_count = query_service.get_players(
+        players, total_count = qs.get_players(
             positions=params.positions,
             search_term=params.search_term,
             limit=params.limit,
@@ -77,13 +79,14 @@ async def search_players(
     request: Request,
     q: str = Query(..., min_length=1),
     limit: int = Query(50, ge=1, le=100),
+    qs: QueryService = Depends(get_query_service),
 ):
     """Search players by name."""
     try:
         # Validate query parameters using Pydantic schema
         params = PlayerSearchQueryParams(q=q, limit=limit)
 
-        players, total_count = query_service.get_players(
+        players, total_count = qs.get_players(
             search_term=params.q,
             limit=params.limit,
             offset=0,
@@ -113,6 +116,7 @@ async def get_player_details(
     player_name: str = Query(...),
     position: str = Query(...),
     team: str = Query(...),
+    qs: QueryService = Depends(get_query_service),
 ):
     """Get detailed statistics for a specific player."""
     try:
@@ -121,7 +125,7 @@ async def get_player_details(
             player_name=player_name, position=position, team=team
         )
 
-        details = query_service.get_player_details(
+        details = qs.get_player_details(
             params.player_name, params.position, params.team
         )
 

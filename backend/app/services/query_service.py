@@ -39,6 +39,7 @@ class QueryService:
         self._con: duckdb.DuckDBPyConnection = duckdb.connect(
             database=":memory:", read_only=False
         )
+        self._closed: bool = False
 
         # Enable arrow/polars integration
         self._con.execute("PRAGMA enable_object_cache;")
@@ -88,6 +89,21 @@ class QueryService:
         self.all_players: List[str] = self.query(
             "SELECT DISTINCT player FROM picks ORDER BY player"
         )["player"].to_list()
+
+    def close(self) -> None:
+        """Close DuckDB connection and mark service closed.
+
+        This method is idempotent and safe to call multiple times.
+        """
+        if self._closed:
+            return
+        try:
+            # DuckDBPyConnection.close() may raise if already closed; guard with flag
+            self._con.close()
+        except Exception:
+            logger.exception("Error while closing DuckDB connection")
+        finally:
+            self._closed = True
 
     @staticmethod
     def _validate_and_sanitize_path(file_path: Path, allowed_dir: Path) -> Path:
@@ -1094,18 +1110,4 @@ class QueryService:
         )
         return result.to_dicts()
 
-
-# Global singleton instance - lazy loaded
-_query_service_instance: Optional[QueryService] = None
-
-
-def get_query_service() -> QueryService:
-    """Get the global singleton QueryService instance."""
-    global _query_service_instance
-    if _query_service_instance is None:
-        _query_service_instance = QueryService()
-    return _query_service_instance
-
-
-# For backward compatibility
-query_service = get_query_service()
+    # Note: Global singletons removed in favor of FastAPI lifespan-managed DI

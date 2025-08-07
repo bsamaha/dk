@@ -10,7 +10,8 @@ test_allowed_hosts = ["localhost", "127.0.0.1", "testserver"]
 with patch("app.core.config.settings.ALLOWED_HOSTS", test_allowed_hosts):
     app = create_app()
 
-client = TestClient(app)
+# Use context manager so FastAPI lifespan runs and DI is available
+client = TestClient(app, raise_server_exceptions=True)
 
 
 def test_health_endpoint():
@@ -263,7 +264,8 @@ def test_week17_bringback_team_view_endpoint(monkeypatch):
         mock_get_week17_opponent,
     )
     # Mock the singleton instance's total_drafts property
-    monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
+    # Override via app.state since singleton is removed
+    app.state.query_service.total_drafts = 15000
 
     response = client.get(
         "/api/analytics/week17-bringback?scope=team&entity=BUF&limit=5"
@@ -330,7 +332,7 @@ def test_week17_bringback_player_view_endpoint(monkeypatch):
         mock_get_week17_opponent,
     )
     # Mock the singleton instance's total_drafts property
-    monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
+    app.state.query_service.total_drafts = 15000
 
     response = client.get(
         "/api/analytics/week17-bringback?scope=player&entity=Josh Allen&limit=5"
@@ -420,7 +422,7 @@ def test_week17_bringback_missing_limit_uses_default(monkeypatch):
         "app.services.query_service.QueryService.get_week17_opponent",
         mock_get_week17_opponent,
     )
-    monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
+    app.state.query_service.total_drafts = 15000
 
     response = client.get("/api/analytics/week17-bringback?scope=team&entity=BUF")
     assert response.status_code == 200
@@ -444,7 +446,7 @@ def test_week17_bringback_partial_data(monkeypatch):
         "app.services.query_service.QueryService.get_week17_opponent",
         mock_get_week17_opponent,
     )
-    monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
+    app.state.query_service.total_drafts = 15000
 
     response = client.get("/api/analytics/week17-bringback?scope=team&entity=BUF")
     assert response.status_code == 200
@@ -474,8 +476,8 @@ def test_week17_bringback_no_data(monkeypatch):
         "app.services.query_service.QueryService.get_week17_opponent",
         mock_get_week17_opponent,
     )
-    # Mock the singleton instance's total_drafts property
-    monkeypatch.setattr("app.services.query_service.query_service.total_drafts", 15000)
+    # Override via app.state since singleton is removed
+    app.state.query_service.total_drafts = 15000
 
     response = client.get("/api/analytics/week17-bringback?scope=team&entity=BUF")
     assert response.status_code == 200

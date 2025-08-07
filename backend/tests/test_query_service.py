@@ -290,18 +290,16 @@ def test_get_data_path_error_handling(mock_validate):
         QueryService()
 
 
-def test_query_service_singleton_behavior():
-    """Test that the query_service singleton works correctly."""
-    # Import the singleton again to check identity
-    from app.services.query_service import query_service
-    from app.services.query_service import query_service as query_service_again
+def test_query_service_is_usable():
+    """Ensure QueryService can be instantiated and queried (no singleton)."""
+    from app.services.query_service import QueryService
 
-    # The singleton should be initialized and functional
-    assert query_service is not None
-    metadata = query_service.get_metadata()
-    assert "total_players" in metadata
-    # Assert that both imports refer to the same instance
-    assert query_service is query_service_again
+    service = QueryService()
+    try:
+        metadata = service.get_metadata()
+        assert "total_players" in metadata
+    finally:
+        service.close()
 
 
 # ============================================================================

@@ -1,9 +1,10 @@
 import logging
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Path, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import ValidationError
 
+from ..dependencies import get_query_service
 from ..models.schemas import (
     AggregationType,
     Position,
@@ -15,7 +16,7 @@ from ..models.validation import (
     PositionStatsQueryParams,
     RosterConstructionCountsQueryParams,
 )
-from ..services.query_service import query_service
+from ..services.query_service import QueryService
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +24,10 @@ router = APIRouter()
 
 
 @router.get("/stats", response_model=PositionStatsResponse)
-async def get_position_stats():
+async def get_position_stats(qs: QueryService = Depends(get_query_service)):
     """Get statistics for all positions and log raw payload when validation fails."""
     try:
-        stats = query_service.get_position_stats()
+        stats = qs.get_position_stats()
         # Enforce non-null total_drafted values before summing
         if any(stat.total_drafted is None for stat in stats):
             raise ValueError("total_drafted must not be None in position stats")
@@ -81,10 +82,12 @@ async def get_position_stats():
 
 
 @router.get("/stats/first_player")
-async def get_first_player_position_stats():
+async def get_first_player_position_stats(
+    qs: QueryService = Depends(get_query_service),
+):
     """Get the avg, min, and max pick for the first player drafted at each position."""
     try:
-        stats = query_service.get_first_player_draft_stats()
+        stats = qs.get_first_player_draft_stats()
         return {"first_player_stats": stats}
     except Exception:
         logger.exception("Error getting first player stats")
@@ -96,13 +99,14 @@ async def get_position_draft_counts_by_round(
     request: Request,
     position: Position = Path(...),
     aggregation: AggregationType = AggregationType.MEAN,
+    qs: QueryService = Depends(get_query_service),
 ) -> List[PositionRoundCount]:
     """Get draft counts by round for a specific position."""
     try:
         # Validate query parameters using Pydantic schema
         params = PositionStatsQueryParams(position=position, aggregation=aggregation)
 
-        return query_service.get_position_draft_counts_by_round(
+        return qs.get_position_draft_counts_by_round(
             position=params.position, aggregation=params.aggregation
         )
     except Exception:
@@ -111,10 +115,12 @@ async def get_position_draft_counts_by_round(
 
 
 @router.get("/roster-construction")
-async def get_roster_construction() -> List[RosterConstruction]:
+async def get_roster_construction(
+    qs: QueryService = Depends(get_query_service),
+) -> List[RosterConstruction]:
     """Get roster construction statistics."""
     try:
-        return query_service.get_roster_construction()
+        return qs.get_roster_construction()
     except Exception:
         logger.exception("Error getting roster construction")
         raise HTTPException(status_code=500, detail="An internal error occurred")
@@ -124,13 +130,14 @@ async def get_roster_construction() -> List[RosterConstruction]:
 async def get_roster_construction_counts(
     request: Request,
     required_players: Optional[List[str]] = Query(None),
+    qs: QueryService = Depends(get_query_service),
 ) -> List[Dict[str, int]]:
     """Get aggregated counts of unique roster constructions."""
     try:
         # Validate query parameters using Pydantic schema
         params = RosterConstructionCountsQueryParams(required_players=required_players)
 
-        return query_service.get_roster_construction_counts(
+        return qs.get_roster_construction_counts(
             required_players=params.required_players
         )
     except Exception:

@@ -1,9 +1,10 @@
 import logging
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import polars as pl
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -12,6 +13,8 @@ from pydantic import ValidationError
 from .api import router
 from .core.config import settings
 from .core.validation import validation_exception_handler
+from .dependencies import get_query_service
+from .services.query_service import QueryService
 
 # Enable Polars string cache for categorical comparisons
 pl.enable_string_cache()
@@ -25,13 +28,42 @@ logger = logging.getLogger(__name__)
 
 
 def create_app():
+    # Lifespan to manage app-scoped QueryService
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        try:
+            if getattr(app.state, "query_service", None) is None:
+                app.state.query_service = QueryService()
+                logger.info("QueryService initialized and stored in app.state")
+        except Exception:
+            logger.exception("Failed to initialize QueryService during startup")
+            raise
+        try:
+            yield
+        finally:
+            try:
+                qs = getattr(app.state, "query_service", None)
+                if qs is not None:
+                    qs.close()
+                    logger.info("QueryService closed on shutdown")
+            except Exception:
+                logger.exception("Error during QueryService shutdown")
+
     app = FastAPI(
         title="Fantasy Draft Analytics API",
         description="RESTful API for fantasy football draft analysis and player combinations",
         version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
+        lifespan=lifespan,
     )
+
+    # Ensure a usable QueryService for environments that don't trigger lifespan (some tests)
+    if getattr(app.state, "query_service", None) is None:
+        try:
+            app.state.query_service = QueryService()
+        except Exception:
+            logger.exception("Failed to initialize QueryService during app creation")
 
     # Security middleware
     app.add_middleware(
@@ -65,7 +97,8 @@ def create_app():
     # Register validation exception handler
     app.add_exception_handler(ValidationError, validation_exception_handler)
 
-    app.include_router(router, prefix="/api")
+    # Inject dependency into sub-routers by setting dependency for router include
+    app.include_router(router, prefix="/api", dependencies=[Depends(get_query_service)])
 
     @app.get("/health")
     async def health_check():
