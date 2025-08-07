@@ -132,13 +132,17 @@ function findSchemaForUrl(url: string): z.ZodSchema | null {
 // Add request interceptor for logging and performance tracking
 api.interceptors.request.use(
   config => {
-    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    if (import.meta.env.DEV) {
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    }
     // Add timestamp for performance tracking using symbol
     config[METADATA_SYMBOL] = { startTime: performance.now() };
     return config;
   },
   error => {
-    console.error('API Request Error:', error);
+    if (import.meta.env.DEV) {
+      console.error('API Request Error:', error);
+    }
     trackError('API Request', error.message);
     return Promise.reject(error);
   }
@@ -147,7 +151,9 @@ api.interceptors.request.use(
 // Add response interceptor for centralized validation and error handling
 api.interceptors.response.use(
   response => {
-    console.log(`API Response: ${response.status} ${response.config.url}`);
+    if (import.meta.env.DEV) {
+      console.log(`API Response: ${response.status} ${response.config.url}`);
+    }
 
     // Track performance if we have start time
     if (response.config[METADATA_SYMBOL]?.startTime) {
@@ -175,11 +181,13 @@ api.interceptors.response.use(
     return response;
   },
   error => {
-    console.error(
-      'API Response Error:',
-      error.response?.status,
-      error.response?.data
-    );
+    if (import.meta.env.DEV) {
+      console.error(
+        'API Response Error:',
+        error.response?.status,
+        error.response?.data
+      );
+    }
 
     // Track API errors
     const endpoint = error.config?.url?.split('?')[0] || 'unknown';
