@@ -17,11 +17,11 @@ const securityHeaders = {
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
   const isProduction = mode === 'production';
   const gaTrackingId = env.VITE_GA_TRACKING_ID;
 
-  function withGAPlugin(plugins: PluginOption[]): PluginOption[] {
+  const withGAPlugin = (plugins: PluginOption[]): PluginOption[] => {
     if (!isProduction || !gaTrackingId) return plugins;
     return [
       ...plugins,
@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ];
-  }
+  };
 
   return {
     test: {
