@@ -227,3 +227,21 @@ def validate_enum_value(value: str, valid_values: List[str], field_name: str) ->
         )
 
     return sanitized
+
+
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Catch-all handler for unexpected exceptions.
+
+    Lets HTTPException and ValidationError propagate to their dedicated handlers.
+    Returns a consistent 500 response for other exceptions.
+    """
+    if isinstance(exc, (HTTPException, ValidationError)):
+        # Defer to FastAPI's default or our registered handlers
+        raise exc
+
+    logger.exception("Unhandled error for %s %s", request.method, request.url.path)
+
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "An internal error occurred"},
+    )

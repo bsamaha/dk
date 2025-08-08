@@ -9,10 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
+from starlette.concurrency import run_in_threadpool
 
 from .api import router
 from .core.config import settings
-from .core.validation import validation_exception_handler
+from .core.validation import unhandled_exception_handler, validation_exception_handler
 from .services.query_service import QueryService
 
 # Enable Polars string cache for categorical comparisons
@@ -33,11 +34,11 @@ def _init_query_service(app: FastAPI) -> None:
         logger.info("QueryService initialized and stored in app.state")
 
 
-def _close_query_service(app: FastAPI) -> None:
-    """Close QueryService if present on app.state."""
+async def _close_query_service(app: FastAPI) -> None:
+    """Close QueryService if present on app.state without blocking event loop."""
     qs = getattr(app.state, "query_service", None)
     if qs is not None:
-        qs.close()
+        await run_in_threadpool(qs.close)
         logger.info("QueryService closed on shutdown")
 
 
@@ -54,7 +55,7 @@ def create_app():
             yield
         finally:
             try:
-                _close_query_service(app)
+                await _close_query_service(app)
             except Exception:
                 logger.exception("Error during QueryService shutdown")
 
@@ -104,6 +105,8 @@ def create_app():
 
     # Register validation exception handler
     app.add_exception_handler(ValidationError, validation_exception_handler)
+    # Register a catch-all exception handler to reduce per-endpoint boilerplate
+    app.add_exception_handler(Exception, unhandled_exception_handler)
 
     # Include API routers; individual endpoints use Depends(get_query_service)
     app.include_router(router, prefix="/api")
