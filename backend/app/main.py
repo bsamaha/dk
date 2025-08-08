@@ -26,14 +26,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _init_query_service(app: FastAPI) -> None:
+    """Initialize and attach QueryService to app.state if missing."""
+    if getattr(app.state, "query_service", None) is None:
+        app.state.query_service = QueryService()
+        logger.info("QueryService initialized and stored in app.state")
+
+
+def _close_query_service(app: FastAPI) -> None:
+    """Close QueryService if present on app.state."""
+    qs = getattr(app.state, "query_service", None)
+    if qs is not None:
+        qs.close()
+        logger.info("QueryService closed on shutdown")
+
+
 def create_app():
     # Lifespan to manage app-scoped QueryService
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         try:
-            if getattr(app.state, "query_service", None) is None:
-                app.state.query_service = QueryService()
-                logger.info("QueryService initialized and stored in app.state")
+            _init_query_service(app)
         except Exception:
             logger.exception("Failed to initialize QueryService during startup")
             raise
@@ -41,10 +54,7 @@ def create_app():
             yield
         finally:
             try:
-                qs = getattr(app.state, "query_service", None)
-                if qs is not None:
-                    qs.close()
-                    logger.info("QueryService closed on shutdown")
+                _close_query_service(app)
             except Exception:
                 logger.exception("Error during QueryService shutdown")
 
@@ -57,12 +67,11 @@ def create_app():
         lifespan=lifespan,
     )
 
-    # Ensure a usable QueryService for environments that don't trigger lifespan (some tests)
-    if getattr(app.state, "query_service", None) is None:
-        try:
-            app.state.query_service = QueryService()
-        except Exception:
-            logger.exception("Failed to initialize QueryService during app creation")
+    # Ensure availability for environments/tests that don't trigger lifespan
+    try:
+        _init_query_service(app)
+    except Exception:
+        logger.exception("Failed to initialize QueryService during app creation")
 
     # Security middleware
     app.add_middleware(
