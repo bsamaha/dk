@@ -515,3 +515,15 @@ def test_week17_bringback_server_error(monkeypatch):
 
     response = client.get("/api/analytics/week17-bringback?scope=team&entity=BUF")
     assert response.status_code == 500
+
+
+def test_503_when_query_service_missing():
+    """Remove QueryService from app.state and verify 503 is returned by a dependent endpoint."""
+    # Remove QueryService from state
+    if hasattr(app.state, "query_service"):
+        delattr(app.state, "query_service")
+
+    # Call an endpoint that requires QueryService
+    response = client.get("/api/metadata/")
+    assert response.status_code == 503
+    assert "unavailable" in response.text.lower()

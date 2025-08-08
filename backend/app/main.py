@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import polars as pl
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -13,7 +13,6 @@ from pydantic import ValidationError
 from .api import router
 from .core.config import settings
 from .core.validation import validation_exception_handler
-from .dependencies import get_query_service
 from .services.query_service import QueryService
 
 # Enable Polars string cache for categorical comparisons
@@ -97,8 +96,8 @@ def create_app():
     # Register validation exception handler
     app.add_exception_handler(ValidationError, validation_exception_handler)
 
-    # Inject dependency into sub-routers by setting dependency for router include
-    app.include_router(router, prefix="/api", dependencies=[Depends(get_query_service)])
+    # Include API routers; individual endpoints use Depends(get_query_service)
+    app.include_router(router, prefix="/api")
 
     @app.get("/health")
     async def health_check():
