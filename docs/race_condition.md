@@ -9,6 +9,7 @@ The race condition fix has been **successfully completed** and deployed. The Que
 ### **Phase 1: Thread-Safe Singleton (COMPLETED)**
 
 #### **1.1 Core Thread-Safe Implementation**
+
 ```python
 class QueryService:
     _instance: Optional['QueryService'] = None
@@ -17,7 +18,7 @@ class QueryService:
     _initialized: bool = False
     _initialization_started: bool = False
     _initialization_error: Optional[Exception] = None
-    
+
     def __new__(cls) -> 'QueryService':
         """Thread-safe singleton implementation with double-checked locking."""
         if cls._instance is None:
@@ -28,25 +29,26 @@ class QueryService:
 ```
 
 #### **1.2 Retry Logic with Detailed Logging**
+
 ```python
 def _initialize_service_with_retry(self, max_retries: int = 3) -> None:
     """Initialize service with retry logic and detailed logging."""
     logger.info("Starting QueryService initialization...")
     start_time = time.time()
-    
+
     for attempt in range(1, max_retries + 1):
         try:
             logger.info("Initialization attempt %d/%d", attempt, max_retries)
             self._initialize_service()
-            
+
             elapsed_time = time.time() - start_time
             logger.info("QueryService initialized successfully in %.2fs", elapsed_time)
             return
-            
+
         except Exception as e:
             logger.error("Initialization attempt %d failed: %s", attempt, str(e))
             self._initialization_error = e
-            
+
             if attempt < max_retries:
                 wait_time = 2 ** attempt  # Exponential backoff
                 logger.info("Retrying in %ds...", wait_time)
@@ -57,6 +59,7 @@ def _initialize_service_with_retry(self, max_retries: int = 3) -> None:
 ```
 
 #### **1.3 Lazy Initialization Pattern**
+
 ```python
 def __init__(self) -> None:
     """Initialize QueryService with thread-safe lazy initialization."""
@@ -79,7 +82,7 @@ def _ensure_initialized(self) -> None:
             if not self._initialized:
                 if self._initialization_error:
                     raise RuntimeError("Service initialization failed") from self._initialization_error
-                
+
                 if not self._initialization_started:
                     logger.info("Triggering lazy initialization...")
                     self._initialization_started = True
@@ -92,12 +95,13 @@ def _ensure_initialized(self) -> None:
 ```
 
 #### **1.4 Database Synchronization**
+
 ```python
 def query(self, sql: str, params: Optional[Sequence[Any]] = None) -> pl.DataFrame:
     """Execute SQL query and return Polars DataFrame."""
     self._ensure_initialized()
     logger.debug("DuckDB query: %s — params=%s", sql, params)
-    
+
     # Synchronize database access to prevent concurrent access issues
     with self._db_lock:
         if params is None:
@@ -117,10 +121,11 @@ def query(self, sql: str, params: Optional[Sequence[Any]] = None) -> pl.DataFram
 ## 🧪 **Testing Results**
 
 ### **Comprehensive Test Suite**
+
 All 7 concurrent access tests pass successfully:
 
 - ✅ **test_concurrent_singleton_access** - Validates singleton behavior under concurrent access
-- ✅ **test_concurrent_initialization** - Ensures no race conditions during lazy initialization  
+- ✅ **test_concurrent_initialization** - Ensures no race conditions during lazy initialization
 - ✅ **test_singleton_performance** - Verifies fast singleton access (1000 accesses < 1s)
 - ✅ **test_concurrent_queries** - Tests database synchronization under load
 - ✅ **test_singleton_state_consistency** - Validates metadata consistency across threads
@@ -128,6 +133,7 @@ All 7 concurrent access tests pass successfully:
 - ✅ **test_thread_safety_under_load** - High-load testing with 20 concurrent threads
 
 ### **Performance Metrics**
+
 - **Singleton Creation**: ~0.001s (instant)
 - **Lazy Initialization**: ~0.22s (only when first needed)
 - **Concurrent Queries**: No segmentation faults, proper synchronization
@@ -136,6 +142,7 @@ All 7 concurrent access tests pass successfully:
 ## 🚀 **Production Deployment**
 
 ### **Successfully Deployed**
+
 The implementation has been deployed and is running successfully in production:
 
 ```
@@ -158,8 +165,9 @@ app-1       | 2025-08-03 17:05:47,983 - backend.app.services.query_service - INF
 ```
 
 ### **Key Benefits Achieved**
+
 - ✅ **Eliminated Race Conditions**: Safe for 4+ Gunicorn workers
-- ✅ **Faster Application Startup**: No hanging during initialization  
+- ✅ **Faster Application Startup**: No hanging during initialization
 - ✅ **Memory Efficient**: Single shared instance across all workers
 - ✅ **Fault Tolerant**: Proper error handling and recovery
 - ✅ **Scalable**: Ready for increased worker counts
@@ -167,26 +175,31 @@ app-1       | 2025-08-03 17:05:47,983 - backend.app.services.query_service - INF
 ## 📁 **Files Modified**
 
 ### **Core Implementation**
+
 - `backend/app/services/query_service.py` - Complete thread-safe singleton implementation
 
 ### **Testing**
+
 - `backend/tests/test_concurrent_access.py` - Comprehensive concurrent access test suite
 
 ## 🔧 **Technical Architecture**
 
 ### **Thread Safety Layers**
+
 1. **Singleton Lock** (`_lock`): Ensures only one instance exists
 2. **Database Lock** (`_db_lock`): Prevents concurrent DuckDB access
 3. **Initialization Lock**: Prevents multiple initialization attempts
 4. **Lazy Loading**: Defers heavy operations until needed
 
 ### **Error Handling**
+
 - Retry logic with exponential backoff
 - Proper state management during failures
 - Graceful degradation on initialization errors
 - Comprehensive logging for debugging
 
 ### **Performance Optimizations**
+
 - Double-checked locking for minimal overhead
 - Lazy initialization for fast startup
 - Database connection reuse
@@ -203,4 +216,4 @@ The race condition fix has been **successfully completed** and is now running in
 - ✅ Includes comprehensive error handling
 - ✅ Maintains excellent performance
 
-**Status: PRODUCTION READY** 🚀 
+**Status: PRODUCTION READY** 🚀

@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import json
 import logging
-from pathlib import Path
 import threading
 import time
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import duckdb  # type: ignore

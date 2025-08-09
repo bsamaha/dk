@@ -4,7 +4,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
-
 from app.services.query_service import QueryService
 
 
