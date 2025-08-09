@@ -41,17 +41,25 @@ const AboutView: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 pt-1">
               <a
-                href="mailto:team@thesignalcallers.com"
-                className="flex-1 sm:flex-none sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-signal-green text-white rounded-lg hover:bg-signal-green/90 transition-colors font-medium"
+                href={SPOTIFY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 sm:flex-none sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                aria-label="Listen on Spotify"
+                title="Listen on Spotify"
               >
-                <IconMail size={18} /> Email us
+                <IconBrandSpotify size={18} /> Listen on Spotify
               </a>
-              <button
-                onClick={handleXDM}
-                className="flex-1 sm:flex-none sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors font-medium"
+              <a
+                href={YOUTUBE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 sm:flex-none sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                aria-label="Watch on YouTube"
+                title="Watch on YouTube"
               >
-                <IconBrandX size={18} /> DM on X
-              </button>
+                <IconBrandYoutube size={18} /> Watch on YouTube
+              </a>
             </div>
           </div>
         </div>
@@ -133,32 +141,7 @@ const AboutView: React.FC = () => {
             </button>
           </div>
 
-          {/* Media / Community links */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <a
-              href={SPOTIFY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-              aria-label="Listen on Spotify"
-              title="Listen on Spotify"
-            >
-              <IconBrandSpotify size={18} />
-              <span>Listen on Spotify</span>
-            </a>
-
-            <a
-              href={YOUTUBE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-              aria-label="Watch on YouTube"
-              title="Watch on YouTube"
-            >
-              <IconBrandYoutube size={18} />
-              <span>Watch on YouTube</span>
-            </a>
-          </div>
+          {/* Media links moved to hero to avoid redundancy */}
         </div>
         </div>
       </div>
