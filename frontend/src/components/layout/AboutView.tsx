@@ -55,12 +55,6 @@ const AboutView: React.FC = () => {
           <div className="w-full">
             <div className="flex flex-col gap-3">
               <a
-                href="mailto:team@thesignalcallers.com"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-gridiron-graphite text-white hover:bg-gridiron-graphite-light transition-colors font-medium"
-              >
-                <IconMail size={18} /> Email us: team@thesignalcallers.com
-              </a>
-              <a
                 href={X_URL}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -109,6 +103,12 @@ const AboutView: React.FC = () => {
                 title="Follow on TikTok"
               >
                 <IconBrandTiktok size={18} /> Follow on TikTok
+              </a>
+              <a
+                href="mailto:team@thesignalcallers.com"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-surface-dark text-gray-200 hover:bg-surface-dark-elev border border-white/10 transition-colors font-medium"
+              >
+                <IconMail size={18} /> Email us: team@thesignalcallers.com
               </a>
             </div>
           </div>
