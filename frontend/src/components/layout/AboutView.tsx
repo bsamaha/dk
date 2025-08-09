@@ -38,14 +38,20 @@ const AboutView: React.FC = () => {
           <div className="w-full">
             <div className="flex flex-col gap-3">
               <a
-                href={SPOTIFY_URL}
+                href="mailto:team@thesignalcallers.com"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-audible-gold text-gridiron-graphite hover:brightness-95 transition-colors font-medium"
+              >
+                <IconMail size={18} /> Email us: team@thesignalcallers.com
+              </a>
+              <a
+                href={X_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium"
-                aria-label="Listen on Spotify"
-                title="Listen on Spotify"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-white/30 text-white hover:bg-white/10 transition-colors font-medium"
+                aria-label="Follow on X"
+                title="Follow on X"
               >
-                <IconBrandSpotify size={18} /> Listen on Spotify
+                <IconBrandX size={18} /> Follow on X
               </a>
               <a
                 href={YOUTUBE_URL}
@@ -58,16 +64,6 @@ const AboutView: React.FC = () => {
                 <IconBrandYoutube size={18} /> Watch on YouTube
               </a>
               <a
-                href={X_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors font-medium"
-                aria-label="Follow on X"
-                title="Follow on X"
-              >
-                <IconBrandX size={18} /> Follow on X
-              </a>
-              <a
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -78,6 +74,16 @@ const AboutView: React.FC = () => {
                 <IconBrandInstagram size={18} /> Follow on Instagram
               </a>
               <a
+                href={SPOTIFY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium"
+                aria-label="Listen on Spotify"
+                title="Listen on Spotify"
+              >
+                <IconBrandSpotify size={18} /> Listen on Spotify
+              </a>
+              <a
                 href={TIKTOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -86,12 +92,6 @@ const AboutView: React.FC = () => {
                 title="Follow on TikTok"
               >
                 <IconBrandTiktok size={18} /> Follow on TikTok
-              </a>
-              <a
-                href="mailto:team@thesignalcallers.com"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-signal-green text-white hover:bg-signal-green/90 transition-colors font-medium"
-              >
-                <IconMail size={18} /> Email us: team@thesignalcallers.com
               </a>
             </div>
           </div>
