@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 class QueryService:
     """Unified service for all data operations using DuckDB."""
+
     # Singleton state and locks for thread safety
     _instance: Optional["QueryService"] = None
     _lock: threading.Lock = threading.Lock()
@@ -158,7 +159,7 @@ class QueryService:
                         time.time() - start_time,
                     )
                     raise
-                wait_s = min(2 ** attempt, max_backoff_seconds)
+                wait_s = min(2**attempt, max_backoff_seconds)
                 time.sleep(wait_s)
 
     def _precheck_data_path(self, is_first_init: bool) -> None:

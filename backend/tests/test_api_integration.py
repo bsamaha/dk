@@ -20,7 +20,9 @@ def client(app):
         yield test_client
 
 
-@pytest.fixture(params=[True, False], ids=["with_query_service", "without_query_service"])
+@pytest.fixture(
+    params=[True, False], ids=["with_query_service", "without_query_service"]
+)
 def client_qs_variants(app, request):
     """Yield a TestClient with QueryService present or removed from DI."""
     with TestClient(app, raise_server_exceptions=True) as test_client:

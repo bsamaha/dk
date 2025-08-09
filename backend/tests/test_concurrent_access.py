@@ -20,6 +20,7 @@ class TestConcurrentAccess:
             try:
                 # Import inside thread to simulate real-world usage
                 from app.services.query_service import query_service
+
                 instances.append(query_service)
                 # Test that it's functional
                 metadata = query_service.get_metadata()
@@ -38,8 +39,9 @@ class TestConcurrentAccess:
         assert not errors, f"Errors during concurrent access: {errors}"
         assert len(instances) == 10, "Should have 10 instances"
         first_instance = instances[0]
-        assert all(instance is first_instance for instance in instances), \
-            "All instances should be the same object"
+        assert all(
+            instance is first_instance for instance in instances
+        ), "All instances should be the same object"
 
     def test_concurrent_initialization(self):
         """Test that concurrent initialization doesn't cause race conditions."""
@@ -58,10 +60,10 @@ class TestConcurrentAccess:
                 start_time = time.time()
                 service = QueryService()
                 end_time = time.time()
-                
+
                 instances.append(service)
                 initialization_times.append(end_time - start_time)
-                
+
                 # Verify service is functional
                 metadata = service.get_metadata()
                 assert isinstance(metadata["total_players"], int)
@@ -76,37 +78,40 @@ class TestConcurrentAccess:
 
         # Verify no errors occurred
         assert not errors, f"Errors during concurrent initialization: {errors}"
-        
+
         # All instances should be the same
         assert len(instances) == 8
         first_instance = instances[0]
         assert all(instance is first_instance for instance in instances)
-        
+
         # Only one initialization should have taken significant time
         # Others should be nearly instantaneous
         significant_times = [t for t in initialization_times if t > 1.0]
-        assert len(significant_times) <= 1, \
-            f"Too many threads did full initialization: {significant_times}"
+        assert (
+            len(significant_times) <= 1
+        ), f"Too many threads did full initialization: {significant_times}"
 
     def test_singleton_performance(self):
         """Test that singleton doesn't impact performance."""
         start_time = time.time()
-        
+
         for _ in range(100):
             from app.services.query_service import query_service
+
             # Quick operation to ensure it's functional
-            assert hasattr(query_service, 'total_players')
-            
+            assert hasattr(query_service, "total_players")
+
         end_time = time.time()
-        
+
         # Should complete within reasonable time (very fast for 100 accesses)
-        assert end_time - start_time < 1.0, \
-            f"Singleton access too slow: {end_time - start_time:.2f}s"
+        assert (
+            end_time - start_time < 1.0
+        ), f"Singleton access too slow: {end_time - start_time:.2f}s"
 
     def test_concurrent_queries(self):
         """Test concurrent query execution."""
         from app.services.query_service import query_service
-        
+
         results = []
         errors = []
 
@@ -129,20 +134,21 @@ class TestConcurrentAccess:
 
         # Verify no errors occurred
         assert not errors, f"Errors during concurrent queries: {errors}"
-        
+
         # Verify all results are consistent
         assert len(results) == 30  # 6 threads * 5 queries each
         first_count = results[0]
-        assert all(count == first_count for count in results), \
-            "Query results should be consistent across threads"
+        assert all(
+            count == first_count for count in results
+        ), "Query results should be consistent across threads"
 
     def test_singleton_state_consistency(self):
         """Test that singleton state remains consistent across threads."""
         from app.services.query_service import query_service
-        
+
         # Get initial state
         initial_metadata = query_service.get_metadata()
-        
+
         metadata_results = []
         errors = []
 
@@ -161,12 +167,13 @@ class TestConcurrentAccess:
 
         # Verify no errors
         assert not errors, f"Errors checking metadata: {errors}"
-        
+
         # All metadata should be identical
         assert len(metadata_results) == 8
         for metadata in metadata_results:
-            assert metadata == initial_metadata, \
-                "Metadata should be consistent across all threads"
+            assert (
+                metadata == initial_metadata
+            ), "Metadata should be consistent across all threads"
 
     def test_error_handling_during_initialization(self):
         """Test error handling when initialization fails."""
@@ -175,32 +182,32 @@ class TestConcurrentAccess:
         QueryService._initialized = False
         QueryService._initialization_started = False
         QueryService._initialization_error = None
-        
+
         # Mock a failure scenario by temporarily breaking the data path
         original_get_data_path = QueryService._get_data_path
-        
+
         def failing_get_data_path():
             raise FileNotFoundError("Test file not found")
-        
+
         QueryService._get_data_path = staticmethod(failing_get_data_path)
-        
+
         try:
             # With lazy loading, object creation succeeds but accessing data should fail
             service = QueryService()
             assert service is not None  # Object creation should succeed
-            
+
             # But accessing metadata should fail due to file not found
             with pytest.raises(RuntimeError):
                 service.get_metadata()
-                
+
             # Verify service instance exists but is not properly initialized
             assert QueryService._instance is not None
             assert not QueryService._initialized
-            
+
             # Subsequent attempts should also fail consistently
             with pytest.raises(RuntimeError):
                 service.get_metadata()
-            
+
         finally:
             # Restore original method and reset state
             QueryService._get_data_path = original_get_data_path
@@ -212,27 +219,27 @@ class TestConcurrentAccess:
     def test_thread_safety_under_load(self):
         """Test thread safety under high concurrent load."""
         from app.services.query_service import query_service
-        
+
         results = []
         errors = []
-        
+
         def heavy_workload():
             try:
                 # Perform multiple operations
                 metadata = query_service.get_metadata()
                 assert metadata["total_players"] > 0
-                
+
                 # Run a query
                 result = query_service.query(
                     "SELECT Position, COUNT(*) as count FROM picks GROUP BY Position LIMIT 4"
                 )
                 assert len(result) <= 4
                 results.append(len(result))
-                
+
                 # Access attributes
                 assert query_service.total_drafts > 0
                 assert len(query_service.all_players) > 0
-                
+
             except Exception as e:
                 errors.append(e)
 
@@ -245,8 +252,9 @@ class TestConcurrentAccess:
         # Verify no errors under load
         assert not errors, f"Errors under high load: {errors}"
         assert len(results) == 20
-        
+
         # Results should be consistent (all should return same number of positions)
         first_result = results[0]
-        assert all(r == first_result for r in results), \
-            "Results should be consistent under concurrent load"
+        assert all(
+            r == first_result for r in results
+        ), "Results should be consistent under concurrent load"
