@@ -56,7 +56,7 @@ const AboutView: React.FC = () => {
             <div className="flex flex-col gap-3">
               <a
                 href="mailto:team@thesignalcallers.com"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-audible-gold text-gridiron-graphite hover:brightness-95 transition-colors font-medium"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-gridiron-graphite text-white hover:bg-gridiron-graphite-light transition-colors font-medium"
               >
                 <IconMail size={18} /> Email us: team@thesignalcallers.com
               </a>
