@@ -42,9 +42,9 @@ const AboutView: React.FC = () => {
     <div className="flex flex-col h-full overflow-y-auto bg-gradient-to-b from-gridiron-graphite to-surface-dark">
       {/* Hero */}
       <section className="px-4 sm:px-6 md:px-10 py-8 sm:py-10">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
+        <div className="max-w-6xl mx-auto grid grid-cols-12 gap-6 md:gap-8 items-start">
           {/* Left: Logo */}
-          <div className="flex items-center justify-start lg:col-span-4">
+          <div className="col-span-12 lg:col-span-4 flex items-center justify-start">
             <Logo
               variant="horizontal"
               className="w-48 sm:w-60 md:w-72 drop-shadow-lg"
@@ -52,8 +52,8 @@ const AboutView: React.FC = () => {
           </div>
 
           {/* Right: All buttons stacked vertically */}
-          <div className="lg:col-span-8 w-full">
-            <div className="flex flex-col gap-2.5 w-full max-w-sm">
+          <div className="col-span-12 lg:col-span-8 w-full flex">
+            <div className="flex flex-col gap-2.5 w-full max-w-sm items-stretch">
               <a
                 href={X_URL}
                 target="_blank"
@@ -114,7 +114,7 @@ const AboutView: React.FC = () => {
           </div>
 
           {/* Full-width copy below */}
-          <div className="lg:col-span-12 text-left text-white space-y-2 max-w-3xl">
+          <div className="col-span-12 text-left text-white space-y-2 max-w-5xl">
             <h1 className="font-heading text-3xl sm:text-4xl font-semibold">
               The Signal Callers
             </h1>
@@ -131,12 +131,12 @@ const AboutView: React.FC = () => {
       <div className="flex-grow px-4 sm:px-6 md:px-10 pb-12">
         <div className="max-w-6xl mx-auto space-y-10">
           {/* Latest media embeds */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 justify-items-center">
+          <div className="grid grid-cols-12 gap-4 sm:gap-6 items-start">
             <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card">
               <h3 className="text-base font-semibold mb-3 text-gridiron-graphite dark:text-white">
                 Latest on Spotify
               </h3>
-              <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '152px' }}>
+              <div className="relative col-span-12 lg:col-span-6 w-full max-w-xl mx-auto" style={{ paddingTop: '152px' }}>
                 <iframe
                   title="Spotify latest show"
                   src={SPOTIFY_EMBED_SRC}
@@ -146,7 +146,7 @@ const AboutView: React.FC = () => {
                 />
               </div>
             </div>
-            <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card">
+            <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card col-span-12 lg:col-span-6">
               <h3 className="text-base font-semibold mb-3 text-gridiron-graphite dark:text-white">
                 Latest on YouTube
               </h3>
