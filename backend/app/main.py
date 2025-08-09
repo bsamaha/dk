@@ -68,12 +68,6 @@ def create_app():
         lifespan=lifespan,
     )
 
-    # Ensure availability for environments/tests that don't trigger lifespan
-    try:
-        _init_query_service(app)
-    except Exception:
-        logger.exception("Failed to initialize QueryService during app creation")
-
     # Security middleware
     app.add_middleware(
         TrustedHostMiddleware,
