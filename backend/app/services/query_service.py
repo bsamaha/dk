@@ -181,25 +181,26 @@ class QueryService:
 
     def _ensure_initialized(self) -> None:
         """Ensure the singleton is fully initialized before use."""
-        if not self._initialized or self._closed or self._con is None:
-            with self._lock:
-                if not self._initialized or self._closed or self._con is None:
-                    if self._initialization_error:
-                        # Reset flags to allow retry on next call
-                        err = self._initialization_error
-                        self._initialization_error = None
-                        self._initialization_started = False
-                        # Propagate as runtime error to callers
-                        raise RuntimeError("Service initialization failed") from err
-                    if not self._initialization_started:
-                        self._initialization_started = True
-                        try:
-                            self._initialize_service_with_retry()
-                            self._initialized = True
-                            self._closed = False
-                        except Exception as exc:
-                            self._initialization_error = exc
-                            raise RuntimeError("Service initialization failed") from exc
+        if self._initialized and not self._closed and self._con is not None:
+            return
+        with self._lock:
+            if not self._initialized or self._closed or self._con is None:
+                if self._initialization_error:
+                    # Reset flags to allow retry on next call
+                    err = self._initialization_error
+                    self._initialization_error = None
+                    self._initialization_started = False
+                    # Propagate as runtime error to callers
+                    raise RuntimeError("Service initialization failed") from err
+                if not self._initialization_started:
+                    self._initialization_started = True
+                    try:
+                        self._initialize_service_with_retry()
+                        self._initialized = True
+                        self._closed = False
+                    except Exception as exc:
+                        self._initialization_error = exc
+                        raise RuntimeError("Service initialization failed") from exc
 
     def close(self) -> None:
         """Close DuckDB connection and mark service closed.
