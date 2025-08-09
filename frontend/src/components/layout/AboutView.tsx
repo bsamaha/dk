@@ -27,6 +27,16 @@ const AboutView: React.FC = () => {
   // If you know the YouTube uploads playlist (UU...) set VITE_YT_UPLOADS_PLAYLIST_ID in env
   const YT_UPLOADS_PLAYLIST_ID = (import.meta as any).env
     ?.VITE_YT_UPLOADS_PLAYLIST_ID as string | undefined;
+  const YT_CHANNEL_ID = (import.meta as any).env
+    ?.VITE_YT_CHANNEL_ID as string | undefined;
+  const deriveUploadsPlaylistId = (channelId?: string): string | undefined => {
+    if (!channelId) return undefined;
+    return channelId.startsWith('UC')
+      ? `UU${channelId.substring(2)}`
+      : undefined;
+  };
+  const YT_EFFECTIVE_PLAYLIST_ID =
+    YT_UPLOADS_PLAYLIST_ID || deriveUploadsPlaylistId(YT_CHANNEL_ID);
 
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-gradient-to-b from-gridiron-graphite to-surface-dark">
@@ -140,11 +150,11 @@ const AboutView: React.FC = () => {
               <h3 className="text-base font-semibold mb-3 text-gridiron-graphite dark:text-white">
                 Latest on YouTube
               </h3>
-              {YT_UPLOADS_PLAYLIST_ID ? (
+              {YT_EFFECTIVE_PLAYLIST_ID ? (
                 <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
                   <iframe
                     title="YouTube latest uploads"
-                    src={`https://www.youtube.com/embed?listType=playlist&list=${YT_UPLOADS_PLAYLIST_ID}`}
+                    src={`https://www.youtube.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
@@ -154,8 +164,9 @@ const AboutView: React.FC = () => {
                 </div>
               ) : (
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Set <code className="font-code">VITE_YT_UPLOADS_PLAYLIST_ID</code> to
-                  auto‑embed the latest video. For now, visit our channel:
+                  Set <code className="font-code">VITE_YT_UPLOADS_PLAYLIST_ID</code> or
+                  <code className="font-code"> VITE_YT_CHANNEL_ID</code> to auto‑embed
+                  the latest video. For now, visit our channel:
                   <a
                     href={YOUTUBE_URL}
                     target="_blank"
