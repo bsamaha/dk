@@ -59,31 +59,8 @@ class QueryService:
         # Validate/resolve data path on construction to surface ValueError immediately.
         # Do NOT poison an already-initialized singleton instance's state in later constructions.
         is_first_init = not hasattr(self, "_basic_init_done")
-        try:
-            _ = QueryService._get_data_path()
-        except ValueError as exc:
-            if is_first_init:
-                self._initialization_error = exc
-            raise
-        except FileNotFoundError as exc:
-            # Record but don't raise on first init; allow lazy recovery.
-            if is_first_init:
-                self._initialization_error = exc
-        except Exception as exc:  # pragma: no cover
-            if is_first_init:
-                self._initialization_error = exc
-        if not hasattr(self, "_basic_init_done"):
-            with self._lock:
-                if not hasattr(self, "_basic_init_done"):
-                    logger.info("QueryService basic initialization")
-                    self._con: Optional[duckdb.DuckDBPyConnection] = None
-                    self._closed: bool = False
-                    # Metadata placeholders until initialized
-                    self.total_drafts: int = 0
-                    self.total_teams: int = 0
-                    self.total_players: int = 0
-                    self.all_players: List[str] = []
-                    self._basic_init_done = True
+        self._precheck_data_path(is_first_init)
+        self._init_basic_fields_if_needed()
         # Attempt eager initialization once
         if not self._initialized:
             with self._lock:
@@ -160,8 +137,10 @@ class QueryService:
 
         logger.info("QueryService initialization completed successfully.")
 
-    def _initialize_service_with_retry(self, max_retries: int = 3) -> None:
-        """Initialize service with retries and backoff."""
+    def _initialize_service_with_retry(
+        self, max_retries: int = 3, max_backoff_seconds: float = 4.0
+    ) -> None:
+        """Initialize service with retries and capped exponential backoff."""
         start_time = time.time()
         for attempt in range(1, max_retries + 1):
             try:
@@ -173,11 +152,69 @@ class QueryService:
             except Exception as exc:  # pragma: no cover
                 logger.exception("Initialization attempt %d failed", attempt)
                 self._initialization_error = exc
-                if attempt < max_retries:
-                    wait_s = 2 ** attempt
-                    time.sleep(wait_s)
-                else:
+                if attempt >= max_retries:
+                    logger.error(
+                        "All initialization attempts failed after %.2fs",
+                        time.time() - start_time,
+                    )
                     raise
+                wait_s = min(2 ** attempt, max_backoff_seconds)
+                time.sleep(wait_s)
+
+    def _precheck_data_path(self, is_first_init: bool) -> None:
+        """Validate/resolve data path early to surface config errors.
+
+        Raises ValueError immediately. Records FileNotFoundError on first
+        initialization but defers raising to lazy init.
+        """
+        try:
+            _ = QueryService._get_data_path()
+        except ValueError as exc:
+            if is_first_init:
+                self._initialization_error = exc
+            raise
+        except Exception as exc:  # includes FileNotFoundError
+            if is_first_init:
+                self._initialization_error = exc
+
+    def _init_basic_fields_if_needed(self) -> None:
+        """Initialize basic instance fields once, under lock."""
+        with self._lock:
+            if not getattr(self, "_basic_init_done", False):
+                logger.info("QueryService basic initialization")
+                self._con: Optional[duckdb.DuckDBPyConnection] = None
+                self._closed: bool = False
+                # Metadata placeholders until initialized
+                self.total_drafts: int = 0
+                self.total_teams: int = 0
+                self.total_players: int = 0
+                self.all_players: List[str] = []
+                self._basic_init_done = True
+
+    @staticmethod
+    def _resolve_data_dir() -> Path:
+        """Resolve the data directory path consistently for all lookups."""
+        data_dir: Path = Path(settings.DATA_PATH).expanduser()
+        container_data = Path("/app/data")
+        if container_data.exists():
+            data_dir = container_data
+        if not data_dir.exists():
+            project_root = Path(__file__).resolve().parents[3]
+            candidate = project_root / "data"
+            if candidate.exists():
+                data_dir = candidate
+        if str(data_dir) == "/app/data" and not data_dir.exists():
+            project_root = Path(__file__).resolve().parents[3]
+            data_dir = project_root / "data"
+        return data_dir
+
+    @staticmethod
+    def _get_data_path() -> str:
+        """Return absolute path to the parquet data file with validation."""
+        data_dir: Path = QueryService._resolve_data_dir()
+        data_path: Path = data_dir / "updated_bestball_data.parquet"
+        validated_path = QueryService._validate_and_sanitize_path(data_path, data_dir)
+        return str(validated_path)
 
     def _ensure_initialized(self) -> None:
         """Ensure the singleton is fully initialized before use."""
@@ -273,7 +310,7 @@ class QueryService:
             return resolved_path
 
         except (OSError, FileNotFoundError) as e:
-            raise ValueError(f"Invalid path: {file_path} - {str(e)}")
+            raise ValueError(f"Invalid path: {file_path}") from e
         except Exception:
             # Log unexpected exceptions to aid debugging
             logger.exception(f"Unexpected error while validating path: {file_path}")
@@ -312,23 +349,7 @@ class QueryService:
     def _load_week17_matchups(self) -> None:
         """Load Week 17 matchups data into DuckDB."""
         # Get path to Week 17 matchups file
-        data_dir: Path = Path(settings.DATA_PATH).expanduser()
-
-        container_data = Path("/app/data")
-        if container_data.exists():
-            data_dir = container_data
-
-        # Local/dev fallback to repo root data/
-        if not data_dir.exists():
-            project_root = Path(__file__).resolve().parents[3]
-            candidate = project_root / "data"
-            if candidate.exists():
-                data_dir = candidate
-
-        # Container path fallback
-        if str(data_dir) == "/app/data" and not data_dir.exists():
-            project_root = Path(__file__).resolve().parents[3]
-            data_dir = project_root / "data"
+        data_dir: Path = QueryService._resolve_data_dir()
 
         matchups_path: Path = data_dir / "week17_matchups.json"
 

@@ -1,0 +1,15 @@
+---
+globs: frontend/**/*.{ts,tsx}
+description: React + TypeScript best practices (state, hooks, components)
+---
+# React + TypeScript Best Practices
+
+- Prefer functional components with hooks (`useState`, `useEffect`, `useMemo`, `useCallback`).
+- Strong typing: define component props and state with explicit interfaces/types.
+- Keep components small and focused; lift state up or extract hooks for shared logic.
+- Memoize expensive computations (`useMemo`) and stable callbacks (`useCallback`) for perf.
+- Derive UI strictly from props/state; avoid side effects in render.
+- Handle API data with typed clients and error states; avoid implicit any.
+- Use Suspense-friendly patterns where applicable; keep loading/error states consistent.
+- Keep CSS scoped (CSS Modules or CSS-in-JS) and avoid global leakage.
+- Avoid inline functions in hot lists; memoize list items with `key`.

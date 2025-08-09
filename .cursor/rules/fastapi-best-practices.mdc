@@ -1,0 +1,26 @@
+---
+globs: backend/**/*.py
+description: FastAPI patterns for DI, lifespan, validation, and handlers
+---
+# FastAPI Backend Best Practices
+
+- Use Pydantic models for request/response validation and type hints throughout.
+- Prefer dependency injection for shared resources; inject `QueryService` via `Depends(get_query_service)`.
+- Initialize app-wide resources in FastAPI lifespan (startup/shutdown), not at import time.
+- Register exception handlers once in `create_app`.
+- Use appropriate HTTP status codes and return shapes.
+- Log with `logging` (no prints) and preserve exception chains (see [exception-chaining.mdc](mdc:.cursor/rules/exception-chaining.mdc)).
+
+## Codebase references
+- App factory and lifespan: [backend/app/main.py](mdc:backend/app/main.py)
+- DI helper: [backend/app/dependencies.py](mdc:backend/app/dependencies.py)
+- Validation and handlers: [backend/app/core/validation.py](mdc:backend/app/core/validation.py)
+- Unified service: [backend/app/services/query_service.py](mdc:backend/app/services/query_service.py)
+
+## Router guidance
+- Always import `get_query_service` where `Depends(get_query_service)` is used.
+- Avoid file-scoped singletons inside routers; use DI to access app-scoped state.
+
+## Handlers
+- Let `HTTPException` and `ValidationError` propagate to their handlers.
+- Wrap unexpected exceptions into 500 responses centrally; avoid duplicating try/except in each route.

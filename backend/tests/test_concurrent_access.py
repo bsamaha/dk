@@ -37,7 +37,7 @@ class TestConcurrentAccess:
                 future.result()
 
         # All instances should be the same object
-        assert len(errors) == 0, f"Errors during concurrent access: {errors}"
+        assert not errors, f"Errors during concurrent access: {errors}"
         assert len(instances) == 10, "Should have 10 instances"
         first_instance = instances[0]
         assert all(instance is first_instance for instance in instances), \
@@ -77,7 +77,7 @@ class TestConcurrentAccess:
                 future.result()
 
         # Verify no errors occurred
-        assert len(errors) == 0, f"Errors during concurrent initialization: {errors}"
+        assert not errors, f"Errors during concurrent initialization: {errors}"
         
         # All instances should be the same
         assert len(instances) == 8
@@ -130,7 +130,7 @@ class TestConcurrentAccess:
                 future.result()
 
         # Verify no errors occurred
-        assert len(errors) == 0, f"Errors during concurrent queries: {errors}"
+        assert not errors, f"Errors during concurrent queries: {errors}"
         
         # Verify all results are consistent
         assert len(results) == 30  # 6 threads * 5 queries each
@@ -162,7 +162,7 @@ class TestConcurrentAccess:
                 future.result()
 
         # Verify no errors
-        assert len(errors) == 0, f"Errors checking metadata: {errors}"
+        assert not errors, f"Errors checking metadata: {errors}"
         
         # All metadata should be identical
         assert len(metadata_results) == 8
@@ -245,7 +245,7 @@ class TestConcurrentAccess:
                 future.result()
 
         # Verify no errors under load
-        assert len(errors) == 0, f"Errors under high load: {errors}"
+        assert not errors, f"Errors under high load: {errors}"
         assert len(results) == 20
         
         # Results should be consistent (all should return same number of positions)

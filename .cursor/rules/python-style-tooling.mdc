@@ -1,0 +1,14 @@
+---
+globs: backend/**/*.py
+description: Python style, typing, linting, imports, and testing guidance
+---
+# Python Style and Tooling
+
+- Follow Google Python Style: 4 spaces, max 80–100 cols, snake_case, type hints for public APIs.
+- Prefer meaningful names; avoid 1–2 char identifiers in production code.
+- Keep functions small; extract helpers for complex logic.
+- Use `ruff` for lint/format; keep imports sorted (`isort` style). Avoid unused imports.
+- Use `pytest` fixtures and `@pytest.mark.parametrize` instead of loops/conditionals in tests.
+- Avoid logic in tests (no-loop-in-tests). Move loops into fixtures or parametrize.
+- Use `raise ... from e` when translating exceptions (see [exception-chaining.mdc](mdc:.cursor/rules/exception-chaining.mdc)).
+- Don’t re-raise with `raise e`; use bare `raise` to preserve tracebacks.
