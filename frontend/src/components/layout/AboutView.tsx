@@ -58,7 +58,7 @@ const AboutView: React.FC = () => {
                 href={X_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-white/30 text-white hover:bg-white/10 transition-colors font-medium"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-black text-white hover:bg-neutral-900 transition-colors font-medium"
                 aria-label="Follow on X"
                 title="Follow on X"
               >
