@@ -5,19 +5,21 @@ import {
   IconBrandX,
   IconBrandSpotify,
   IconBrandYoutube,
+  IconBrandInstagram,
+  IconBrandTiktok,
   IconChartBar,
   IconDeviceAnalytics,
   IconTrophy,
 } from '@tabler/icons-react';
 
 const AboutView: React.FC = () => {
-  const handleXDM = () => {
-    window.open('https://x.com/signalcallers', '_blank');
-  };
-
+  // Links
   const SPOTIFY_URL =
     'https://open.spotify.com/show/5bN7N0PinX56rsSAomHZd8';
   const YOUTUBE_URL = 'https://www.youtube.com/@TheSignalCallers/videos';
+  const X_URL = 'https://x.com/signalcallers';
+  const INSTAGRAM_URL = 'https://www.instagram.com/thesignalcallers';
+  const TIKTOK_URL = 'https://www.tiktok.com/@thesignalcallers';
 
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-gradient-to-b from-gridiron-graphite to-surface-dark">
@@ -39,28 +41,7 @@ const AboutView: React.FC = () => {
               rooms into clear, actionable insights so you can out‑draft the
               room with confidence.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 pt-1">
-              <a
-                href={SPOTIFY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 sm:flex-none sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-                aria-label="Listen on Spotify"
-                title="Listen on Spotify"
-              >
-                <IconBrandSpotify size={18} /> Listen on Spotify
-              </a>
-              <a
-                href={YOUTUBE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 sm:flex-none sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                aria-label="Watch on YouTube"
-                title="Watch on YouTube"
-              >
-                <IconBrandYoutube size={18} /> Watch on YouTube
-              </a>
-            </div>
+            {/* No CTAs in hero to avoid duplication; see unified socials below */}
           </div>
         </div>
       </section>
@@ -112,7 +93,77 @@ const AboutView: React.FC = () => {
           </div>
         </div>
 
-        {/* Connect Section - contact + channels */}
+        {/* Socials Section - one place for all channels */}
+        <div className="space-y-4">
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-gridiron-graphite dark:text-white mb-2">
+              Follow us
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Your choice of platform — same handle, same signal.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            <a
+              href={SPOTIFY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium"
+              aria-label="Listen on Spotify"
+              title="Listen on Spotify"
+            >
+              <IconBrandSpotify size={18} />
+              <span>Spotify</span>
+            </a>
+            <a
+              href={YOUTUBE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium"
+              aria-label="Watch on YouTube"
+              title="Watch on YouTube"
+            >
+              <IconBrandYoutube size={18} />
+              <span>YouTube</span>
+            </a>
+            <a
+              href={X_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
+              aria-label="Follow on X"
+              title="Follow on X"
+            >
+              <IconBrandX size={18} />
+              <span>X</span>
+            </a>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-violet-600 text-white hover:from-pink-600 hover:to-violet-700 transition-colors font-medium"
+              aria-label="Follow on Instagram"
+              title="Follow on Instagram"
+            >
+              <IconBrandInstagram size={18} />
+              <span>Instagram</span>
+            </a>
+            <a
+              href={TIKTOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-black text-white hover:bg-neutral-900 transition-colors font-medium"
+              aria-label="Follow on TikTok"
+              title="Follow on TikTok"
+            >
+              <IconBrandTiktok size={18} />
+              <span>TikTok</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Contact Section - single place for outreach */}
         <div className="space-y-4">
           <div className="text-center">
             <h3 className="text-lg font-medium text-gridiron-graphite dark:text-white mb-2">
@@ -131,17 +182,7 @@ const AboutView: React.FC = () => {
               <IconMail size={18} />
               <span>Email us at team@thesignalcallers.com</span>
             </a>
-
-            <button
-              onClick={handleXDM}
-              className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
-            >
-              <IconBrandX size={18} />
-              <span>DM @SignalCallers on X</span>
-            </button>
           </div>
-
-          {/* Media links moved to hero to avoid redundancy */}
         </div>
         </div>
       </div>
