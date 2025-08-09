@@ -55,6 +55,11 @@ export const CSP_DIRECTIVES = {
     'https://stats.g.doubleclick.net',
     'https://region1.google-analytics.com',
     'https://region1.analytics.google.com',
+    // Allow YouTube/Google logging for embedded players
+    'https://www.youtube.com',
+    'https://www.youtube-nocookie.com',
+    'https://*.googlevideo.com',
+    'https://play.google.com',
   ],
   'frame-ancestors': ["'none'"],
   'base-uri': ["'self'"],

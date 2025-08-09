@@ -155,7 +155,7 @@ const AboutView: React.FC = () => {
                   <iframe
                     title="YouTube latest uploads"
                     src={`https://www.youtube.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
                     loading="lazy"
