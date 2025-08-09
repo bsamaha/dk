@@ -37,6 +37,12 @@ export const CSP_DIRECTIVES = {
     'https://stats.g.doubleclick.net',
   ],
   'media-src': ["'self'", 'data:', 'blob:'],
+  'frame-src': [
+    "'self'",
+    'https://open.spotify.com',
+    'https://www.youtube.com',
+    'https://youtube.com',
+  ],
   'connect-src': [
     "'self'",
     'http://localhost:*',
