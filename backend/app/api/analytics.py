@@ -2,16 +2,17 @@
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import ValidationError
 
+from ..dependencies import get_query_service
 from ..models.schemas import Week17BringBackPlayer, Week17BringBackResponse
 from ..models.validation import (
     AnalyticsDraftSlotQueryParams,
     AnalyticsStacksQueryParams,
     AnalyticsWeek17BringBackQueryParams,
 )
-from ..services.query_service import query_service
+from ..services.query_service import QueryService
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +20,10 @@ router = APIRouter()
 
 
 @router.get("/heat-map")
-async def get_heat_map():
+async def get_heat_map(qs: QueryService = Depends(get_query_service)):
     """Get heat map data showing pick counts by round and position."""
     try:
-        return {"heat_map": query_service.get_heat_map()}
+        return {"heat_map": qs.get_heat_map()}
     except Exception:
         logger.exception("Error getting heat map")
         raise HTTPException(status_code=500, detail="An internal error occurred")
@@ -32,17 +33,14 @@ async def get_heat_map():
 async def get_stacks(
     n_rounds: int = Query(10, ge=1, le=20),
     limit: int = Query(100, ge=1, le=1000),
+    qs: QueryService = Depends(get_query_service),
 ):
     """Find QB/receiver stacks drafted within first n_rounds."""
     try:
         # Validate query parameters using Pydantic schema
         params = AnalyticsStacksQueryParams(n_rounds=n_rounds, limit=limit)
 
-        return {
-            "stacks": query_service.get_stacks(
-                n_rounds=params.n_rounds, limit=params.limit
-            )
-        }
+        return {"stacks": qs.get_stacks(n_rounds=params.n_rounds, limit=params.limit)}
     except Exception:
         logger.exception("Error getting stacks")
         raise HTTPException(status_code=500, detail="An internal error occurred")
@@ -55,6 +53,7 @@ async def get_draft_slot_correlation(
     metric: str = Query("percent"),
     top_n: int = Query(25, ge=1, le=100),
     min_teams: int = Query(10, ge=1),
+    qs: QueryService = Depends(get_query_service),
 ):
     """Get players most correlated with a specific draft slot."""
     try:
@@ -66,7 +65,7 @@ async def get_draft_slot_correlation(
         return {
             "slot": params.slot,
             "metric": params.metric,
-            "rows": query_service.get_draft_slot_correlation(
+            "rows": qs.get_draft_slot_correlation(
                 slot=params.slot,
                 metric=params.metric,
                 top_n=params.top_n,
@@ -79,10 +78,10 @@ async def get_draft_slot_correlation(
 
 
 @router.get("/drift")
-async def get_adp_drift():
+async def get_adp_drift(qs: QueryService = Depends(get_query_service)):
     """Get ADP drift between early and late drafts."""
     try:
-        return {"adp_drift": query_service.get_adp_drift()}
+        return {"adp_drift": qs.get_adp_drift()}
     except Exception:
         logger.exception("Error getting ADP drift")
         raise HTTPException(status_code=500, detail="An internal error occurred")
@@ -98,6 +97,7 @@ async def get_week17_bringback(
         ..., description="Team abbreviation (e.g., 'BUF') or player name"
     ),
     limit: int = Query(10, ge=1, le=25, description="Number of top players to return"),
+    qs: QueryService = Depends(get_query_service),
 ):
     """Get Week 17 bring back analytics data.
 
@@ -112,10 +112,10 @@ async def get_week17_bringback(
 
         if params.scope == "team":
             # Team view - aggregate draft percentages
-            players_data = query_service.get_week17_bringback_team_view(
+            players_data = qs.get_week17_bringback_team_view(
                 params.entity, params.limit
             )
-            opponent = query_service.get_week17_opponent(params.entity)
+            opponent = qs.get_week17_opponent(params.entity)
 
             players = [
                 Week17BringBackPlayer(
@@ -130,19 +130,19 @@ async def get_week17_bringback(
 
         else:  # scope == "player"
             # Player view - conditional co-draft percentages
-            players_data = query_service.get_week17_bringback_player_view(
+            players_data = qs.get_week17_bringback_player_view(
                 params.entity, params.limit
             )
 
             # Get opponent from first result or query directly
             if players_data:
                 # Get the player's team to find opponent
-                player_team_result = query_service.query(
+                player_team_result = qs.query(
                     "SELECT DISTINCT Team FROM picks WHERE player = ?", [params.entity]
                 )
                 if len(player_team_result) > 0:
                     player_team = player_team_result["Team"][0]
-                    opponent = query_service.get_week17_opponent(player_team)
+                    opponent = qs.get_week17_opponent(player_team)
                 else:
                     opponent = None
             else:
@@ -163,7 +163,7 @@ async def get_week17_bringback(
             scope=params.scope,
             entity=params.entity,
             opponent=opponent,
-            total_drafts=query_service.total_drafts,
+            total_drafts=qs.total_drafts,
             players=players,
         )
 

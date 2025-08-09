@@ -94,6 +94,8 @@ celerybeat.pid
 venv/
 ENV/
 env/
+test_env/
+*_env/
 
 # Spyder project settings
 .spyderproject
@@ -127,6 +129,7 @@ instructions.txt
 
 data/sample_data.csv
 backend/backend_env/
+backend/test_env/
 
 ################################################################################
 # Node.js / React / Frontend build artifacts                                   #
@@ -144,6 +147,7 @@ lerna-debug.log*
 # Dependency directories
 node_modules/
 /frontend/node_modules/
+.pnpm-store/
 
 # Build outputs
 frontend/dist/
@@ -162,3 +166,8 @@ frontend/*.local
 !.vscode/extensions.json
 .idea/
 .DS_Store
+
+
+# AI stuff
+prompt_template.md
+prompt.md

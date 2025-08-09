@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -33,24 +35,66 @@ logger = logging.getLogger(__name__)
 class QueryService:
     """Unified service for all data operations using DuckDB."""
 
-    def __init__(self) -> None:
-        """Initialize QueryService with DuckDB connection and data loading."""
-        logger.info("Initializing QueryService with DuckDB...")
-        self._con: duckdb.DuckDBPyConnection = duckdb.connect(
-            database=":memory:", read_only=False
-        )
+    # Singleton state and locks for thread safety
+    _instance: Optional["QueryService"] = None
+    _lock: threading.Lock = threading.Lock()
+    _db_lock: threading.Lock = threading.Lock()
+    _initialized: bool = False
+    _initialization_started: bool = False
+    _initialization_error: Optional[Exception] = None
 
+    def __new__(cls) -> "QueryService":
+        """Thread-safe singleton via double-checked locking."""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance  # type: ignore[return-value]
+
+    def __init__(self) -> None:
+        """Initialize basic state and attempt eager init with nuanced error handling.
+
+        - ValueError from path validation is propagated (for tests expecting it)
+        - FileNotFoundError is recorded but not raised to allow lazy recovery
+        """
+        # Validate/resolve data path on construction to surface ValueError immediately.
+        # Do NOT poison an already-initialized singleton instance's state in later constructions.
+        is_first_init = not hasattr(self, "_basic_init_done")
+        self._precheck_data_path(is_first_init)
+        self._init_basic_fields_if_needed()
+        # Attempt eager initialization once
+        if not self._initialized:
+            with self._lock:
+                if not self._initialized and not self._initialization_started:
+                    self._initialization_started = True
+                    try:
+                        self._initialize_service_with_retry()
+                        self._initialized = True
+                    except ValueError as exc:
+                        # Path validation errors should surface immediately
+                        self._initialization_error = exc
+                        raise
+                    except FileNotFoundError as exc:
+                        # Allow lazy recovery on first real use
+                        self._initialization_error = exc
+                        self._initialization_started = False
+                    except Exception as exc:  # pragma: no cover
+                        self._initialization_error = exc
+                        self._initialization_started = False
+
+    def _initialize_service(self) -> None:
+        """Initialize DuckDB and load data. Not thread-safe; call under _lock."""
+        logger.info("Starting QueryService initialization...")
+        # Create connection
+        self._con = duckdb.connect(database=":memory:", read_only=False)
         # Enable arrow/polars integration
+        assert self._con is not None
         self._con.execute("PRAGMA enable_object_cache;")
 
         # Attach parquet file as a view
-        data_path: str = self._get_data_path()
+        data_path: str = QueryService._get_data_path()
         logger.info("Attaching parquet file to DuckDB: %s", data_path)
-
-        # Escape single quotes for SQL literal
         sanitized_path: str = data_path.replace("'", "''")
-
-        # Create view with data corrections
         self._con.execute(
             f"""
             CREATE OR REPLACE VIEW picks AS
@@ -71,23 +115,150 @@ class QueryService:
         # Load Week 17 matchups
         self._load_week17_matchups()
 
-        logger.info("QueryService initialized successfully.")
+        # Compute metadata without re-entering query() to avoid recursion during init
+        td_tbl = self._con.execute(
+            "SELECT COUNT(DISTINCT draft) AS count FROM picks"
+        ).arrow()
+        self.total_drafts = int(pl.from_arrow(td_tbl)["count"][0] or 0)
 
-        self.total_drafts: int = int(
-            self.query("SELECT COUNT(DISTINCT draft) AS count FROM picks")["count"][0]
-            or 0
-        )
-        self.total_teams: int = int(
-            self.query("SELECT COUNT(DISTINCT team_id) AS count FROM picks")["count"][0]
-            or 0
-        )
-        self.total_players: int = int(
-            self.query("SELECT COUNT(DISTINCT player) AS count FROM picks")["count"][0]
-            or 0
-        )
-        self.all_players: List[str] = self.query(
+        tt_tbl = self._con.execute(
+            "SELECT COUNT(DISTINCT team_id) AS count FROM picks"
+        ).arrow()
+        self.total_teams = int(pl.from_arrow(tt_tbl)["count"][0] or 0)
+
+        tp_tbl = self._con.execute(
+            "SELECT COUNT(DISTINCT player) AS count FROM picks"
+        ).arrow()
+        self.total_players = int(pl.from_arrow(tp_tbl)["count"][0] or 0)
+
+        ap_tbl = self._con.execute(
             "SELECT DISTINCT player FROM picks ORDER BY player"
-        )["player"].to_list()
+        ).arrow()
+        self.all_players = pl.from_arrow(ap_tbl)["player"].to_list()
+
+        logger.info("QueryService initialization completed successfully.")
+
+    def _initialize_service_with_retry(
+        self, max_retries: int = 3, max_backoff_seconds: float = 4.0
+    ) -> None:
+        """Initialize service with retries and capped exponential backoff."""
+        start_time = time.time()
+        for attempt in range(1, max_retries + 1):
+            try:
+                logger.info("Initialization attempt %d/%d", attempt, max_retries)
+                self._initialize_service()
+                elapsed = time.time() - start_time
+                logger.info("QueryService initialized in %.2fs", elapsed)
+                return
+            except Exception as exc:  # pragma: no cover
+                logger.exception("Initialization attempt %d failed", attempt)
+                self._initialization_error = exc
+                if attempt >= max_retries:
+                    logger.error(
+                        "All initialization attempts failed after %.2fs",
+                        time.time() - start_time,
+                    )
+                    raise
+                wait_s = min(2**attempt, max_backoff_seconds)
+                time.sleep(wait_s)
+
+    def _precheck_data_path(self, is_first_init: bool) -> None:
+        """Validate/resolve data path early to surface config errors.
+
+        Raises ValueError immediately. Records FileNotFoundError on first
+        initialization but defers raising to lazy init.
+        """
+        try:
+            _ = QueryService._get_data_path()
+        except ValueError as exc:
+            if is_first_init:
+                self._initialization_error = exc
+            raise
+        except Exception as exc:  # includes FileNotFoundError
+            if is_first_init:
+                self._initialization_error = exc
+
+    def _init_basic_fields_if_needed(self) -> None:
+        """Initialize basic instance fields once, under lock."""
+        with self._lock:
+            if not getattr(self, "_basic_init_done", False):
+                logger.info("QueryService basic initialization")
+                self._con: Optional[duckdb.DuckDBPyConnection] = None
+                self._closed: bool = False
+                # Metadata placeholders until initialized
+                self.total_drafts: int = 0
+                self.total_teams: int = 0
+                self.total_players: int = 0
+                self.all_players: List[str] = []
+                self._basic_init_done = True
+
+    @staticmethod
+    def _resolve_data_dir() -> Path:
+        """Resolve the data directory path consistently for all lookups."""
+        data_dir: Path = Path(settings.DATA_PATH).expanduser()
+        container_data = Path("/app/data")
+        if container_data.exists():
+            data_dir = container_data
+        if not data_dir.exists():
+            project_root = Path(__file__).resolve().parents[3]
+            candidate = project_root / "data"
+            if candidate.exists():
+                data_dir = candidate
+        if str(data_dir) == "/app/data" and not data_dir.exists():
+            project_root = Path(__file__).resolve().parents[3]
+            data_dir = project_root / "data"
+        return data_dir
+
+    @staticmethod
+    def _get_data_path() -> str:
+        """Return absolute path to the parquet data file with validation."""
+        data_dir: Path = QueryService._resolve_data_dir()
+        data_path: Path = data_dir / "updated_bestball_data.parquet"
+        validated_path = QueryService._validate_and_sanitize_path(data_path, data_dir)
+        return str(validated_path)
+
+    def _ensure_initialized(self) -> None:
+        """Ensure the singleton is fully initialized before use."""
+        if self._initialized and not self._closed and self._con is not None:
+            return
+        with self._lock:
+            if not self._initialized or self._closed or self._con is None:
+                if self._initialization_error:
+                    # Reset flags to allow retry on next call
+                    err = self._initialization_error
+                    self._initialization_error = None
+                    self._initialization_started = False
+                    # Propagate as runtime error to callers
+                    raise RuntimeError("Service initialization failed") from err
+                if not self._initialization_started:
+                    self._initialization_started = True
+                    try:
+                        self._initialize_service_with_retry()
+                        self._initialized = True
+                        self._closed = False
+                    except Exception as exc:
+                        self._initialization_error = exc
+                        raise RuntimeError("Service initialization failed") from exc
+
+    def close(self) -> None:
+        """Close DuckDB connection and mark service closed.
+
+        This method is idempotent and safe to call multiple times.
+        """
+        if self._closed:
+            return
+        with self._db_lock:
+            try:
+                if self._con is not None:
+                    self._con.close()
+            except Exception:  # pragma: no cover - defensive
+                logger.exception("Error while closing DuckDB connection")
+            finally:
+                self._closed = True
+                self._con = None
+                # Allow future re-initialization on next use
+                self._initialized = False
+                self._initialization_started = False
 
     @staticmethod
     def _validate_and_sanitize_path(file_path: Path, allowed_dir: Path) -> Path:
@@ -141,7 +312,7 @@ class QueryService:
             return resolved_path
 
         except (OSError, FileNotFoundError) as e:
-            raise ValueError(f"Invalid path: {file_path} - {str(e)}")
+            raise ValueError(f"Invalid path: {file_path}") from e
         except Exception:
             # Log unexpected exceptions to aid debugging
             logger.exception(f"Unexpected error while validating path: {file_path}")
@@ -149,14 +320,28 @@ class QueryService:
 
     @staticmethod
     def _get_data_path() -> str:
-        """Return absolute path to the parquet data file defined by settings.DATA_PATH."""
+        """Return absolute path to the parquet data file defined by settings.DATA_PATH.
+
+        Falls back to the repository root `data/` directory when running tests locally.
+        """
         data_dir: Path = Path(settings.DATA_PATH).expanduser()
 
-        # If the path is /app/data (container path) but we're running locally,
-        # try to find the data directory relative to project root
+        # If container mount exists, prefer it
+        container_data = Path("/app/data")
+        if container_data.exists():
+            data_dir = container_data
+
+        # Common local/dev fallbacks
+        if not data_dir.exists():
+            # If running under backend/ working directory, jump to repo root
+            project_root = Path(__file__).resolve().parents[3]
+            candidate = project_root / "data"
+            if candidate.exists():
+                data_dir = candidate
+
+        # Container path fallback
         if str(data_dir) == "/app/data" and not data_dir.exists():
-            # Try project root (one level up from backend/app/services/)
-            project_root = Path(__file__).parent.parent.parent.parent
+            project_root = Path(__file__).resolve().parents[3]
             data_dir = project_root / "data"
 
         data_path: Path = data_dir / "updated_bestball_data.parquet"
@@ -166,14 +351,7 @@ class QueryService:
     def _load_week17_matchups(self) -> None:
         """Load Week 17 matchups data into DuckDB."""
         # Get path to Week 17 matchups file
-        data_dir: Path = Path(settings.DATA_PATH).expanduser()
-
-        # If the path is /app/data (container path) but we're running locally,
-        # try to find the data directory relative to project root
-        if str(data_dir) == "/app/data" and not data_dir.exists():
-            # Try project root (one level up from backend/app/services/)
-            project_root = Path(__file__).parent.parent.parent.parent
-            data_dir = project_root / "data"
+        data_dir: Path = QueryService._resolve_data_dir()
 
         matchups_path: Path = data_dir / "week17_matchups.json"
 
@@ -237,14 +415,17 @@ class QueryService:
         params
             Optional sequence of binding parameters.
         """
+        self._ensure_initialized()
         logger.debug("DuckDB query: %s — params=%s", sql, params)
-        if params is None:
-            result = self._con.execute(sql)
-        else:
-            result = self._con.execute(sql, params)
-        # Use Arrow buffer → Polars for zero-copy where possible
-        arrow_result = result.arrow()
-        polars_result = pl.from_arrow(arrow_result)
+        with self._db_lock:
+            assert self._con is not None
+            if params is None:
+                result = self._con.execute(sql)
+            else:
+                result = self._con.execute(sql, params)
+            # Use Arrow buffer → Polars for zero-copy where possible
+            arrow_result = result.arrow()
+            polars_result = pl.from_arrow(arrow_result)
 
         # Ensure we always return a DataFrame, not a Series
         if isinstance(polars_result, pl.Series):
@@ -253,6 +434,7 @@ class QueryService:
 
     def get_metadata(self) -> Dict[str, Any]:
         """Get metadata about the dataset."""
+        self._ensure_initialized()
         return {
             "all_players": self.all_players,
             "total_drafts": self.total_drafts,
@@ -1094,18 +1276,21 @@ class QueryService:
         )
         return result.to_dicts()
 
-
-# Global singleton instance - lazy loaded
-_query_service_instance: Optional[QueryService] = None
-
-
-def get_query_service() -> QueryService:
-    """Get the global singleton QueryService instance."""
-    global _query_service_instance
-    if _query_service_instance is None:
-        _query_service_instance = QueryService()
-    return _query_service_instance
+    # Export a simple, thread-safe singleton for non-FastAPI contexts (e.g., tests)
+    # This preserves compatibility with tests that import `query_service`.
 
 
-# For backward compatibility
-query_service = get_query_service()
+def _create_singleton() -> QueryService:
+    """Create a single QueryService instance for module-level reuse.
+
+    Using a factory avoids initialization at import-time in case settings/env
+    are not ready. Tests import this symbol to exercise concurrency behavior.
+    """
+    # Lazily create and cache on the function object to avoid globals.
+    if not hasattr(_create_singleton, "_instance"):
+        setattr(_create_singleton, "_instance", QueryService())
+    return getattr(_create_singleton, "_instance")
+
+
+# Backwards-compatible singleton symbol used by tests
+query_service: QueryService = _create_singleton()

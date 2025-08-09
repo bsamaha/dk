@@ -1,0 +1,13 @@
+---
+globs: backend/**/*.py
+description: SQL security rules for parameterization and Bandit B608 exceptions
+---
+# SQL Security and Parameterization
+
+- Always use parameterized queries (`?` placeholders) for user inputs.
+- Never interpolate user input directly into SQL strings.
+- F-strings may be used only for static SQL structure (e.g., ORDER BY column names validated by enums) and must be annotated with `# nosec B608` comment.
+- Validate dynamic parts (e.g., sort columns) against a whitelist (enums) before interpolation.
+
+## Codebase references
+- See `get_players` in [backend/app/services/query_service.py](mdc:backend/app/services/query_service.py) for the allowed-column whitelist and parameterization pattern.
