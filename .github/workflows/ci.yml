@@ -20,7 +20,7 @@ jobs:
           pip install ruff black==25.1.0 pre-commit
       - name: Pre-commit (backend-only)
         run: |
-          pre-commit run --all-files --files $(git ls-files backend .pre-commit-config.yaml)
+          pre-commit run --files $(git ls-files backend .pre-commit-config.yaml)
       - run: pytest  # Run from project root
 
   frontend:
