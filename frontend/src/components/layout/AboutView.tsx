@@ -41,24 +41,24 @@ const AboutView: React.FC = () => {
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-gradient-to-b from-gridiron-graphite to-surface-dark">
       {/* Hero */}
-      <section className="px-4 sm:px-6 md:px-10 py-10 sm:py-14">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+      <section className="px-4 sm:px-6 md:px-10 py-8 sm:py-10">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[320px_1fr] gap-6 md:gap-8 items-start">
           {/* Left: Logo */}
           <div className="flex items-center justify-center md:justify-start">
             <Logo
               variant="horizontal"
-              className="w-[260px] sm:w-[320px] md:w-[380px] drop-shadow-lg"
+              className="w-48 sm:w-60 md:w-72 drop-shadow-lg"
             />
           </div>
 
           {/* Right: All buttons stacked vertically */}
-          <div className="w-full">
-            <div className="flex flex-col gap-3">
+          <div className="w-full md:max-w-xs justify-self-start">
+            <div className="flex flex-col gap-2.5">
               <a
                 href={X_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-black text-white hover:bg-neutral-900 transition-colors font-medium"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-black text-white hover:bg-neutral-900 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 aria-label="Follow on X"
                 title="Follow on X"
               >
@@ -68,7 +68,7 @@ const AboutView: React.FC = () => {
                 href={YOUTUBE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60"
                 aria-label="Watch on YouTube"
                 title="Watch on YouTube"
               >
@@ -78,7 +78,7 @@ const AboutView: React.FC = () => {
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-violet-600 text-white hover:from-pink-600 hover:to-violet-700 transition-colors font-medium"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-gradient-to-r from-pink-500 to-violet-600 text-white hover:from-pink-600 hover:to-violet-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300/60"
                 aria-label="Follow on Instagram"
                 title="Follow on Instagram"
               >
@@ -88,7 +88,7 @@ const AboutView: React.FC = () => {
                 href={SPOTIFY_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60"
                 aria-label="Listen on Spotify"
                 title="Listen on Spotify"
               >
@@ -98,7 +98,7 @@ const AboutView: React.FC = () => {
                 href={TIKTOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-black text-white hover:bg-neutral-900 transition-colors font-medium"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-black text-white hover:bg-neutral-900 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 aria-label="Follow on TikTok"
                 title="Follow on TikTok"
               >
@@ -106,7 +106,7 @@ const AboutView: React.FC = () => {
               </a>
               <a
                 href="mailto:team@thesignalcallers.com"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-surface-dark text-gray-200 hover:bg-surface-dark-elev border border-white/10 transition-colors font-medium"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-surface-dark text-gray-200 hover:bg-surface-dark-elev border border-white/10 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
               >
                 <IconMail size={18} /> Email us: team@thesignalcallers.com
               </a>
@@ -114,7 +114,7 @@ const AboutView: React.FC = () => {
           </div>
 
           {/* Full-width copy below */}
-          <div className="md:col-span-2 text-left text-white space-y-3">
+          <div className="md:col-span-2 text-left text-white space-y-2">
             <h1 className="font-heading text-3xl sm:text-4xl font-semibold">
               The Signal Callers
             </h1>
@@ -131,7 +131,7 @@ const AboutView: React.FC = () => {
       <div className="flex-grow px-4 sm:px-6 md:px-10 pb-12">
         <div className="max-w-6xl mx-auto space-y-10">
           {/* Latest media embeds */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card">
               <h3 className="text-base font-semibold mb-3 text-gridiron-graphite dark:text-white">
                 Latest on Spotify
@@ -181,7 +181,7 @@ const AboutView: React.FC = () => {
             </div>
           </div>
           {/* About Section */}
-          <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-6 sm:p-8 shadow-card">
+          <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-5 sm:p-6 shadow-card">
             <div className="text-left">
               <p className="text-base sm:text-lg leading-relaxed text-gray-700 dark:text-gray-200">
                 Welcome to your go‑to hub for Best Ball fantasy football
@@ -198,7 +198,7 @@ const AboutView: React.FC = () => {
           </div>
 
         {/* What You'll Find - quick value props */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex flex-col items-center text-center gap-2">
             <IconChartBar className="text-signal-green" />
             <h4 className="font-semibold">Actionable Insights</h4>
