@@ -26,13 +26,78 @@ const AboutView: React.FC = () => {
       {/* Hero */}
       <section className="px-4 sm:px-6 md:px-10 py-10 sm:py-14">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+          {/* Left: Logo */}
           <div className="flex items-center justify-center md:justify-start">
             <Logo
               variant="horizontal"
-              className="w-[280px] sm:w-[340px] md:w-[400px] drop-shadow-lg"
+              className="w-[260px] sm:w-[320px] md:w-[380px] drop-shadow-lg"
             />
           </div>
-          <div className="text-left text-white space-y-4">
+
+          {/* Right: All buttons stacked vertically */}
+          <div className="w-full">
+            <div className="flex flex-col gap-3">
+              <a
+                href={SPOTIFY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium"
+                aria-label="Listen on Spotify"
+                title="Listen on Spotify"
+              >
+                <IconBrandSpotify size={18} /> Listen on Spotify
+              </a>
+              <a
+                href={YOUTUBE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium"
+                aria-label="Watch on YouTube"
+                title="Watch on YouTube"
+              >
+                <IconBrandYoutube size={18} /> Watch on YouTube
+              </a>
+              <a
+                href={X_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors font-medium"
+                aria-label="Follow on X"
+                title="Follow on X"
+              >
+                <IconBrandX size={18} /> Follow on X
+              </a>
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-violet-600 text-white hover:from-pink-600 hover:to-violet-700 transition-colors font-medium"
+                aria-label="Follow on Instagram"
+                title="Follow on Instagram"
+              >
+                <IconBrandInstagram size={18} /> Follow on Instagram
+              </a>
+              <a
+                href={TIKTOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-black text-white hover:bg-neutral-900 transition-colors font-medium"
+                aria-label="Follow on TikTok"
+                title="Follow on TikTok"
+              >
+                <IconBrandTiktok size={18} /> Follow on TikTok
+              </a>
+              <a
+                href="mailto:team@thesignalcallers.com"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-signal-green text-white hover:bg-signal-green/90 transition-colors font-medium"
+              >
+                <IconMail size={18} /> Email us: team@thesignalcallers.com
+              </a>
+            </div>
+          </div>
+
+          {/* Full-width copy below */}
+          <div className="md:col-span-2 text-left text-white space-y-3">
             <h1 className="font-heading text-3xl sm:text-4xl font-semibold">
               The Signal Callers
             </h1>
@@ -41,7 +106,6 @@ const AboutView: React.FC = () => {
               rooms into clear, actionable insights so you can out‑draft the
               room with confidence.
             </p>
-            {/* No CTAs in hero to avoid duplication; see unified socials below */}
           </div>
         </div>
       </section>
@@ -59,10 +123,9 @@ const AboutView: React.FC = () => {
               </p>
               <p className="mt-4 text-base sm:text-lg leading-relaxed text-gray-700 dark:text-gray-200">
                 We analyze Average Draft Position (ADP), draft trends, player
-                combinations, and roster constructions to help you build
-                winning teams. Whether you are new to best ball or a seasoned
-                grinder, our tools are designed to make smarter decisions
-                faster.
+                combinations, and roster constructions to help you build winning
+                teams. Whether you are new to best ball or a seasoned grinder,
+                our tools are designed to make smarter decisions faster.
               </p>
             </div>
           </div>
@@ -93,97 +156,7 @@ const AboutView: React.FC = () => {
           </div>
         </div>
 
-        {/* Socials Section - one place for all channels */}
-        <div className="space-y-4">
-          <div className="text-center">
-            <h3 className="text-lg font-medium text-gridiron-graphite dark:text-white mb-2">
-              Follow us
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Your choice of platform — same handle, same signal.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            <a
-              href={SPOTIFY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium"
-              aria-label="Listen on Spotify"
-              title="Listen on Spotify"
-            >
-              <IconBrandSpotify size={18} />
-              <span>Spotify</span>
-            </a>
-            <a
-              href={YOUTUBE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium"
-              aria-label="Watch on YouTube"
-              title="Watch on YouTube"
-            >
-              <IconBrandYoutube size={18} />
-              <span>YouTube</span>
-            </a>
-            <a
-              href={X_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
-              aria-label="Follow on X"
-              title="Follow on X"
-            >
-              <IconBrandX size={18} />
-              <span>X</span>
-            </a>
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-pink-500 to-violet-600 text-white hover:from-pink-600 hover:to-violet-700 transition-colors font-medium"
-              aria-label="Follow on Instagram"
-              title="Follow on Instagram"
-            >
-              <IconBrandInstagram size={18} />
-              <span>Instagram</span>
-            </a>
-            <a
-              href={TIKTOK_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-black text-white hover:bg-neutral-900 transition-colors font-medium"
-              aria-label="Follow on TikTok"
-              title="Follow on TikTok"
-            >
-              <IconBrandTiktok size={18} />
-              <span>TikTok</span>
-            </a>
-          </div>
-        </div>
-
-        {/* Contact Section - single place for outreach */}
-        <div className="space-y-4">
-          <div className="text-center">
-            <h3 className="text-lg font-medium text-gridiron-graphite dark:text-white mb-2">
-              Have a Suggestion or Question?
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              We'd love to hear from you! The best ways to reach us are below.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <a
-              href="mailto:team@thesignalcallers.com"
-              className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-signal-green text-white rounded-lg hover:bg-signal-green/90 transition-colors font-medium"
-            >
-              <IconMail size={18} />
-              <span>Email us at team@thesignalcallers.com</span>
-            </a>
-          </div>
-        </div>
+        {/* Socials & contact are now in the hero; no duplication here */}
         </div>
       </div>
 
