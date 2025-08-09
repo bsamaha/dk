@@ -1,9 +1,7 @@
 """Tests for concurrent access to QueryService singleton."""
 
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import List
 
 import pytest
 
