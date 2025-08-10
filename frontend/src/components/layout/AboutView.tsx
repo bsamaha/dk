@@ -130,13 +130,13 @@ const AboutView: React.FC = () => {
       {/* Main Content */}
       <div className="flex-grow px-4 sm:px-6 md:px-10 pb-12">
         <div className="max-w-6xl mx-auto space-y-10">
-          {/* Latest media embeds */}
-          <div className="grid grid-cols-12 gap-4 sm:gap-6 items-start">
+          {/* Latest media embeds (stacked vertically) */}
+          <div className="grid grid-cols-1 gap-4 sm:gap-6">
             <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card">
               <h3 className="text-base font-semibold mb-3 text-gridiron-graphite dark:text-white">
                 Latest on Spotify
               </h3>
-              <div className="relative col-span-12 lg:col-span-6 w-full max-w-xl mx-auto" style={{ paddingTop: '152px' }}>
+              <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '152px' }}>
                 <iframe
                   title="Spotify latest show"
                   src={SPOTIFY_EMBED_SRC}
@@ -146,7 +146,7 @@ const AboutView: React.FC = () => {
                 />
               </div>
             </div>
-            <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card col-span-12 lg:col-span-6">
+            <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card">
               <h3 className="text-base font-semibold mb-3 text-gridiron-graphite dark:text-white">
                 Latest on YouTube
               </h3>
@@ -197,31 +197,7 @@ const AboutView: React.FC = () => {
             </div>
           </div>
 
-        {/* What You'll Find - quick value props */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex flex-col items-center text-center gap-2">
-            <IconChartBar className="text-signal-green" />
-            <h4 className="font-semibold">Actionable Insights</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              ADP trends, roster construction tips, and player correlations you
-              can use today.
-            </p>
-          </div>
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex flex-col items-center text-center gap-2">
-            <IconDeviceAnalytics className="text-signal-green" />
-            <h4 className="font-semibold">Transparent Methods</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              We explain the why behind the numbers so you learn as you draft.
-            </p>
-          </div>
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex flex-col items-center text-center gap-2">
-            <IconTrophy className="text-signal-green" />
-            <h4 className="font-semibold">Built To Win</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Tools for both newcomers and sharps to make better, faster calls.
-            </p>
-          </div>
-        </div>
+        {/* Value props section removed per request */}
 
         {/* Socials & contact are now in the hero; no duplication here */}
         </div>
