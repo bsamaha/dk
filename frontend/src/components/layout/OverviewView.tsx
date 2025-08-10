@@ -166,7 +166,7 @@ const OverviewView = () => {
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Position Draft Distribution
           </h3>
-          <div className={responsive.chartHeight}>
+          <div className={`${responsive.chartHeight} flex items-center justify-center`}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -186,7 +186,7 @@ const OverviewView = () => {
                     />
                   )}
                   labelLine={false}
-                  outerRadius={responsive.pieRadius}
+                  outerRadius={isMobile ? 110 : 160}
                   fill="#8884d8"
                   dataKey="value"
                 >
