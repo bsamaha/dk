@@ -43,9 +43,25 @@ const AboutView: React.FC = () => {
       {/* Hero */}
       <section className="px-4 sm:px-6 md:px-10 py-8 sm:py-10">
         {/* Unified hero column to align with media width */}
-        <div className="max-w-xl mx-auto flex flex-col items-center gap-5">
+        <div className="max-w-3xl mx-auto flex flex-col items-center gap-6">
           {/* Logo */}
           <Logo variant="horizontal" className="w-56 sm:w-64 md:w-72 drop-shadow-lg" />
+
+          {/* Description aligned to same width (above socials) */}
+          <div className="w-full text-left text-white space-y-2">
+            <h1 className="font-heading text-3xl sm:text-4xl font-semibold">
+              The Signal Callers
+            </h1>
+            <p className="text-base sm:text-lg text-gray-200 leading-relaxed">
+              Need a pod that blends contest-level DFS theory with locker-room
+              laughs? Welcome to The Signal Callers DFS Show. Kevin runs the
+              production board, Trey dissects rising ADPs, and Blake - our Data
+              Wizard - spins machine-learning models into actionable lineup
+              advice. We grade our own bad plays live, because “learn how we
+              lose money so you don’t have to” is the motto. Light swearing,
+              sharp data, and the occasional on-air beverage included.
+            </p>
+          </div>
 
           {/* All buttons stacked vertically with same width as media */}
           <div className="w-full">
@@ -109,27 +125,13 @@ const AboutView: React.FC = () => {
             </div>
           </div>
 
-          {/* Description aligned to same width */}
-          <div className="w-full text-left text-white space-y-2">
-            <h1 className="font-heading text-3xl sm:text-4xl font-semibold">
-              The Signal Callers
-            </h1>
-            <p className="text-base sm:text-lg text-gray-200 leading-relaxed">
-              Need a pod that blends contest-level DFS theory with locker-room
-              laughs? Welcome to The Signal Callers DFS Show. Kevin runs the
-              production board, Trey dissects rising ADPs, and Blake - our Data
-              Wizard - spins machine-learning models into actionable lineup
-              advice. We grade our own bad plays live, because “learn how we
-              lose money so you don’t have to” is the motto. Light swearing,
-              sharp data, and the occasional on-air beverage included.
-            </p>
-          </div>
+          
         </div>
       </section>
 
       {/* Main Content */}
       <div className="flex-grow px-4 sm:px-6 md:px-10 pb-12">
-        <div className="max-w-xl mx-auto space-y-10">
+        <div className="max-w-3xl mx-auto space-y-10">
           {/* Latest media embeds (stacked vertically) */}
           <div className="grid grid-cols-1 gap-4 sm:gap-6">
             <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card">
