@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 import { loadEnv, type PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { getDevCSPHeader, getProdCSPHeader } from './src/utils/csp';
+import { getDevCSPHeader, getProdCSPHeader } from './csp.shared.js';
 // import { VitePluginRadar } from 'vite-plugin-radar';
 
 // Shared security headers configuration

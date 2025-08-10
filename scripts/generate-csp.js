@@ -9,91 +9,24 @@ const fs = require('fs');
 const path = require('path');
 
 // Import the CSP directives directly to avoid TypeScript import issues
-const CSP_DIRECTIVES = {
-  'default-src': ["'self'"],
-  'script-src': [
-    "'self'",
-    // Note: dev allows eval/inline; prod will strip these before writing to nginx
-    "'unsafe-eval'",
-    "'unsafe-inline'",
-    "'wasm-unsafe-eval'",
-    'data:',
-    'blob:',
-    'https://www.googletagmanager.com',
-    'https://www.google-analytics.com',
-    'https://*.google-analytics.com',
-    'https://region1.google-analytics.com',
-  ],
-  'style-src': [
-    "'self'",
-    "'unsafe-inline'", // Required for Mantine components
-    'data:',
-    'https://fonts.googleapis.com',
-    'https:',
-  ],
-  'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com', 'https:'],
-  'img-src': [
-    "'self'",
-    'data:',
-    'https:',
-    'blob:',
-    'https://www.google-analytics.com',
-    'https://stats.g.doubleclick.net',
-  ],
-  'media-src': ["'self'", 'data:', 'blob:'],
-  'frame-src': [
-    "'self'",
-    'https://open.spotify.com',
-    'https://www.youtube.com',
-    'https://youtube.com',
-  ],
-  'connect-src': [
-    "'self'",
-    'http://localhost:*',
-    'https://thesignalcallers.com',
-    'ws://localhost:*',
-    'wss://localhost:*',
-    'https://*.google-analytics.com',
-    'https://www.google-analytics.com',
-    'https://analytics.google.com',
-    'https://stats.g.doubleclick.net',
-    'https://region1.google-analytics.com',
-    'https://region1.analytics.google.com',
-    // Allow YouTube/Google logging for embedded players
-    'https://www.youtube.com',
-    'https://www.youtube-nocookie.com',
-    'https://*.googlevideo.com',
-    'https://play.google.com',
-  ],
-  'frame-ancestors': ["'none'"],
-  'base-uri': ["'self'"],
-  'form-action': ["'self'"],
-  'object-src': ["'none'"],
-  'worker-src': ["'self'", 'blob:', 'data:'],
-  'child-src': ["'self'", 'blob:'],
-};
+const path = require('path');
+// Dynamically load ESM shared module from Node CJS script
+async function loadShared() {
+  const url = 'file://' + path.join(__dirname, '../frontend/csp.shared.js');
+  const mod = await import(url);
+  return mod;
+}
 
 /**
  * Build CSP header value from directives
  */
-const buildCSPHeader = directives =>
-  Object.entries(directives)
-    .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
-    .join('; ');
 
 const generateNginxCSP = () => {
   try {
     // Generate CSP header from centralized config
-    // Build production header: strip eval/inline/data/blob from script-src
-    const prodDirectives = JSON.parse(JSON.stringify(CSP_DIRECTIVES));
-    prodDirectives['script-src'] = prodDirectives['script-src'].filter(
-      s => !["'unsafe-eval'", "'unsafe-inline'", "'wasm-unsafe-eval'", 'data:', 'blob:'].includes(s)
-    );
-    // Allow youtube-nocookie in frame-src
-    if (!prodDirectives['frame-src'].includes('https://www.youtube-nocookie.com')) {
-      prodDirectives['frame-src'].push('https://www.youtube-nocookie.com');
-    }
-    const cspHeader = buildCSPHeader(prodDirectives);
+    // Build production header from shared config
+    const { getProdCSPHeader } = await loadShared();
+    const cspHeader = getProdCSPHeader();
 
     // Read current nginx.conf
     const nginxConfigPath = path.join(process.cwd(), 'nginx.conf');

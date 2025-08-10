@@ -93,10 +93,10 @@ const OverviewView = () => {
     'https://open.spotify.com/embed/show/5bN7N0PinX56rsSAomHZd8?utm_source=generator';
   const YOUTUBE_URL = 'https://www.youtube.com/@TheSignalCallers/videos';
   const YT_UPLOADS_PLAYLIST_ID =
-    (import.meta as any).env?.VITE_YT_UPLOADS_PLAYLIST_ID as
+    (import.meta as ImportMeta).env?.VITE_YT_UPLOADS_PLAYLIST_ID as
       | string
       | undefined;
-  const YT_CHANNEL_ID = (import.meta as any).env?.VITE_YT_CHANNEL_ID as
+  const YT_CHANNEL_ID = (import.meta as ImportMeta).env?.VITE_YT_CHANNEL_ID as
     | string
     | undefined;
   const deriveUploadsPlaylistId = (channelId?: string): string | undefined => {
@@ -182,15 +182,14 @@ const OverviewView = () => {
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    label={(props: any) => (
+                    label={(props: { name?: string; value?: number; cx?: number; cy?: number; midAngle?: number; outerRadius?: number }) => (
                       <ResponsivePieLabel
-                        name={props.name}
+                        name={props.name ?? ''}
                         value={props.value ?? 0}
-                        cx={props.cx}
-                        cy={props.cy}
-                        midAngle={props.midAngle}
-                        outerRadius={props.outerRadius}
+                        cx={props.cx ?? 0}
+                        cy={props.cy ?? 0}
+                        midAngle={props.midAngle ?? 0}
+                        outerRadius={props.outerRadius ?? 0}
                         isMobile={isMobile}
                       />
                     )}
@@ -204,9 +203,10 @@ const OverviewView = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    content={({ active, payload }) => {
+                    // recharts types are permissive; define minimal shape we use
+                    content={({ active, payload }: { active?: boolean; payload?: Array<{ name?: string; value?: number; payload?: { count?: number } }> }) => {
                       if (active && payload && payload.length) {
-                        const data = payload[0] as any;
+                        const data = payload[0];
                         return (
                           <div
                             style={{
