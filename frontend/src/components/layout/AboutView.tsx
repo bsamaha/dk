@@ -65,6 +65,16 @@ const AboutView: React.FC = () => {
                 <IconBrandX size={18} /> Follow on X
               </a>
               <a
+                href={YOUTUBE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60"
+                aria-label="Watch on YouTube"
+                title="Watch on YouTube"
+              >
+                <IconBrandYoutube size={18} /> Watch on YouTube
+              </a>
+              <a
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -73,6 +83,16 @@ const AboutView: React.FC = () => {
                 title="Follow on Instagram"
               >
                 <IconBrandInstagram size={18} /> Follow on Instagram
+              </a>
+              <a
+                href={SPOTIFY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60"
+                aria-label="Listen on Spotify"
+                title="Listen on Spotify"
+              >
+                <IconBrandSpotify size={18} /> Listen on Spotify
               </a>
               <a
                 href={TIKTOK_URL}
@@ -99,9 +119,13 @@ const AboutView: React.FC = () => {
               The Signal Callers
             </h1>
             <p className="text-base sm:text-lg text-gray-200 leading-relaxed">
-              Read the coverage. Call the win. We turn thousands of real draft
-              rooms into clear, actionable insights so you can out‑draft the
-              room with confidence.
+              Need a pod that blends contest-level DFS theory with locker-room
+              laughs? Welcome to The Signal Callers DFS Show. Kevin runs the
+              production board, Trey dissects rising ADPs, and Blake - our Data
+              Wizard - spins machine-learning models into actionable lineup
+              advice. We grade our own bad plays live, because “learn how we
+              lose money so you don’t have to” is the motto. Light swearing,
+              sharp data, and the occasional on-air beverage included.
             </p>
           </div>
         </div>
@@ -125,17 +149,6 @@ const AboutView: React.FC = () => {
                   className="absolute top-0 left-0 w-full h-[152px] rounded-lg border-0"
                 />
               </div>
-            <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
-              Prefer the app?{' '}
-              <a
-                href={SPOTIFY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                Open on Spotify
-              </a>
-            </p>
             </div>
             <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card">
               <h3 className="text-base font-semibold mb-3 text-gridiron-graphite dark:text-white">
@@ -169,35 +182,9 @@ const AboutView: React.FC = () => {
                   .
                 </p>
               )}
-            <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
-              Watch on{' '}
-              <a
-                href={YOUTUBE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                YouTube
-              </a>
-            </p>
             </div>
           </div>
-          {/* About Section */}
-          <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-5 sm:p-6 shadow-card">
-            <div className="text-left">
-              <p className="text-base sm:text-lg leading-relaxed text-gray-700 dark:text-gray-200">
-                Welcome to your go‑to hub for Best Ball fantasy football
-                analytics. Our platform delivers a data‑driven edge, powered by
-                insights derived from thousands of real‑world drafts.
-              </p>
-              <p className="mt-4 text-base sm:text-lg leading-relaxed text-gray-700 dark:text-gray-200">
-                We analyze Average Draft Position (ADP), draft trends, player
-                combinations, and roster constructions to help you build winning
-                teams. Whether you are new to best ball or a seasoned grinder,
-                our tools are designed to make smarter decisions faster.
-              </p>
-            </div>
-          </div>
+          {/* About Section removed per request */}
 
         {/* Value props section removed per request */}
 
