@@ -88,6 +88,24 @@ const OverviewView = () => {
     '#0891b2',
   ];
 
+  // Embeds
+  const SPOTIFY_EMBED_SRC =
+    'https://open.spotify.com/embed/show/5bN7N0PinX56rsSAomHZd8?utm_source=generator';
+  const YOUTUBE_URL = 'https://www.youtube.com/@TheSignalCallers/videos';
+  const YT_UPLOADS_PLAYLIST_ID =
+    (import.meta as any).env?.VITE_YT_UPLOADS_PLAYLIST_ID as
+      | string
+      | undefined;
+  const YT_CHANNEL_ID = (import.meta as any).env?.VITE_YT_CHANNEL_ID as
+    | string
+    | undefined;
+  const deriveUploadsPlaylistId = (channelId?: string): string | undefined => {
+    if (!channelId) return undefined;
+    return channelId.startsWith('UC') ? `UU${channelId.substring(2)}` : undefined;
+  };
+  const YT_EFFECTIVE_PLAYLIST_ID =
+    YT_UPLOADS_PLAYLIST_ID || deriveUploadsPlaylistId(YT_CHANNEL_ID);
+
   if (metadataLoading || positionStatsLoading || roundCountsLoading) {
     return (
       <div className="space-y-6">
@@ -228,7 +246,7 @@ const OverviewView = () => {
           <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '152px' }}>
             <iframe
               title="Spotify latest show"
-              src={'https://open.spotify.com/embed/show/5bN7N0PinX56rsSAomHZd8?utm_source=generator'}
+              src={SPOTIFY_EMBED_SRC}
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"
               className="absolute top-0 left-0 w-full h-[152px] rounded-lg border-0"
@@ -239,17 +257,34 @@ const OverviewView = () => {
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Latest on YouTube
           </h3>
-          <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '56.25%' }}>
-            <iframe
-              title="YouTube latest uploads"
-              src={`https://www.youtube.com/embed?listType=playlist&list=${'${import.meta.env.VITE_YT_UPLOADS_PLAYLIST_ID || ''}'}`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-              loading="lazy"
-              className="absolute top-0 left-0 w-full h-full rounded-lg border-0"
-            />
-          </div>
+          {YT_EFFECTIVE_PLAYLIST_ID ? (
+            <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '56.25%' }}>
+              <iframe
+                title="YouTube latest uploads"
+                src={`https://www.youtube.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                loading="lazy"
+                className="absolute top-0 left-0 w-full h-full rounded-lg border-0"
+              />
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Set <code className="font-code">VITE_YT_UPLOADS_PLAYLIST_ID</code> or
+              <code className="font-code"> VITE_YT_CHANNEL_ID</code> to auto‑embed the
+              latest video. For now, visit our channel:
+              <a
+                href={YOUTUBE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-1 text-signal-green underline"
+              >
+                YouTube @TheSignalCallers
+              </a>
+              .
+            </p>
+          )}
         </div>
       </div>
 
