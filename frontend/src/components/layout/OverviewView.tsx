@@ -173,8 +173,8 @@ const OverviewView = () => {
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Position Draft Distribution
           </h3>
-          <div className="grid grid-cols-1 gap-4">
-            <div className="h-[370px] md:h-[420px] mt-4 md:mt-6">
+          <div className="grid grid-cols-1 gap-4 pt-12 md:pt-16">
+            <div className="h-[370px] md:h-[420px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -245,7 +245,7 @@ const OverviewView = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="pb-2">
+            <div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {quickStats.map(stat => (
                   <div
