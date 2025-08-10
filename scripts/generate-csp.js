@@ -8,8 +8,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// Import the CSP directives directly to avoid TypeScript import issues
-const path = require('path');
 // Dynamically load ESM shared module from Node CJS script
 async function loadShared() {
   const url = 'file://' + path.join(__dirname, '../frontend/csp.shared.js');
@@ -21,7 +19,7 @@ async function loadShared() {
  * Build CSP header value from directives
  */
 
-const generateNginxCSP = () => {
+const generateNginxCSP = async () => {
   try {
     // Generate CSP header from centralized config
     // Build production header from shared config
@@ -71,4 +69,7 @@ const generateNginxCSP = () => {
 };
 
 // Add this to package.json scripts: "generate-csp": "node scripts/generate-csp.js"
-generateNginxCSP();
+generateNginxCSP().catch(err => {
+  console.error('❌ Unhandled error generating CSP:', err?.message || err);
+  process.exit(1);
+});

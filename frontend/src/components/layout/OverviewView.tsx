@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { apiService } from '../../services/api';
 import { useResponsive } from '../../hooks/useResponsive';
+import { useYouTubePlaylistId, useSpotifyEmbedUrl } from '../../hooks/useMediaEmbeds';
+import { useQuickStats } from '../../hooks/useQuickStats';
 import { ResponsivePieLabel } from '../ui/ResponsivePieLabel';
 import {
   BarChart,
@@ -89,8 +91,7 @@ const OverviewView = () => {
   ];
 
   // Embeds
-  const SPOTIFY_EMBED_SRC =
-    'https://open.spotify.com/embed/show/5bN7N0PinX56rsSAomHZd8?utm_source=generator';
+  const SPOTIFY_EMBED_SRC = useSpotifyEmbedUrl('5bN7N0PinX56rsSAomHZd8');
   const YOUTUBE_URL = 'https://www.youtube.com/@TheSignalCallers/videos';
   const YT_UPLOADS_PLAYLIST_ID =
     (import.meta as ImportMeta).env?.VITE_YT_UPLOADS_PLAYLIST_ID as
@@ -99,12 +100,10 @@ const OverviewView = () => {
   const YT_CHANNEL_ID = (import.meta as ImportMeta).env?.VITE_YT_CHANNEL_ID as
     | string
     | undefined;
-  const deriveUploadsPlaylistId = (channelId?: string): string | undefined => {
-    if (!channelId) return undefined;
-    return channelId.startsWith('UC') ? `UU${channelId.substring(2)}` : undefined;
-  };
-  const YT_EFFECTIVE_PLAYLIST_ID =
-    YT_UPLOADS_PLAYLIST_ID || deriveUploadsPlaylistId(YT_CHANNEL_ID);
+  const YT_EFFECTIVE_PLAYLIST_ID = useYouTubePlaylistId(
+    YT_UPLOADS_PLAYLIST_ID,
+    YT_CHANNEL_ID
+  );
 
   if (metadataLoading || positionStatsLoading || roundCountsLoading) {
     return (
@@ -136,19 +135,10 @@ const OverviewView = () => {
       count: stat.total_drafted,
       color: colors[index % colors.length],
     })) || [];
-  // Derived bar data only used when roundCounts are rendered; keeping for future use
-  // const barData =
-  //   positionStats?.position_stats.map(stat => ({
-  //     position: stat.position,
-  //     medianDraftCount: stat.median_draft_count,
-  //   })) || [];
+  // Removed unused barData derivation; keep focused on current charts
 
   // Quick stats ordered for display
-  const quickOrder: Array<'QB' | 'RB' | 'WR' | 'TE'> = ['QB', 'RB', 'WR', 'TE'];
-  const quickStats = quickOrder.map(pos => {
-    const s = positionStats?.position_stats.find(ps => ps.position === pos);
-    return { position: pos, total: s?.total_drafted ?? 0 };
-  });
+  const quickStats = useQuickStats(positionStats);
 
   return (
     <div className="space-y-6 text-gridiron-graphite dark:text-white">
@@ -334,7 +324,7 @@ const OverviewView = () => {
             <h5 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">
               Position Stats by Round
             </h5>
-            <div className="h-80">
+              <div className="h-80">
               {roundCountsLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader />
