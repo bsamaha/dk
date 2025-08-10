@@ -115,6 +115,7 @@ const OverviewView = () => {
     positionStats?.position_stats.map((stat, index) => ({
       name: stat.position,
       value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
+      count: stat.total_drafted,
       color: colors[index % colors.length],
     })) || [];
   const barData =
@@ -138,75 +139,7 @@ const OverviewView = () => {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className={`grid ${responsive.singleColumnOnMobile} gap-6`}>
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-signal-green/20">
-              <span className="text-signal-green text-xl">👤</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Unique Players Drafted
-              </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {metadata?.total_players.toLocaleString() || '0'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-audible-gold/10">
-              <span className="text-audible-gold text-xl">🏈</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Total Drafts
-              </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {metadata?.total_drafts.toLocaleString() || '0'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-signal-green/10">
-              <span className="text-signal-green text-xl">🏆</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Total Teams
-              </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {metadata?.total_teams.toLocaleString() || '0'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-turf-dark/10">
-              <span className="text-turf-dark text-xl">📊</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Total Picks
-              </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {(metadata?.total_teams
-                  ? metadata.total_teams * 20
-                  : 0
-                ).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Key Metrics removed (moved to sidebar) */}
 
       {/* Charts */}
       <div className={`grid ${responsive.chartGrid}`}>
@@ -246,7 +179,7 @@ const OverviewView = () => {
                 <Tooltip
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
-                      const data = payload[0];
+                      const data = payload[0] as any;
                       return (
                         <div
                           style={{
@@ -270,7 +203,7 @@ const OverviewView = () => {
                             {data.name}
                           </p>
                           <p style={{ margin: 0, color: '#00A86B' }}>
-                            {data.value?.toFixed(2)}%
+                            {data.value?.toFixed(2)}% · {data.payload?.count?.toLocaleString?.()}
                           </p>
                         </div>
                       );
@@ -287,43 +220,35 @@ const OverviewView = () => {
             </ResponsiveContainer>
           </div>
         </div>
-
-        {/* Median Players Drafted per Team Bar Chart */}
+        {/* Latest Media on Overview */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
-            Median Players Drafted per Draft Lobby
+            Latest on Spotify
           </h3>
-          <div className={responsive.chartHeight}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={isDark ? '#555' : '#e5e7eb'}
-                />
-                <XAxis
-                  dataKey="position"
-                  fontSize={responsive.fontSize.medium}
-                  tick={{ fill: tickColor }}
-                  axisLine={{ stroke: tickColor }}
-                  tickLine={{ stroke: tickColor }}
-                />
-                <YAxis
-                  fontSize={responsive.fontSize.medium}
-                  tick={{ fill: tickColor }}
-                  axisLine={{ stroke: tickColor }}
-                  tickLine={{ stroke: tickColor }}
-                />
-                <Tooltip
-                  formatter={(v: number) => v.toFixed(2)}
-                  contentStyle={getTooltipStyle(isDark)}
-                />
-                <Bar
-                  dataKey="medianDraftCount"
-                  name="Median Draft Count"
-                  fill="#00A86B"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '152px' }}>
+            <iframe
+              title="Spotify latest show"
+              src={'https://open.spotify.com/embed/show/5bN7N0PinX56rsSAomHZd8?utm_source=generator'}
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              className="absolute top-0 left-0 w-full h-[152px] rounded-lg border-0"
+            />
+          </div>
+        </div>
+        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
+          <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
+            Latest on YouTube
+          </h3>
+          <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '56.25%' }}>
+            <iframe
+              title="YouTube latest uploads"
+              src={`https://www.youtube.com/embed?listType=playlist&list=${'${import.meta.env.VITE_YT_UPLOADS_PLAYLIST_ID || ''}'}`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+              loading="lazy"
+              className="absolute top-0 left-0 w-full h-full rounded-lg border-0"
+            />
           </div>
         </div>
       </div>

@@ -132,56 +132,7 @@ const AboutView: React.FC = () => {
       {/* Main Content */}
       <div className="flex-grow px-4 sm:px-6 md:px-10 pb-12">
         <div className="max-w-3xl mx-auto space-y-10">
-          {/* Latest media embeds (stacked vertically) */}
-          <div className="grid grid-cols-1 gap-4 sm:gap-6">
-            <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card">
-              <h3 className="text-base font-semibold mb-3 text-gridiron-graphite dark:text-white">
-                Latest on Spotify
-              </h3>
-              <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '152px' }}>
-                <iframe
-                  title="Spotify latest show"
-                  src={SPOTIFY_EMBED_SRC}
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
-                  className="absolute top-0 left-0 w-full h-[152px] rounded-lg border-0"
-                />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-surface-dark rounded-card border border-gray-200 dark:border-white/10 p-4 sm:p-5 shadow-card">
-              <h3 className="text-base font-semibold mb-3 text-gridiron-graphite dark:text-white">
-                Latest on YouTube
-              </h3>
-              {YT_EFFECTIVE_PLAYLIST_ID ? (
-                <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '56.25%' }}>
-                  <iframe
-                    title="YouTube latest uploads"
-                    src={`https://www.youtube.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen
-                    loading="lazy"
-                    className="absolute top-0 left-0 w-full h-full rounded-lg border-0"
-                  />
-                </div>
-              ) : (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Set <code className="font-code">VITE_YT_UPLOADS_PLAYLIST_ID</code> or
-                  <code className="font-code"> VITE_YT_CHANNEL_ID</code> to auto‑embed
-                  the latest video. For now, visit our channel:
-                  <a
-                    href={YOUTUBE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-1 text-signal-green underline"
-                  >
-                    YouTube @TheSignalCallers
-                  </a>
-                  .
-                </p>
-              )}
-            </div>
-          </div>
+          {/* Latest media moved to Overview */}
           {/* About Section removed per request */}
 
         {/* Value props section removed per request */}
