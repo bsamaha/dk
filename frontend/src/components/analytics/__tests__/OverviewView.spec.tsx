@@ -112,6 +112,7 @@ describe('OverviewView', () => {
 
   it('renders position stats', () => {
     renderWithContext(<OverviewView />);
-    expect(screen.getByText('100')).toBeInTheDocument();
+    // Expect the mocked QB total_drafted of 10 to appear in quick stats
+    expect(screen.getByText('10')).toBeInTheDocument();
   });
 });

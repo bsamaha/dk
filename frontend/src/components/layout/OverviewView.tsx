@@ -29,7 +29,7 @@ const OverviewView = () => {
   const isDark = colorScheme === 'dark';
   const tickColor = isDark ? '#ffffff' : '#374151';
 
-  const { data: metadata, isLoading: metadataLoading } = useQuery({
+  const { isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
     queryFn: apiService.getMetadata,
   });
@@ -136,11 +136,12 @@ const OverviewView = () => {
       count: stat.total_drafted,
       color: colors[index % colors.length],
     })) || [];
-  const barData =
-    positionStats?.position_stats.map(stat => ({
-      position: stat.position,
-      medianDraftCount: stat.median_draft_count,
-    })) || [];
+  // Derived bar data only used when roundCounts are rendered; keeping for future use
+  // const barData =
+  //   positionStats?.position_stats.map(stat => ({
+  //     position: stat.position,
+  //     medianDraftCount: stat.median_draft_count,
+  //   })) || [];
 
   // Quick stats ordered for display
   const quickOrder: Array<'QB' | 'RB' | 'WR' | 'TE'> = ['QB', 'RB', 'WR', 'TE'];
@@ -292,7 +293,7 @@ const OverviewView = () => {
                 <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '45%' }}>
                   <iframe
                     title="YouTube latest uploads"
-                    src={`https://www.youtube.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
+                     src={`https://www.youtube-nocookie.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen

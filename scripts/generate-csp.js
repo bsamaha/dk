@@ -5,21 +5,24 @@
  * This ensures consistency between frontend Vite config and nginx production config
  */
 
-import fs from 'fs';
-import path from 'path';
+const fs = require('fs');
+const path = require('path');
 
 // Import the CSP directives directly to avoid TypeScript import issues
 const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
   'script-src': [
     "'self'",
-    "'unsafe-eval'", // Required for Vite dev server and some chart libraries
-    "'unsafe-inline'", // Required for Mantine components and inline scripts
-    "'wasm-unsafe-eval'", // Required for Vite
+    // Note: dev allows eval/inline; prod will strip these before writing to nginx
+    "'unsafe-eval'",
+    "'unsafe-inline'",
+    "'wasm-unsafe-eval'",
     'data:',
     'blob:',
     'https://www.googletagmanager.com',
     'https://www.google-analytics.com',
+    'https://*.google-analytics.com',
+    'https://region1.google-analytics.com',
   ],
   'style-src': [
     "'self'",
@@ -38,15 +41,29 @@ const CSP_DIRECTIVES = {
     'https://stats.g.doubleclick.net',
   ],
   'media-src': ["'self'", 'data:', 'blob:'],
+  'frame-src': [
+    "'self'",
+    'https://open.spotify.com',
+    'https://www.youtube.com',
+    'https://youtube.com',
+  ],
   'connect-src': [
     "'self'",
     'http://localhost:*',
     'https://thesignalcallers.com',
     'ws://localhost:*',
     'wss://localhost:*',
+    'https://*.google-analytics.com',
     'https://www.google-analytics.com',
     'https://analytics.google.com',
     'https://stats.g.doubleclick.net',
+    'https://region1.google-analytics.com',
+    'https://region1.analytics.google.com',
+    // Allow YouTube/Google logging for embedded players
+    'https://www.youtube.com',
+    'https://www.youtube-nocookie.com',
+    'https://*.googlevideo.com',
+    'https://play.google.com',
   ],
   'frame-ancestors': ["'none'"],
   'base-uri': ["'self'"],
@@ -59,16 +76,24 @@ const CSP_DIRECTIVES = {
 /**
  * Build CSP header value from directives
  */
-const buildCSPHeader = () => {
-  return Object.entries(CSP_DIRECTIVES)
+const buildCSPHeader = directives =>
+  Object.entries(directives)
     .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
     .join('; ');
-};
 
 const generateNginxCSP = () => {
   try {
     // Generate CSP header from centralized config
-    const cspHeader = buildCSPHeader();
+    // Build production header: strip eval/inline/data/blob from script-src
+    const prodDirectives = JSON.parse(JSON.stringify(CSP_DIRECTIVES));
+    prodDirectives['script-src'] = prodDirectives['script-src'].filter(
+      s => !["'unsafe-eval'", "'unsafe-inline'", "'wasm-unsafe-eval'", 'data:', 'blob:'].includes(s)
+    );
+    // Allow youtube-nocookie in frame-src
+    if (!prodDirectives['frame-src'].includes('https://www.youtube-nocookie.com')) {
+      prodDirectives['frame-src'].push('https://www.youtube-nocookie.com');
+    }
+    const cspHeader = buildCSPHeader(prodDirectives);
 
     // Read current nginx.conf
     const nginxConfigPath = path.join(process.cwd(), 'nginx.conf');

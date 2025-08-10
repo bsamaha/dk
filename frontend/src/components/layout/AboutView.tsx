@@ -7,9 +7,6 @@ import {
   IconBrandYoutube,
   IconBrandInstagram,
   IconBrandTiktok,
-  IconChartBar,
-  IconDeviceAnalytics,
-  IconTrophy,
 } from '@tabler/icons-react';
 
 const AboutView: React.FC = () => {
@@ -21,22 +18,7 @@ const AboutView: React.FC = () => {
   const INSTAGRAM_URL = 'https://www.instagram.com/thesignalcallers';
   const TIKTOK_URL = 'https://www.tiktok.com/@thesignalcallers';
 
-  // Embeds
-  const SPOTIFY_EMBED_SRC =
-    'https://open.spotify.com/embed/show/5bN7N0PinX56rsSAomHZd8?utm_source=generator';
-  // If you know the YouTube uploads playlist (UU...) set VITE_YT_UPLOADS_PLAYLIST_ID in env
-  const YT_UPLOADS_PLAYLIST_ID = (import.meta as any).env
-    ?.VITE_YT_UPLOADS_PLAYLIST_ID as string | undefined;
-  const YT_CHANNEL_ID = (import.meta as any).env
-    ?.VITE_YT_CHANNEL_ID as string | undefined;
-  const deriveUploadsPlaylistId = (channelId?: string): string | undefined => {
-    if (!channelId) return undefined;
-    return channelId.startsWith('UC')
-      ? `UU${channelId.substring(2)}`
-      : undefined;
-  };
-  const YT_EFFECTIVE_PLAYLIST_ID =
-    YT_UPLOADS_PLAYLIST_ID || deriveUploadsPlaylistId(YT_CHANNEL_ID);
+  // Embeds removed from About; they live on Overview now
 
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-gradient-to-b from-gridiron-graphite to-surface-dark">

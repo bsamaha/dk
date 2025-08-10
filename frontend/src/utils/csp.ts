@@ -42,6 +42,7 @@ export const CSP_DIRECTIVES = {
     'https://open.spotify.com',
     'https://www.youtube.com',
     'https://youtube.com',
+    'https://www.youtube-nocookie.com',
   ],
   'connect-src': [
     "'self'",
@@ -89,7 +90,15 @@ export const getDevCSPHeader = (): string => {
  * Get CSP header for production environment
  */
 export const getProdCSPHeader = (): string => {
-  return buildCSPHeader();
+  // Clone and adjust directives for production: remove eval/inline from script-src
+  const prodDirectives = JSON.parse(JSON.stringify(CSP_DIRECTIVES)) as Record<string, string[]>;
+  const devScriptSrc = prodDirectives['script-src'] || [];
+  prodDirectives['script-src'] = devScriptSrc.filter(
+    s => !["'unsafe-eval'", "'unsafe-inline'", "'wasm-unsafe-eval'", 'data:', 'blob:'].includes(s)
+  );
+  return Object.entries(prodDirectives)
+    .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
+    .join('; ');
 };
 
 /**
