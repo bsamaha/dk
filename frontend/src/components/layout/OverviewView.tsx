@@ -174,7 +174,7 @@ const OverviewView = () => {
             Position Draft Distribution
           </h3>
           <div className="grid grid-cols-1 gap-4">
-            <div className="h-[460px] md:h-[520px]">
+            <div className="h-[370px] md:h-[420px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -274,7 +274,7 @@ const OverviewView = () => {
               <h4 className="text-sm font-medium mb-2 text-gridiron-graphite dark:text-gray-200">
                 Spotify
               </h4>
-              <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '152px' }}>
+              <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '122px' }}>
                 <iframe
                   title="Spotify latest show"
                   src={SPOTIFY_EMBED_SRC}
@@ -289,7 +289,7 @@ const OverviewView = () => {
                 YouTube
               </h4>
               {YT_EFFECTIVE_PLAYLIST_ID ? (
-                <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '56.25%' }}>
+                <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '45%' }}>
                   <iframe
                     title="YouTube latest uploads"
                     src={`https://www.youtube.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
