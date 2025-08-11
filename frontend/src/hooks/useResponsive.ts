@@ -42,6 +42,9 @@ export const useResponsive = () => {
     pieRadius: isMobile ? 80 : 120,
     pieLabelOffset: isMobile ? 15 : 25,
     pieLegendHeight: isMobile ? 50 : 36,
+    // Consolidated utilities for pie container
+    pieContainerHeight: 'h-[340px] md:h-[380px]',
+    pieContainerMargin: 'mt-2 md:mt-4',
 
     // Position stats
     positionStatsGrid: isMobile

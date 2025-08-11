@@ -20,7 +20,13 @@ import {
 import { Select, SegmentedControl, Loader } from '@mantine/core';
 import type { Position } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
-import { getTooltipStyle } from '../../utils/chartTheme';
+import {
+  getTooltipStyle,
+  POSITION_COLORS_CORE,
+  CORE_POSITIONS,
+  type CorePosition,
+  getPrimaryChartColor,
+} from '../../utils/chartTheme';
 
 const OverviewView = () => {
   const { isMobile, responsive } = useResponsive();
@@ -29,6 +35,9 @@ const OverviewView = () => {
   // Theme-aware values
   const isDark = colorScheme === 'dark';
   const tickColor = isDark ? '#ffffff' : '#374151';
+
+  // Shared chart color map to keep legend and segments in sync (brand-based)
+  const chartColors: Record<CorePosition, string> = POSITION_COLORS_CORE;
 
   const { isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
@@ -97,16 +106,6 @@ const OverviewView = () => {
     );
   }
 
-  const colors = [
-    '#00A86B',
-    '#FFC300',
-    '#016140',
-    '#1E1E1E',
-    '#89C4AA',
-    '#0891b2',
-  ];
-
-
   if (metadataLoading || positionStatsLoading || roundCountsLoading) {
     return (
       <div className="space-y-6">
@@ -131,12 +130,15 @@ const OverviewView = () => {
       0
     ) || 0;
   const pieData =
-    positionStats?.position_stats.map((stat, index) => ({
-      name: stat.position,
-      value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
-      count: stat.total_drafted,
-      color: colors[index % colors.length],
-    })) || [];
+    positionStats?.position_stats
+      // Bestball-only core positions
+      .filter(stat => (CORE_POSITIONS as readonly string[]).includes(stat.position))
+      .map(stat => ({
+        name: stat.position,
+        value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
+        count: stat.total_drafted,
+        color: chartColors[stat.position as CorePosition],
+      })) || [];
   // Removed unused barData derivation; keep focused on current charts
 
   // Quick stats already computed above
@@ -166,7 +168,7 @@ const OverviewView = () => {
             Position Draft Distribution
           </h3>
           <div className="grid grid-cols-1 gap-6 pt-2 md:pt-4">
-            <div className="h-[340px] md:h-[380px] mt-2 md:mt-4 flex flex-col items-center justify-center">
+            <div className={`${responsive.pieContainerHeight} ${responsive.pieContainerMargin} flex flex-col items-center justify-center`}>
               <div className="w-full h-full max-w-[640px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart margin={{ top: 20, right: isMobile ? 50 : 40, bottom: 20, left: isMobile ? 50 : 40 }}>
@@ -221,7 +223,7 @@ const OverviewView = () => {
                             >
                               {data.name}
                             </p>
-                            <p style={{ margin: 0, color: '#00A86B' }}>
+                            <p style={{ margin: 0, color: chartColors.WR }}>
                               {data.value?.toFixed(2)}% · {data.payload?.count?.toLocaleString?.()}
                             </p>
                           </div>
@@ -233,12 +235,12 @@ const OverviewView = () => {
                   {/* Legend moved outside to avoid overlay/clipping */}
                 </PieChart>
               </ResponsiveContainer>
-              <div className="mt-0 text-center text-sm font-medium" style={{ color: isDark ? '#ffffff' : '#1f2937' }}>
+              <div className="mt-0 text-center text-sm font-medium text-gridiron-graphite dark:text-white">
                 <div className="inline-flex items-center justify-center gap-4 flex-wrap">
-                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: '#00A86B' }} /> WR</span>
-                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: '#FFC300' }} /> RB</span>
-                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: '#1E1E1E' }} /> TE</span>
-                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: '#0891b2' }} /> QB</span>
+                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: chartColors.WR }} /> WR</span>
+                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: chartColors.RB }} /> RB</span>
+                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: chartColors.TE }} /> TE</span>
+                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: chartColors.QB }} /> QB</span>
                 </div>
               </div>
               </div>
@@ -350,7 +352,7 @@ const OverviewView = () => {
                       formatter={(v: number) => v.toFixed(2)}
                       contentStyle={getTooltipStyle(isDark)}
                     />
-                    <Bar dataKey="count" name="Count" fill="#00A86B" />
+                    <Bar dataKey="count" name="Count" fill={getPrimaryChartColor()} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -367,17 +369,12 @@ const OverviewView = () => {
                 v && setSelectedPosition(v as 'QB' | 'RB' | 'WR' | 'TE')
               }
               size={responsive.inputSize}
-              styles={{
-                input: {
-                  backgroundColor: '#ffffff',
-                  color: '#000000',
-                },
-                dropdown: {
-                  backgroundColor: '#ffffff',
-                },
-                option: {
-                  color: '#000000',
-                }
+              classNames={{
+                input:
+                  'bg-white dark:bg-surface-dark-elev text-gridiron-graphite dark:text-white',
+                dropdown: 'bg-white dark:bg-surface-dark-elev',
+                option: 'text-gridiron-graphite dark:text-white',
+                label: 'text-gridiron-graphite dark:text-gray-300',
               }}
             />
             <SegmentedControl
