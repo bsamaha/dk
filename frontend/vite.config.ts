@@ -1,9 +1,8 @@
 import { defineConfig } from 'vitest/config';
-import { loadEnv, type PluginOption } from 'vite';
+import { loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { getDevCSPHeader, getProdCSPHeader } from './src/utils/csp';
-import { VitePluginRadar } from 'vite-plugin-radar';
+import { getDevCSPHeader, getProdCSPHeader } from './csp.shared.js';
 
 // Shared security headers configuration
 const securityHeaders = {
@@ -18,30 +17,6 @@ const securityHeaders = {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
-  const isProduction = mode === 'production';
-  const gaTrackingId = env.VITE_GA_TRACKING_ID;
-
-  const withGAPlugin = (plugins: PluginOption[]): PluginOption[] => {
-    if (!isProduction || !gaTrackingId) return plugins;
-    return [
-      ...plugins,
-      VitePluginRadar({
-        analytics: {
-          id: gaTrackingId,
-          config: {
-            send_page_view: true,
-            allow_google_signals: true,
-            allow_ad_personalization_signals: true,
-          },
-          consentDefaults: {
-            analytics_storage: 'granted',
-            ad_storage: 'denied',
-            wait_for_update: 500,
-          },
-        },
-      }),
-    ];
-  };
 
   return {
     test: {
@@ -50,11 +25,11 @@ export default defineConfig(({ mode }) => {
       setupFiles: './src/setupTests.ts',
       css: true,
     },
-    plugins: withGAPlugin([
+    plugins: [
       react({
         include: '**/*.{jsx,tsx}',
       }),
-    ]),
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

@@ -1,0 +1,11 @@
+---
+globs: backend/tests/**/*.py
+description: Testing guidelines for pytest fixtures, parametrization, and clarity
+---
+# Testing Guidelines
+
+- Prefer fixtures for setup/teardown; keep tests declarative and minimal.
+- Replace loops and conditionals with `@pytest.mark.parametrize` for clarity (no-loop-in-tests).
+- Assert one thing per test where practical; name tests descriptively.
+- Use `app.dependency_overrides` to inject or remove dependencies in FastAPI tests.
+- Ensure TestClient runs lifespan by using context managers or test-level fixtures.

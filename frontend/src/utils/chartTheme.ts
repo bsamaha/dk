@@ -109,6 +109,31 @@ export const POSITION_COLORS = {
 } as const;
 
 /**
+ * Core bestball positions and colors
+ * Use this map across components to ensure consistency with brand book
+ */
+export const CORE_POSITIONS = ['QB', 'RB', 'WR', 'TE'] as const;
+export type CorePosition = (typeof CORE_POSITIONS)[number];
+
+// Brand-aligned, distinct colors per core position
+export const POSITION_COLORS_CORE: Record<CorePosition, string> = {
+  WR: CHART_COLORS.primary, // Signal Green
+  RB: CHART_COLORS.secondary, // Audible Gold
+  TE: CHART_COLORS.quaternary, // Gridiron Graphite
+  QB: CHART_COLORS.accent2, // Blue-ish accent
+};
+
+// Alias for core chart colors to simplify imports in components
+export const CHART_COLORS_CORE: Record<CorePosition, string> =
+  POSITION_COLORS_CORE;
+
+/**
+ * Type guard for core bestball positions
+ */
+export const isCorePosition = (value: string): value is CorePosition =>
+  (CORE_POSITIONS as readonly string[]).includes(value);
+
+/**
  * Get position color by position name
  */
 export const getPositionColor = (position: string): string => {

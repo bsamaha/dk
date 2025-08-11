@@ -1,0 +1,46 @@
+---
+alwaysApply: true
+---
+# Exception Chaining and Error Propagation
+
+When wrapping exceptions or converting low-level errors to higher-level ones, always use Python's exception chaining to preserve the original cause and traceback (PEP 3134).
+
+## Why
+- Preserves the root cause for debugging and observability
+- Tools (pytest, Sentry) display chained causes clearly
+- Avoids losing context when re-raising
+
+## Rules
+- Re-raise the same exception with a bare `raise` (not `raise e`).
+- When translating exceptions, use `raise NewError(...) from e`.
+- Log at appropriate levels; do not swallow exceptions silently.
+
+## Examples
+
+Good:
+
+```python
+try:
+    do_io()
+except OSError as e:
+    raise ValueError("Invalid file path") from e
+```
+
+Good (re-raise):
+
+```python
+try:
+    validate()
+except ValidationError:
+    raise
+```
+
+Avoid:
+
+```python
+except OSError as e:
+    raise ValueError(str(e))  # loses original traceback
+```
+
+## Codebase references
+- See `_validate_and_sanitize_path` in [backend/app/services/query_service.py](mdc:backend/app/services/query_service.py)

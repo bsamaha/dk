@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { apiService } from '../../services/api';
 import { useResponsive } from '../../hooks/useResponsive';
+import { useYouTubePlaylistId } from '../../hooks/useMediaEmbeds';
+import { useQuickStats } from '../../hooks/useQuickStats';
 import { ResponsivePieLabel } from '../ui/ResponsivePieLabel';
 import {
   BarChart,
@@ -14,21 +16,18 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from 'recharts';
 import { Select, SegmentedControl, Loader, Alert } from '@mantine/core';
 import type { Position } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
-import { getTooltipStyle } from '../../utils/chartTheme';
-
-const CHART_COLORS = [
-  '#00A86B',
-  '#FFC300',
-  '#016140',
-  '#1E1E1E',
-  '#89C4AA',
-  '#0891b2',
-];
+import { PositionLegend } from '../ui/PositionLegend';
+import {
+  getTooltipStyle,
+  getPrimaryChartColor,
+  isCorePosition,
+  CHART_COLORS_CORE,
+} from '../../utils/chartTheme';
+import { useCorePieData } from '../../hooks/useCorePieData';
 
 const OverviewView = () => {
   const { isMobile, responsive } = useResponsive();
@@ -40,7 +39,10 @@ const OverviewView = () => {
   const isDark = colorScheme === 'dark';
   const tickColor = isDark ? '#ffffff' : '#374151';
 
-  const { data: metadata, isLoading: metadataLoading } = useQuery({
+  // Shared chart color map to keep legend and segments in sync (brand-based)
+  const chartColors = CHART_COLORS_CORE;
+
+  const { isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
     queryFn: apiService.getMetadata,
   });
@@ -74,7 +76,6 @@ const OverviewView = () => {
         selectedPosition as Position,
         aggregation
       ),
-    // Help recover from prior failed fetches after hot-reload or backend restart
     retry: 2,
     refetchOnMount: 'always',
     staleTime: 0,
@@ -89,60 +90,25 @@ const OverviewView = () => {
     [roundCountsData]
   );
 
-  // Calculate derived data with useMemo to avoid re-renders
-  const totalDrafted = useMemo(
-    () =>
-      positionStats?.position_stats.reduce(
-        (sum, stat) => sum + stat.total_drafted,
-        0
-      ) || 0,
-    [positionStats]
+  // Embeds
+  const YOUTUBE_URL = 'https://www.youtube.com/@TheSignalCallers/videos';
+  const YT_UPLOADS_PLAYLIST_ID =
+    (import.meta as ImportMeta).env?.VITE_YT_UPLOADS_PLAYLIST_ID as
+      | string
+      | undefined;
+  const YT_CHANNEL_ID = (import.meta as ImportMeta).env?.VITE_YT_CHANNEL_ID as
+    | string
+    | undefined;
+  const YT_EFFECTIVE_PLAYLIST_ID = useYouTubePlaylistId(
+    YT_UPLOADS_PLAYLIST_ID,
+    YT_CHANNEL_ID
   );
 
-  const pieData = useMemo(
-    () =>
-      positionStats?.position_stats.map((stat, index) => ({
-        name: stat.position,
-        value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
-        color: CHART_COLORS[index % CHART_COLORS.length],
-      })) || [],
-    [positionStats, totalDrafted]
-  );
+  // Quick stats and pie data
+  const quickStats = useQuickStats(positionStats);
+  const pieData = useCorePieData(positionStats);
 
-  const barData = useMemo(
-    () =>
-      positionStats?.position_stats.map(stat => ({
-        position: stat.position,
-        medianDraftCount: stat.median_draft_count,
-      })) || [],
-    [positionStats]
-  );
-
-  // Debug logging
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      console.log('[OverviewView] Data state update:', {
-        positionStatsLoading,
-        positionStats: !!positionStats,
-        positionStatsData: positionStats,
-        pieData: pieData.length,
-        pieDataContent: pieData,
-        barData: barData.length,
-        barDataContent: barData,
-        totalDrafted,
-        key,
-      });
-    }
-  }, [
-    positionStatsLoading,
-    positionStats,
-    pieData,
-    barData,
-    totalDrafted,
-    key,
-  ]);
-
-  // Force a single re-render once data is available to stabilize charts
+  // Stabilize charts once on data ready
   useEffect(() => {
     if (
       !hasForcedRerender.current &&
@@ -155,7 +121,6 @@ const OverviewView = () => {
     }
   }, [positionStatsLoading, positionStats, pieData.length]);
 
-  // Force a single re-render for the by-round chart when its data becomes available
   useEffect(() => {
     if (
       !hasForcedRoundRerender.current &&
@@ -167,7 +132,6 @@ const OverviewView = () => {
     }
   }, [roundCountsLoading, roundBarData.length]);
 
-  // Handle error state for position stats query
   if (positionStatsError) {
     if (import.meta.env.DEV) {
       console.error('Position Stats Query Error:', positionStatsError);
@@ -175,6 +139,24 @@ const OverviewView = () => {
     return (
       <div className="text-red-600 dark:text-red-400">
         Error loading position statistics. Please try again later.
+      </div>
+    );
+  }
+
+  if (metadataLoading || positionStatsLoading || roundCountsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white p-6 rounded-lg shadow">
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -194,319 +176,157 @@ const OverviewView = () => {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className={`grid ${responsive.singleColumnOnMobile} gap-6`}>
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-signal-green/20">
-              <span className="text-signal-green text-xl">👤</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Unique Players Drafted
-              </p>
-              {metadataLoading ? (
-                <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-              ) : (
-                <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                  {metadata?.total_players.toLocaleString() || '0'}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-audible-gold/10">
-              <span className="text-audible-gold text-xl">🏈</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Total Drafts
-              </p>
-              {metadataLoading ? (
-                <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-              ) : (
-                <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                  {metadata?.total_drafts.toLocaleString() || '0'}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-signal-green/10">
-              <span className="text-signal-green text-xl">🏆</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Total Teams
-              </p>
-              {metadataLoading ? (
-                <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-              ) : (
-                <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                  {metadata?.total_teams.toLocaleString() || '0'}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-turf-dark/10">
-              <span className="text-turf-dark text-xl">📊</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Total Picks
-              </p>
-              {metadataLoading ? (
-                <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-              ) : (
-                <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                  {(metadata?.total_teams
-                    ? metadata.total_teams * 20
-                    : 0
-                  ).toLocaleString()}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Charts */}
       <div className={`grid ${responsive.chartGrid}`}>
-        {/* Position Distribution Pie Chart */}
+        {/* Position Distribution + Quick Stats */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
           <h2 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Position Draft Distribution
           </h2>
-          <div className="h-80" style={{ minHeight: '320px' }}>
-            {positionStatsLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <Loader />
-              </div>
-            ) : !pieData || pieData.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                No data available
-              </div>
-            ) : (
-              <ResponsiveContainer
-                key={`pie-container-${key}`}
-                width="100%"
-                height={320}
-              >
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    label={(props: any) => (
-                      <ResponsivePieLabel
-                        name={props.name}
-                        value={props.value ?? 0}
-                        cx={props.cx}
-                        cy={props.cy}
-                        midAngle={props.midAngle}
-                        outerRadius={props.outerRadius}
-                        isMobile={isMobile}
-                      />
-                    )}
-                    labelLine={false}
-                    outerRadius={responsive.pieRadius}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0];
-                        return (
-                          <div
-                            style={{
-                              backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-                              border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
-                              borderRadius: '6px',
-                              boxShadow: isDark
-                                ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                                : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                              color: isDark ? '#FFFFFF' : '#1F2937',
-                              padding: '10px',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            <p
+          <div className="grid grid-cols-1 gap-6 pt-2 md:pt-4">
+            <div className={`${responsive.pieContainerHeight} ${responsive.pieContainerMargin} flex flex-col items-center justify-center`}>
+              <div className="w-full h-full max-w-[640px]">
+                <ResponsiveContainer key={`pie-container-${key}`} width="100%" height="100%">
+                  <PieChart margin={{ top: 20, right: isMobile ? 50 : 40, bottom: 20, left: isMobile ? 50 : 40 }}>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="45%"
+                      label={(props: { name?: string; value?: number; cx?: number; cy?: number; midAngle?: number; outerRadius?: number }) => (
+                        <ResponsivePieLabel
+                          name={props.name ?? ''}
+                          value={props.value ?? 0}
+                          cx={props.cx ?? 0}
+                          cy={props.cy ?? 0}
+                          midAngle={props.midAngle ?? 0}
+                          outerRadius={props.outerRadius ?? 0}
+                          isMobile={isMobile}
+                        />
+                      )}
+                      labelLine={false}
+                      outerRadius={isMobile ? 110 : 140}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={({ active, payload }: { active?: boolean; payload?: Array<{ name?: string; value?: number; payload?: { count?: number } }> }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0];
+                          const positionName = (data.name ?? '') as string;
+                          const color = isCorePosition(positionName)
+                            ? chartColors[positionName]
+                            : chartColors.WR;
+                          return (
+                            <div
                               style={{
-                                margin: '0 0 6px 0',
-                                fontWeight: 600,
+                                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                                border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
+                                borderRadius: '6px',
+                                boxShadow: isDark
+                                  ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                                  : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                color: isDark ? '#FFFFFF' : '#1F2937',
+                                padding: '10px',
+                                whiteSpace: 'nowrap',
                               }}
                             >
-                              {data.name}
-                            </p>
-                            <p style={{ margin: 0, color: '#00A86B' }}>
-                              {data.value?.toFixed(2)}%
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={responsive.pieLegendHeight}
-                    wrapperStyle={{ fontSize: responsive.fontSize.pieLegend }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+                              <p
+                                style={{
+                                  margin: '0 0 6px 0',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {data.name}
+                              </p>
+                              <p style={{ margin: 0, color }}>
+                                {data.value?.toFixed(2)}% · {data.payload?.count?.toLocaleString?.()}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    {/* Legend moved outside to avoid overlay/clipping */}
+                  </PieChart>
+                </ResponsiveContainer>
+                <PositionLegend colors={chartColors} />
+              </div>
+            </div>
+            <div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                {quickStats.map(stat => (
+                  <div key={stat.position} className="text-center border rounded-md p-3">
+                    <p className="uppercase text-xs font-semibold text-gray-500">{stat.position} Drafted</p>
+                    <p className="text-signal-green mt-1 font-bold text-lg">{stat.total.toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Median Players Drafted per Team Bar Chart */}
+        {/* Latest Media on Overview */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <h2 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
-            Median Players Drafted per Draft Lobby
-          </h2>
-          <div className="h-80" style={{ minHeight: '320px' }}>
-            {positionStatsLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <Loader />
-              </div>
-            ) : !barData || barData.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                No data available
-              </div>
-            ) : (
-              <ResponsiveContainer
-                key={`bar-container-${key}`}
-                width="100%"
-                height={320}
-              >
-                <BarChart data={barData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke={isDark ? '#555' : '#e5e7eb'}
+          <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">Latest From The Signal Callers</h3>
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gridiron-graphite dark:text-gray-200">YouTube</h4>
+              {YT_EFFECTIVE_PLAYLIST_ID ? (
+                <div className="relative w-full max-w-lg mx-auto" style={{ paddingTop: '40%' }}>
+                  <iframe
+                    title="YouTube latest uploads"
+                    src={`https://www.youtube-nocookie.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                    loading="lazy"
+                    className="absolute top-0 left-0 w-full h-full rounded-lg border-0"
                   />
-                  <XAxis
-                    dataKey="position"
-                    fontSize={responsive.fontSize.medium}
-                    tick={{ fill: tickColor }}
-                    axisLine={{ stroke: tickColor }}
-                    tickLine={{ stroke: tickColor }}
-                  />
-                  <YAxis
-                    fontSize={responsive.fontSize.medium}
-                    tick={{ fill: tickColor }}
-                    axisLine={{ stroke: tickColor }}
-                    tickLine={{ stroke: tickColor }}
-                  />
-                  <Tooltip
-                    formatter={(v: number) => v.toFixed(2)}
-                    contentStyle={getTooltipStyle(isDark)}
-                  />
-                  <Bar
-                    dataKey="medianDraftCount"
-                    name="Median Draft Count"
-                    fill="#00A86B"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Set <code className="font-code">VITE_YT_UPLOADS_PLAYLIST_ID</code> or
+                  <code className="font-code"> VITE_YT_CHANNEL_ID</code> to auto‑embed the latest video. For now, visit our channel:
+                  <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="ml-1 text-signal-green underline">
+                    YouTube @TheSignalCallers
+                  </a>
+                  .
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Position Analysis */}
       <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-        <h2 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
-          Position Analysis
-        </h2>
+        <h2 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">Position Analysis</h2>
 
-        {/* Quick Stats */}
-        <div className={`grid ${responsive.positionStatsGrid} mb-6`}>
-          {positionStatsLoading ? (
-            <>
-              {['QB', 'RB', 'WR', 'TE'].map(pos => (
-                <div
-                  key={pos}
-                  className={`text-center border rounded-md ${responsive.positionStatsPadding}`}
-                >
-                  <p className="uppercase text-xs font-semibold text-gray-500">
-                    {pos} Drafted
-                  </p>
-                  <div className="h-6 w-20 mx-auto mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </div>
-              ))}
-            </>
-          ) : (
-            positionStats?.position_stats.map(stat => (
-              <div
-                key={stat.position}
-                className={`text-center border rounded-md ${responsive.positionStatsPadding}`}
-              >
-                <p className="uppercase text-xs font-semibold text-gray-500">
-                  {stat.position} Drafted
-                </p>
-                <p
-                  className={`text-signal-green mt-1 font-bold ${responsive.statText}`}
-                >
-                  {stat.total_drafted.toLocaleString()}
-                </p>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Bar Chart & Controls */}
         <div className={`grid ${responsive.controlsGrid} items-end`}>
           <div className={responsive.controlsColumn}>
-            <h3 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">
-              Position Stats by Round
-            </h3>
-            <div className="h-80">
+            <h3 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">Position Stats by Round</h3>
+            <div className={responsive.chartHeight}>
               {roundCountsLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader />
                 </div>
               ) : roundCountsError ? (
                 <div className="flex items-center justify-center h-full">
-                  <Alert
-                    color="red"
-                    title="Failed to load chart"
-                    variant="light"
-                  >
-                    {roundCountsErrorObj instanceof Error
-                      ? roundCountsErrorObj.message
-                      : 'Unexpected error'}
+                  <Alert color="red" title="Failed to load chart" variant="light">
+                    {roundCountsErrorObj instanceof Error ? roundCountsErrorObj.message : 'Unexpected error'}
                   </Alert>
                 </div>
               ) : roundBarData.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  No data available.
-                </div>
+                <div className="flex items-center justify-center h_full text-gray-500">No data available.</div>
               ) : (
-                <ResponsiveContainer
-                  key={`round-container-${roundChartKey}`}
-                  width="100%"
-                  height="100%"
-                >
+                <ResponsiveContainer key={`round-container-${roundChartKey}`} width="100%" height="100%">
                   <BarChart data={roundBarData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke={isDark ? '#555' : '#e5e7eb'}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#555' : '#e5e7eb'} />
                     <XAxis
                       dataKey="round"
                       fontSize={responsive.fontSize.small}
@@ -522,12 +342,10 @@ const OverviewView = () => {
                       tick={{ fill: tickColor }}
                       axisLine={{ stroke: tickColor }}
                       tickLine={{ stroke: tickColor }}
+                      tickFormatter={value => Math.round(value).toString()}
                     />
-                    <Tooltip
-                      formatter={(v: number) => v.toFixed(2)}
-                      contentStyle={getTooltipStyle(isDark)}
-                    />
-                    <Bar dataKey="count" name="Count" fill="#00A86B" />
+                    <Tooltip formatter={(v: number) => v.toFixed(2)} contentStyle={getTooltipStyle(isDark)} />
+                    <Bar dataKey="count" name="Count" fill={getPrimaryChartColor()} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -540,10 +358,14 @@ const OverviewView = () => {
               label="Position"
               data={['QB', 'RB', 'WR', 'TE'].map(p => ({ value: p, label: p }))}
               value={selectedPosition}
-              onChange={v =>
-                v && setSelectedPosition(v as 'QB' | 'RB' | 'WR' | 'TE')
-              }
+              onChange={v => v && setSelectedPosition(v as 'QB' | 'RB' | 'WR' | 'TE')}
               size={responsive.inputSize}
+              classNames={{
+                input: 'bg-white dark:bg-surface-dark-elev text-gridiron-graphite dark:text-white',
+                dropdown: 'bg-white dark:bg-surface-dark-elev',
+                option: 'text-gridiron-graphite dark:text-white',
+                label: 'text-gridiron-graphite dark:text-gray-300',
+              }}
             />
             <SegmentedControl
               fullWidth

@@ -5,70 +5,26 @@
  * This ensures consistency between frontend Vite config and nginx production config
  */
 
-import fs from 'fs';
-import path from 'path';
+const fs = require('fs');
+const path = require('path');
 
-// Import the CSP directives directly to avoid TypeScript import issues
-const CSP_DIRECTIVES = {
-  'default-src': ["'self'"],
-  'script-src': [
-    "'self'",
-    "'unsafe-eval'", // Required for Vite dev server and some chart libraries
-    "'unsafe-inline'", // Required for Mantine components and inline scripts
-    "'wasm-unsafe-eval'", // Required for Vite
-    'data:',
-    'blob:',
-    'https://www.googletagmanager.com',
-    'https://www.google-analytics.com',
-  ],
-  'style-src': [
-    "'self'",
-    "'unsafe-inline'", // Required for Mantine components
-    'data:',
-    'https://fonts.googleapis.com',
-    'https:',
-  ],
-  'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com', 'https:'],
-  'img-src': [
-    "'self'",
-    'data:',
-    'https:',
-    'blob:',
-    'https://www.google-analytics.com',
-    'https://stats.g.doubleclick.net',
-  ],
-  'media-src': ["'self'", 'data:', 'blob:'],
-  'connect-src': [
-    "'self'",
-    'http://localhost:*',
-    'https://thesignalcallers.com',
-    'ws://localhost:*',
-    'wss://localhost:*',
-    'https://www.google-analytics.com',
-    'https://analytics.google.com',
-    'https://stats.g.doubleclick.net',
-  ],
-  'frame-ancestors': ["'none'"],
-  'base-uri': ["'self'"],
-  'form-action': ["'self'"],
-  'object-src': ["'none'"],
-  'worker-src': ["'self'", 'blob:', 'data:'],
-  'child-src': ["'self'", 'blob:'],
-};
+// Dynamically load ESM shared module from Node CJS script
+async function loadShared() {
+  const url = 'file://' + path.join(__dirname, '../frontend/csp.shared.js');
+  const mod = await import(url);
+  return mod;
+}
 
 /**
  * Build CSP header value from directives
  */
-const buildCSPHeader = () => {
-  return Object.entries(CSP_DIRECTIVES)
-    .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
-    .join('; ');
-};
 
-const generateNginxCSP = () => {
+const generateNginxCSP = async () => {
   try {
     // Generate CSP header from centralized config
-    const cspHeader = buildCSPHeader();
+    // Build production header from shared config
+    const { getProdCSPHeader } = await loadShared();
+    const cspHeader = getProdCSPHeader();
 
     // Read current nginx.conf
     const nginxConfigPath = path.join(process.cwd(), 'nginx.conf');
@@ -113,4 +69,7 @@ const generateNginxCSP = () => {
 };
 
 // Add this to package.json scripts: "generate-csp": "node scripts/generate-csp.js"
-generateNginxCSP();
+generateNginxCSP().catch(err => {
+  console.error('❌ Unhandled error generating CSP:', err?.message || err);
+  process.exit(1);
+});

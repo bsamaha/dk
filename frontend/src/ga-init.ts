@@ -53,7 +53,8 @@ const initializeGoogleAnalytics = (): void => {
     window.gtag = gtag;
 
     gtag('js', new Date());
-    gtag('config', gaTrackingId);
+    // Avoid duplicate initial page_view; SPA page views are tracked in App via usePageTracking
+    gtag('config', gaTrackingId, { send_page_view: false });
 
     // Make tracking ID globally available for React app
     window._gaTrackingId = gaTrackingId;

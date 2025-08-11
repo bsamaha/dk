@@ -1,5 +1,4 @@
 import React from 'react';
-import { useColorScheme } from '../../contexts/ColorSchemeContext';
 
 interface LogoProps {
   variant?: 'mark' | 'horizontal';
@@ -19,16 +18,9 @@ const Logo: React.FC<LogoProps> = ({
   size = 40,
   className = '',
 }) => {
-  const { colorScheme } = useColorScheme();
-
-  const src =
-    colorScheme === 'dark'
-      ? variant === 'horizontal'
-        ? '/brand/dark_embedded.svg'
-        : '/brand/dark_embedded.svg'
-      : variant === 'horizontal'
-        ? '/brand/white_embedded.svg'
-        : '/brand/white_embedded.svg';
+  // Use podcast artwork across variants for a consistent brand look
+  // File lives in /public/brand so it is served from /brand/...
+  const src = '/brand/pod logo.png';
 
   return (
     <img

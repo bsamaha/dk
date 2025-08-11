@@ -1,74 +1,131 @@
 import React from 'react';
 import Logo from '../ui/Logo';
-import { IconMail, IconBrandX } from '@tabler/icons-react';
+import {
+  IconMail,
+  IconBrandX,
+  IconBrandSpotify,
+  IconBrandYoutube,
+  IconBrandInstagram,
+  IconBrandTiktok,
+} from '@tabler/icons-react';
 
 const AboutView: React.FC = () => {
-  const handleXDM = () => {
-    window.open('https://x.com/signalcallers', '_blank');
-  };
+  // Links
+  const SPOTIFY_URL =
+    'https://open.spotify.com/show/5bN7N0PinX56rsSAomHZd8';
+  const YOUTUBE_URL = 'https://www.youtube.com/@TheSignalCallers/videos';
+  const X_URL = 'https://x.com/signalcallers';
+  const INSTAGRAM_URL = 'https://www.instagram.com/thesignalcallers';
+  const TIKTOK_URL = 'https://www.tiktok.com/@thesignalcallers';
+
+  // Embeds removed from About; they live on Overview now
 
   return (
-    <div className="flex flex-col h-full p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto bg-neutral-900">
-      {/* Centered Header with larger logo */}
-      <div className="flex-shrink-0 flex flex-col items-center justify-center text-center space-y-4">
-        <Logo variant="mark" size={500} className="drop-shadow-lg" />
-        <h1 className="text-3xl font-bold text-white">The Signal Callers</h1>
-      </div>
+    <div className="flex flex-col h-full overflow-y-auto bg-gradient-to-b from-gridiron-graphite to-surface-dark">
+      {/* Hero */}
+      <section className="px-4 sm:px-6 md:px-10 py-8 sm:py-10">
+        {/* Unified hero column to align with media width */}
+        <div className="max-w-3xl mx-auto flex flex-col items-center gap-6">
+          {/* Logo */}
+          <Logo variant="horizontal" className="w-56 sm:w-64 md:w-72 drop-shadow-lg" />
 
-      {/* Main Content */}
-      <div className="flex-grow bg-white dark:bg-surface-dark p-6 sm:p-8 rounded-lg shadow-sm space-y-8 max-w-4xl mx-auto w-full">
-        {/* About Section - Centered and improved text flow */}
-        <div className="prose prose-lg dark:prose-invert max-w-none text-center">
-          <p className="text-xl leading-relaxed">
-            Welcome to your go-to hub for Best Ball fantasy football analytics.
-            Our platform is designed to give you a data-driven edge in your
-            drafts by providing insights derived from thousands of real-world
-            drafts.
-          </p>
-          <p>
-            We analyze Average Draft Position (ADP), draft trends, player
-            combinations, and roster constructions to help you build winning
-            teams. Our tools are built for both seasoned pros and newcomers
-            looking to sharpen their strategy.
-          </p>
-        </div>
-
-        {/* Contact/Suggestion Section */}
-        <div className="space-y-4">
-          <div className="text-center">
-            <h3 className="text-lg font-medium text-gridiron-graphite dark:text-white mb-2">
-              Have a Suggestion or Question?
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              We'd love to hear from you! The best ways to reach us are below.
+          {/* Description aligned to same width (above socials) */}
+          <div className="w-full text-left text-white space-y-2">
+            <h1 className="font-heading text-3xl sm:text-4xl font-semibold">
+              The Signal Callers
+            </h1>
+            <p className="text-base sm:text-lg text-gray-200 leading-relaxed">
+              Need a pod that blends contest-level DFS theory with locker-room
+              laughs? Welcome to The Signal Callers DFS Show. Kevin runs the
+              production board, Trey dissects rising ADPs, and Blake - our Data
+              Wizard - spins machine-learning models into actionable lineup
+              advice. We grade our own bad plays live, because “learn how we
+              lose money so you don’t have to” is the motto. Light swearing,
+              sharp data, and the occasional on-air beverage included.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <a
-              href="mailto:team@thesignalcallers.com"
-              className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-signal-green text-white rounded-lg hover:bg-signal-green/90 transition-colors font-medium"
-            >
-              <IconMail size={18} />
-              <span>Email us at team@thesignalcallers.com</span>
-            </a>
-
-            <button
-              onClick={handleXDM}
-              className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
-            >
-              <IconBrandX size={18} />
-              <span>DM @SignalCallers on X</span>
-            </button>
+          {/* All buttons stacked vertically with same width as media */}
+          <div className="w-full">
+            <div className="flex flex-col gap-2.5 w-full items-stretch">
+              <a
+                href={X_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-black text-white hover:bg-neutral-900 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                aria-label="Follow on X"
+                title="Follow on X"
+              >
+                <IconBrandX size={18} /> Follow on X
+              </a>
+              <a
+                href={YOUTUBE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60"
+                aria-label="Watch on YouTube"
+                title="Watch on YouTube"
+              >
+                <IconBrandYoutube size={18} /> Watch on YouTube
+              </a>
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-gradient-to-r from-pink-500 to-violet-600 text-white hover:from-pink-600 hover:to-violet-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-300/60"
+                aria-label="Follow on Instagram"
+                title="Follow on Instagram"
+              >
+                <IconBrandInstagram size={18} /> Follow on Instagram
+              </a>
+              <a
+                href={SPOTIFY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/60"
+                aria-label="Listen on Spotify"
+                title="Listen on Spotify"
+              >
+                <IconBrandSpotify size={18} /> Listen on Spotify
+              </a>
+              <a
+                href={TIKTOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-black text-white hover:bg-neutral-900 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                aria-label="Follow on TikTok"
+                title="Follow on TikTok"
+              >
+                <IconBrandTiktok size={18} /> Follow on TikTok
+              </a>
+              <a
+                href="mailto:team@thesignalcallers.com"
+                className="inline-flex h-11 items-center justify-center gap-2 px-4 rounded-lg bg-surface-dark text-gray-200 hover:bg-surface-dark-elev border border-white/10 transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+              >
+                <IconMail size={18} /> Email us: team@thesignalcallers.com
+              </a>
+            </div>
           </div>
+
+          
+        </div>
+      </section>
+
+      {/* Main Content */}
+      <div className="flex-grow px-4 sm:px-6 md:px-10 pb-12">
+        <div className="max-w-3xl mx-auto space-y-10">
+          {/* Latest media moved to Overview */}
+          {/* About Section removed per request */}
+
+        {/* Value props section removed per request */}
+
+        {/* Socials & contact are now in the hero; no duplication here */}
         </div>
       </div>
 
       {/* Footer */}
-      <div className="text-center flex-shrink-0">
-        <p className="text-sm text-gray-300">
-          Built with ❤️ for the DFS community
-        </p>
+      <div className="text-center flex-shrink-0 pb-8">
+        <p className="text-sm text-gray-300">Built with ❤️ for the DFS community</p>
       </div>
     </div>
   );
