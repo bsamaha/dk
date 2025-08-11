@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { apiService } from '../../services/api';
 import { useResponsive } from '../../hooks/useResponsive';
-import { useYouTubePlaylistId, useSpotifyEmbedUrl } from '../../hooks/useMediaEmbeds';
+import { useYouTubePlaylistId } from '../../hooks/useMediaEmbeds';
 import { useQuickStats } from '../../hooks/useQuickStats';
 import { ResponsivePieLabel } from '../ui/ResponsivePieLabel';
 import {
@@ -16,7 +16,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from 'recharts';
 import { Select, SegmentedControl, Loader } from '@mantine/core';
 import type { Position } from '../../types';
@@ -69,6 +68,23 @@ const OverviewView = () => {
     [roundCountsData]
   );
 
+  // Embeds (must be declared before any early returns due to hooks naming)
+  const YOUTUBE_URL = 'https://www.youtube.com/@TheSignalCallers/videos';
+  const YT_UPLOADS_PLAYLIST_ID =
+    (import.meta as ImportMeta).env?.VITE_YT_UPLOADS_PLAYLIST_ID as
+      | string
+      | undefined;
+  const YT_CHANNEL_ID = (import.meta as ImportMeta).env?.VITE_YT_CHANNEL_ID as
+    | string
+    | undefined;
+  const YT_EFFECTIVE_PLAYLIST_ID = useYouTubePlaylistId(
+    YT_UPLOADS_PLAYLIST_ID,
+    YT_CHANNEL_ID
+  );
+
+  // Quick stats ordered for display
+  const quickStats = useQuickStats(positionStats);
+
   // Handle error state for position stats query
   if (positionStatsError) {
     if (import.meta.env.DEV) {
@@ -90,20 +106,6 @@ const OverviewView = () => {
     '#0891b2',
   ];
 
-  // Embeds
-  const SPOTIFY_EMBED_SRC = useSpotifyEmbedUrl('5bN7N0PinX56rsSAomHZd8');
-  const YOUTUBE_URL = 'https://www.youtube.com/@TheSignalCallers/videos';
-  const YT_UPLOADS_PLAYLIST_ID =
-    (import.meta as ImportMeta).env?.VITE_YT_UPLOADS_PLAYLIST_ID as
-      | string
-      | undefined;
-  const YT_CHANNEL_ID = (import.meta as ImportMeta).env?.VITE_YT_CHANNEL_ID as
-    | string
-    | undefined;
-  const YT_EFFECTIVE_PLAYLIST_ID = useYouTubePlaylistId(
-    YT_UPLOADS_PLAYLIST_ID,
-    YT_CHANNEL_ID
-  );
 
   if (metadataLoading || positionStatsLoading || roundCountsLoading) {
     return (
@@ -137,8 +139,7 @@ const OverviewView = () => {
     })) || [];
   // Removed unused barData derivation; keep focused on current charts
 
-  // Quick stats ordered for display
-  const quickStats = useQuickStats(positionStats);
+  // Quick stats already computed above
 
   return (
     <div className="space-y-6 text-gridiron-graphite dark:text-white">
@@ -164,14 +165,15 @@ const OverviewView = () => {
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Position Draft Distribution
           </h3>
-          <div className="grid grid-cols-1 gap-4 pt-12 md:pt-16">
-            <div className="h-[370px] md:h-[420px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+          <div className="grid grid-cols-1 gap-6 pt-2 md:pt-4">
+            <div className="h-[340px] md:h-[380px] mt-2 md:mt-4 flex flex-col items-center justify-center">
+              <div className="w-full h-full max-w-[640px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart margin={{ top: 20, right: isMobile ? 50 : 40, bottom: 20, left: isMobile ? 50 : 40 }}>
                   <Pie
                     data={pieData}
                     cx="50%"
-                    cy="50%"
+                    cy="45%"
                     label={(props: { name?: string; value?: number; cx?: number; cy?: number; midAngle?: number; outerRadius?: number }) => (
                       <ResponsivePieLabel
                         name={props.name ?? ''}
@@ -184,7 +186,7 @@ const OverviewView = () => {
                       />
                     )}
                     labelLine={false}
-                    outerRadius={isMobile ? 120 : 180}
+                    outerRadius={isMobile ? 110 : 140}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -228,16 +230,21 @@ const OverviewView = () => {
                       return null;
                     }}
                   />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={responsive.pieLegendHeight}
-                    wrapperStyle={{ fontSize: responsive.fontSize.pieLegend }}
-                  />
+                  {/* Legend moved outside to avoid overlay/clipping */}
                 </PieChart>
               </ResponsiveContainer>
+              <div className="mt-0 text-center text-sm font-medium" style={{ color: isDark ? '#ffffff' : '#1f2937' }}>
+                <div className="inline-flex items-center justify-center gap-4 flex-wrap">
+                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: '#00A86B' }} /> WR</span>
+                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: '#FFC300' }} /> RB</span>
+                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: '#1E1E1E' }} /> TE</span>
+                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: '#0891b2' }} /> QB</span>
+                </div>
+              </div>
+              </div>
             </div>
             <div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
                 {quickStats.map(stat => (
                   <div
                     key={stat.position}
@@ -263,24 +270,10 @@ const OverviewView = () => {
           <div className="space-y-6">
             <div>
               <h4 className="text-sm font-medium mb-2 text-gridiron-graphite dark:text-gray-200">
-                Spotify
-              </h4>
-              <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '122px' }}>
-                <iframe
-                  title="Spotify latest show"
-                  src={SPOTIFY_EMBED_SRC}
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
-                  className="absolute top-0 left-0 w-full h-[152px] rounded-lg border-0"
-                />
-              </div>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-2 text-gridiron-graphite dark:text-gray-200">
                 YouTube
               </h4>
               {YT_EFFECTIVE_PLAYLIST_ID ? (
-                <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '45%' }}>
+                <div className="relative w-full max-w-lg mx-auto" style={{ paddingTop: '40%' }}>
                   <iframe
                     title="YouTube latest uploads"
                      src={`https://www.youtube-nocookie.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
@@ -324,7 +317,7 @@ const OverviewView = () => {
             <h5 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">
               Position Stats by Round
             </h5>
-              <div className="h-80">
+              <div className={responsive.chartHeight}>
               {roundCountsLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader />
@@ -351,6 +344,7 @@ const OverviewView = () => {
                       tick={{ fill: tickColor }}
                       axisLine={{ stroke: tickColor }}
                       tickLine={{ stroke: tickColor }}
+                      tickFormatter={(value) => Math.round(value).toString()}
                     />
                     <Tooltip
                       formatter={(v: number) => v.toFixed(2)}
@@ -373,6 +367,18 @@ const OverviewView = () => {
                 v && setSelectedPosition(v as 'QB' | 'RB' | 'WR' | 'TE')
               }
               size={responsive.inputSize}
+              styles={{
+                input: {
+                  backgroundColor: '#ffffff',
+                  color: '#000000',
+                },
+                dropdown: {
+                  backgroundColor: '#ffffff',
+                },
+                option: {
+                  color: '#000000',
+                }
+              }}
             />
             <SegmentedControl
               fullWidth

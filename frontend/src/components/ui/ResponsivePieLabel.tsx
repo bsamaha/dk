@@ -24,9 +24,10 @@ export const ResponsivePieLabel: React.FC<ResponsivePieLabelProps> = ({
   const RADIAN = Math.PI / 180;
 
   // Scale radius offset based on container size and device type
-  const baseOffset = isMobile ? 15 : 25;
-  const scaleFactor = Math.min(containerWidth / 400, 1.2); // Cap scaling at 1.2x
-  const radius = outerRadius + baseOffset * scaleFactor;
+  const baseOffset = isMobile ? 18 : 20;
+  const scaleFactor = Math.min(containerWidth / 400, 1.0);
+  // Pull labels slightly inward to avoid clipping near container edges
+  const radius = outerRadius + baseOffset * scaleFactor - (isMobile ? 8 : 12);
 
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
