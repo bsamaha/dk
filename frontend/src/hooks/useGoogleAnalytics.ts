@@ -215,14 +215,16 @@ export const usePageTracking = (currentView?: string) => {
               : 'TheSignalCallers',
             page_path: currentView ? `/${currentView}` : '/',
           });
-        } else if (attempts < maxAttempts) {
+        } else if (attempts < maxAttempts && import.meta.env.PROD) {
           // GA not ready yet, wait and try again
           timeoutId = setTimeout(checkGA, 100);
         } else {
           // Timeout reached, track anyway (analytics utils handle missing gtag gracefully)
-          console.warn(
-            '[GA] Timeout waiting for gtag to be available, tracking anyway'
-          );
+          if (import.meta.env.PROD) {
+            console.warn(
+              '[GA] Timeout waiting for gtag to be available, tracking anyway'
+            );
+          }
           trackPageView({
             page_title: currentView
               ? `${currentView.charAt(0).toUpperCase() + currentView.slice(1)} - TheSignalCallers`

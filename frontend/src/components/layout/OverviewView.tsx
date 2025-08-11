@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { apiService } from '../../services/api';
 import { useResponsive } from '../../hooks/useResponsive';
+import { useYouTubePlaylistId, useSpotifyEmbedUrl } from '../../hooks/useMediaEmbeds';
+import { useQuickStats } from '../../hooks/useQuickStats';
 import { ResponsivePieLabel } from '../ui/ResponsivePieLabel';
 import {
   BarChart,
@@ -29,7 +31,7 @@ const OverviewView = () => {
   const isDark = colorScheme === 'dark';
   const tickColor = isDark ? '#ffffff' : '#374151';
 
-  const { data: metadata, isLoading: metadataLoading } = useQuery({
+  const { isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
     queryFn: apiService.getMetadata,
   });
@@ -88,6 +90,21 @@ const OverviewView = () => {
     '#0891b2',
   ];
 
+  // Embeds
+  const SPOTIFY_EMBED_SRC = useSpotifyEmbedUrl('5bN7N0PinX56rsSAomHZd8');
+  const YOUTUBE_URL = 'https://www.youtube.com/@TheSignalCallers/videos';
+  const YT_UPLOADS_PLAYLIST_ID =
+    (import.meta as ImportMeta).env?.VITE_YT_UPLOADS_PLAYLIST_ID as
+      | string
+      | undefined;
+  const YT_CHANNEL_ID = (import.meta as ImportMeta).env?.VITE_YT_CHANNEL_ID as
+    | string
+    | undefined;
+  const YT_EFFECTIVE_PLAYLIST_ID = useYouTubePlaylistId(
+    YT_UPLOADS_PLAYLIST_ID,
+    YT_CHANNEL_ID
+  );
+
   if (metadataLoading || positionStatsLoading || roundCountsLoading) {
     return (
       <div className="space-y-6">
@@ -115,13 +132,13 @@ const OverviewView = () => {
     positionStats?.position_stats.map((stat, index) => ({
       name: stat.position,
       value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
+      count: stat.total_drafted,
       color: colors[index % colors.length],
     })) || [];
-  const barData =
-    positionStats?.position_stats.map(stat => ({
-      position: stat.position,
-      medianDraftCount: stat.median_draft_count,
-    })) || [];
+  // Removed unused barData derivation; keep focused on current charts
+
+  // Quick stats ordered for display
+  const quickStats = useQuickStats(positionStats);
 
   return (
     <div className="space-y-6 text-gridiron-graphite dark:text-white">
@@ -138,192 +155,159 @@ const OverviewView = () => {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className={`grid ${responsive.singleColumnOnMobile} gap-6`}>
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-signal-green/20">
-              <span className="text-signal-green text-xl">👤</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Unique Players Drafted
-              </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {metadata?.total_players.toLocaleString() || '0'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-audible-gold/10">
-              <span className="text-audible-gold text-xl">🏈</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Total Drafts
-              </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {metadata?.total_drafts.toLocaleString() || '0'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-signal-green/10">
-              <span className="text-signal-green text-xl">🏆</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Total Teams
-              </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {metadata?.total_teams.toLocaleString() || '0'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-turf-dark/10">
-              <span className="text-turf-dark text-xl">📊</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
-                Total Picks
-              </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {(metadata?.total_teams
-                  ? metadata.total_teams * 20
-                  : 0
-                ).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Key Metrics removed (moved to sidebar) */}
 
       {/* Charts */}
       <div className={`grid ${responsive.chartGrid}`}>
-        {/* Position Distribution Pie Chart */}
+        {/* Position Distribution + Quick Stats */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Position Draft Distribution
           </h3>
-          <div className={responsive.chartHeight}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  label={(props: any) => (
-                    <ResponsivePieLabel
-                      name={props.name}
-                      value={props.value ?? 0}
-                      cx={props.cx}
-                      cy={props.cy}
-                      midAngle={props.midAngle}
-                      outerRadius={props.outerRadius}
-                      isMobile={isMobile}
-                    />
-                  )}
-                  labelLine={false}
-                  outerRadius={responsive.pieRadius}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0];
-                      return (
-                        <div
-                          style={{
-                            backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-                            border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
-                            borderRadius: '6px',
-                            boxShadow: isDark
-                              ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                              : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                            color: isDark ? '#FFFFFF' : '#1F2937',
-                            padding: '10px',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          <p
+          <div className="grid grid-cols-1 gap-4 pt-12 md:pt-16">
+            <div className="h-[370px] md:h-[420px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    label={(props: { name?: string; value?: number; cx?: number; cy?: number; midAngle?: number; outerRadius?: number }) => (
+                      <ResponsivePieLabel
+                        name={props.name ?? ''}
+                        value={props.value ?? 0}
+                        cx={props.cx ?? 0}
+                        cy={props.cy ?? 0}
+                        midAngle={props.midAngle ?? 0}
+                        outerRadius={props.outerRadius ?? 0}
+                        isMobile={isMobile}
+                      />
+                    )}
+                    labelLine={false}
+                    outerRadius={isMobile ? 120 : 180}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    // recharts types are permissive; define minimal shape we use
+                    content={({ active, payload }: { active?: boolean; payload?: Array<{ name?: string; value?: number; payload?: { count?: number } }> }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0];
+                        return (
+                          <div
                             style={{
-                              margin: '0 0 6px 0',
-                              fontWeight: 600,
+                              backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                              border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
+                              borderRadius: '6px',
+                              boxShadow: isDark
+                                ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                                : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                              color: isDark ? '#FFFFFF' : '#1F2937',
+                              padding: '10px',
+                              whiteSpace: 'nowrap',
                             }}
                           >
-                            {data.name}
-                          </p>
-                          <p style={{ margin: 0, color: '#00A86B' }}>
-                            {data.value?.toFixed(2)}%
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend
-                  verticalAlign="bottom"
-                  height={responsive.pieLegendHeight}
-                  wrapperStyle={{ fontSize: responsive.fontSize.pieLegend }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+                            <p
+                              style={{
+                                margin: '0 0 6px 0',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {data.name}
+                            </p>
+                            <p style={{ margin: 0, color: '#00A86B' }}>
+                              {data.value?.toFixed(2)}% · {data.payload?.count?.toLocaleString?.()}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={responsive.pieLegendHeight}
+                    wrapperStyle={{ fontSize: responsive.fontSize.pieLegend }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {quickStats.map(stat => (
+                  <div
+                    key={stat.position}
+                    className="text-center border rounded-md p-3"
+                  >
+                    <p className="uppercase text-xs font-semibold text-gray-500">
+                      {stat.position} Drafted
+                    </p>
+                    <p className="text-signal-green mt-1 font-bold text-lg">
+                      {stat.total.toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Median Players Drafted per Team Bar Chart */}
+        {/* Latest Media on Overview */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
           <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
-            Median Players Drafted per Draft Lobby
+            Latest From The Signal Callers
           </h3>
-          <div className={responsive.chartHeight}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={isDark ? '#555' : '#e5e7eb'}
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gridiron-graphite dark:text-gray-200">
+                Spotify
+              </h4>
+              <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '122px' }}>
+                <iframe
+                  title="Spotify latest show"
+                  src={SPOTIFY_EMBED_SRC}
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  className="absolute top-0 left-0 w-full h-[152px] rounded-lg border-0"
                 />
-                <XAxis
-                  dataKey="position"
-                  fontSize={responsive.fontSize.medium}
-                  tick={{ fill: tickColor }}
-                  axisLine={{ stroke: tickColor }}
-                  tickLine={{ stroke: tickColor }}
-                />
-                <YAxis
-                  fontSize={responsive.fontSize.medium}
-                  tick={{ fill: tickColor }}
-                  axisLine={{ stroke: tickColor }}
-                  tickLine={{ stroke: tickColor }}
-                />
-                <Tooltip
-                  formatter={(v: number) => v.toFixed(2)}
-                  contentStyle={getTooltipStyle(isDark)}
-                />
-                <Bar
-                  dataKey="medianDraftCount"
-                  name="Median Draft Count"
-                  fill="#00A86B"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gridiron-graphite dark:text-gray-200">
+                YouTube
+              </h4>
+              {YT_EFFECTIVE_PLAYLIST_ID ? (
+                <div className="relative w-full max-w-xl mx-auto" style={{ paddingTop: '45%' }}>
+                  <iframe
+                    title="YouTube latest uploads"
+                     src={`https://www.youtube-nocookie.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                    loading="lazy"
+                    className="absolute top-0 left-0 w-full h-full rounded-lg border-0"
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Set <code className="font-code">VITE_YT_UPLOADS_PLAYLIST_ID</code> or
+                  <code className="font-code"> VITE_YT_CHANNEL_ID</code> to auto‑embed the
+                  latest video. For now, visit our channel:
+                  <a
+                    href={YOUTUBE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-1 text-signal-green underline"
+                  >
+                    YouTube @TheSignalCallers
+                  </a>
+                  .
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -334,32 +318,13 @@ const OverviewView = () => {
           Position Analysis
         </h4>
 
-        {/* Quick Stats */}
-        <div className={`grid ${responsive.positionStatsGrid} mb-6`}>
-          {positionStats?.position_stats.map(stat => (
-            <div
-              key={stat.position}
-              className={`text-center border rounded-md ${responsive.positionStatsPadding}`}
-            >
-              <p className="uppercase text-xs font-semibold text-gray-500">
-                {stat.position} Drafted
-              </p>
-              <p
-                className={`text-signal-green mt-1 font-bold ${responsive.statText}`}
-              >
-                {stat.total_drafted.toLocaleString()}
-              </p>
-            </div>
-          ))}
-        </div>
-
         {/* Bar Chart & Controls */}
         <div className={`grid ${responsive.controlsGrid} items-end`}>
           <div className={responsive.controlsColumn}>
             <h5 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">
               Position Stats by Round
             </h5>
-            <div className="h-80">
+              <div className="h-80">
               {roundCountsLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader />
