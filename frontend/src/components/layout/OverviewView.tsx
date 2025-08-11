@@ -23,11 +23,11 @@ import { useColorScheme } from '../../contexts/ColorSchemeContext';
 import { PositionLegend } from '../ui/PositionLegend';
 import {
   getTooltipStyle,
-  POSITION_COLORS_CORE,
-  type CorePosition,
   getPrimaryChartColor,
   isCorePosition,
+  CHART_COLORS_CORE,
 } from '../../utils/chartTheme';
+import { useCorePieData } from '../../hooks/useCorePieData';
 
 const OverviewView = () => {
   const { isMobile, responsive } = useResponsive();
@@ -38,7 +38,8 @@ const OverviewView = () => {
   const tickColor = isDark ? '#ffffff' : '#374151';
 
   // Shared chart color map to keep legend and segments in sync (brand-based)
-  const chartColors = useMemo(() => POSITION_COLORS_CORE, []);
+  // Static map; reference directly to avoid extra hook usage
+  const chartColors = CHART_COLORS_CORE;
 
   const { isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
@@ -95,23 +96,8 @@ const OverviewView = () => {
   // Quick stats ordered for display
   const quickStats = useQuickStats(positionStats);
 
-  // Memoized pie data for core positions
-  const pieData = useMemo(() => {
-    const stats = positionStats?.position_stats ?? [];
-    const coreStats = stats.filter(
-      (s): s is typeof s & { position: CorePosition } => isCorePosition(s.position)
-    );
-    const totalCoreDrafted = coreStats.reduce(
-      (sum, s) => sum + s.total_drafted,
-      0
-    );
-    return coreStats.map(s => ({
-      name: s.position,
-      value: totalCoreDrafted ? (s.total_drafted / totalCoreDrafted) * 100 : 0,
-      count: s.total_drafted,
-      color: chartColors[s.position],
-    }));
-  }, [positionStats, chartColors]);
+  // Pie data derived via reusable hook (core positions only)
+  const pieData = useCorePieData(positionStats);
 
   // Handle error state for position stats query
   if (positionStatsError) {

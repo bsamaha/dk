@@ -123,6 +123,10 @@ export const POSITION_COLORS_CORE: Record<CorePosition, string> = {
   QB: CHART_COLORS.accent2, // Blue-ish accent
 };
 
+// Alias for core chart colors to simplify imports in components
+export const CHART_COLORS_CORE: Record<CorePosition, string> =
+  POSITION_COLORS_CORE;
+
 /**
  * Type guard for core bestball positions
  */
