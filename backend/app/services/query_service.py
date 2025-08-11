@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -36,6 +37,8 @@ class QueryService:
     def __init__(self) -> None:
         """Initialize QueryService with DuckDB connection and data loading."""
         logger.info("Initializing QueryService with DuckDB...")
+        # Serialize access to the DuckDB connection; it is not thread-safe
+        self._lock: threading.Lock = threading.Lock()
         self._con: duckdb.DuckDBPyConnection = duckdb.connect(
             database=":memory:", read_only=False
         )
@@ -99,7 +102,8 @@ class QueryService:
             return
         try:
             # DuckDBPyConnection.close() may raise if already closed; guard with flag
-            self._con.close()
+            with self._lock:
+                self._con.close()
         except Exception:
             logger.exception("Error while closing DuckDB connection")
         finally:
@@ -254,13 +258,15 @@ class QueryService:
             Optional sequence of binding parameters.
         """
         logger.debug("DuckDB query: %s — params=%s", sql, params)
-        if params is None:
-            result = self._con.execute(sql)
-        else:
-            result = self._con.execute(sql, params)
-        # Use Arrow buffer → Polars for zero-copy where possible
-        arrow_result = result.arrow()
-        polars_result = pl.from_arrow(arrow_result)
+        # DuckDB connections are NOT thread-safe; serialize access
+        with self._lock:
+            if params is None:
+                result = self._con.execute(sql)
+            else:
+                result = self._con.execute(sql, params)
+            # Use Arrow buffer → Polars for zero-copy where possible
+            arrow_result = result.arrow()
+            polars_result = pl.from_arrow(arrow_result)
 
         # Ensure we always return a DataFrame, not a Series
         if isinstance(polars_result, pl.Series):
@@ -471,8 +477,20 @@ class QueryService:
         median_df: pl.DataFrame = self.query(median_sql)
         stats_df: pl.DataFrame = self.query(stats_sql)
 
-        # Join the results
-        combined_df: pl.DataFrame = stats_df.join(median_df, on="Position", how="left")
+        # Join the results and harden against missing medians or unexpected positions
+        combined_df: pl.DataFrame = stats_df.join(
+            median_df, on="Position", how="left"
+        ).with_columns(
+            # Replace null medians with 0.0 so the API model validation does not fail
+            pl.col("median_draft_count").fill_null(0.0).cast(pl.Float64)
+        )
+
+        # Keep only positions we officially support (QB, RB, WR, TE)
+        allowed_positions: List[str] = [p.value for p in Position]
+        if "Position" in combined_df.columns:
+            combined_df = combined_df.filter(
+                pl.col("Position").is_in(allowed_positions)
+            )
 
         # Convert to PositionStats objects and sort
         position_stats_list: List[PositionStats] = [
@@ -480,7 +498,7 @@ class QueryService:
                 position=row["Position"],
                 total_drafted=row["total_drafted"],
                 unique_players=row["unique_players"],
-                median_draft_count=row["median_draft_count"],
+                median_draft_count=float(row["median_draft_count"]),
             )
             for row in combined_df.iter_rows(named=True)
         ]

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { apiService } from '../../services/api';
 import { useResponsive } from '../../hooks/useResponsive';
 import { ResponsivePieLabel } from '../ui/ResponsivePieLabel';
@@ -16,14 +16,25 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { Select, SegmentedControl, Loader } from '@mantine/core';
+import { Select, SegmentedControl, Loader, Alert } from '@mantine/core';
 import type { Position } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
 import { getTooltipStyle } from '../../utils/chartTheme';
 
+const CHART_COLORS = [
+  '#00A86B',
+  '#FFC300',
+  '#016140',
+  '#1E1E1E',
+  '#89C4AA',
+  '#0891b2',
+];
+
 const OverviewView = () => {
   const { isMobile, responsive } = useResponsive();
   const { colorScheme } = useColorScheme();
+  const [key, setKey] = useState(0);
+  const hasForcedRerender = useRef(false);
 
   // Theme-aware values
   const isDark = colorScheme === 'dark';
@@ -48,14 +59,25 @@ const OverviewView = () => {
     'QB' | 'RB' | 'WR' | 'TE'
   >('QB');
   const [aggregation, setAggregation] = useState<'mean' | 'median'>('mean');
+  const [roundChartKey, setRoundChartKey] = useState(0);
+  const hasForcedRoundRerender = useRef(false);
 
-  const { data: roundCountsData, isLoading: roundCountsLoading } = useQuery({
+  const {
+    data: roundCountsData,
+    isLoading: roundCountsLoading,
+    isError: roundCountsError,
+    error: roundCountsErrorObj,
+  } = useQuery({
     queryKey: ['roundCounts', selectedPosition, aggregation],
     queryFn: () =>
       apiService.getPositionDraftCountsByRound(
         selectedPosition as Position,
         aggregation
       ),
+    // Help recover from prior failed fetches after hot-reload or backend restart
+    retry: 2,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const roundBarData = useMemo(
@@ -66,6 +88,84 @@ const OverviewView = () => {
       })) || [],
     [roundCountsData]
   );
+
+  // Calculate derived data with useMemo to avoid re-renders
+  const totalDrafted = useMemo(
+    () =>
+      positionStats?.position_stats.reduce(
+        (sum, stat) => sum + stat.total_drafted,
+        0
+      ) || 0,
+    [positionStats]
+  );
+
+  const pieData = useMemo(
+    () =>
+      positionStats?.position_stats.map((stat, index) => ({
+        name: stat.position,
+        value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
+        color: CHART_COLORS[index % CHART_COLORS.length],
+      })) || [],
+    [positionStats, totalDrafted]
+  );
+
+  const barData = useMemo(
+    () =>
+      positionStats?.position_stats.map(stat => ({
+        position: stat.position,
+        medianDraftCount: stat.median_draft_count,
+      })) || [],
+    [positionStats]
+  );
+
+  // Debug logging
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('[OverviewView] Data state update:', {
+        positionStatsLoading,
+        positionStats: !!positionStats,
+        positionStatsData: positionStats,
+        pieData: pieData.length,
+        pieDataContent: pieData,
+        barData: barData.length,
+        barDataContent: barData,
+        totalDrafted,
+        key,
+      });
+    }
+  }, [
+    positionStatsLoading,
+    positionStats,
+    pieData,
+    barData,
+    totalDrafted,
+    key,
+  ]);
+
+  // Force a single re-render once data is available to stabilize charts
+  useEffect(() => {
+    if (
+      !hasForcedRerender.current &&
+      !positionStatsLoading &&
+      positionStats &&
+      pieData.length > 0
+    ) {
+      hasForcedRerender.current = true;
+      setKey(prev => prev + 1);
+    }
+  }, [positionStatsLoading, positionStats, pieData.length]);
+
+  // Force a single re-render for the by-round chart when its data becomes available
+  useEffect(() => {
+    if (
+      !hasForcedRoundRerender.current &&
+      !roundCountsLoading &&
+      roundBarData.length > 0
+    ) {
+      hasForcedRoundRerender.current = true;
+      setRoundChartKey(prev => prev + 1);
+    }
+  }, [roundCountsLoading, roundBarData.length]);
 
   // Handle error state for position stats query
   if (positionStatsError) {
@@ -78,50 +178,6 @@ const OverviewView = () => {
       </div>
     );
   }
-
-  const colors = [
-    '#00A86B',
-    '#FFC300',
-    '#016140',
-    '#1E1E1E',
-    '#89C4AA',
-    '#0891b2',
-  ];
-
-  if (metadataLoading || positionStatsLoading || roundCountsLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white p-6 rounded-lg shadow">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const totalDrafted =
-    positionStats?.position_stats.reduce(
-      (sum, stat) => sum + stat.total_drafted,
-      0
-    ) || 0;
-  const pieData =
-    positionStats?.position_stats.map((stat, index) => ({
-      name: stat.position,
-      value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
-      color: colors[index % colors.length],
-    })) || [];
-  const barData =
-    positionStats?.position_stats.map(stat => ({
-      position: stat.position,
-      medianDraftCount: stat.median_draft_count,
-    })) || [];
 
   return (
     <div className="space-y-6 text-gridiron-graphite dark:text-white">
@@ -149,9 +205,13 @@ const OverviewView = () => {
               <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
                 Unique Players Drafted
               </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {metadata?.total_players.toLocaleString() || '0'}
-              </p>
+              {metadataLoading ? (
+                <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              ) : (
+                <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
+                  {metadata?.total_players.toLocaleString() || '0'}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -165,9 +225,13 @@ const OverviewView = () => {
               <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
                 Total Drafts
               </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {metadata?.total_drafts.toLocaleString() || '0'}
-              </p>
+              {metadataLoading ? (
+                <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              ) : (
+                <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
+                  {metadata?.total_drafts.toLocaleString() || '0'}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -181,9 +245,13 @@ const OverviewView = () => {
               <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
                 Total Teams
               </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {metadata?.total_teams.toLocaleString() || '0'}
-              </p>
+              {metadataLoading ? (
+                <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              ) : (
+                <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
+                  {metadata?.total_teams.toLocaleString() || '0'}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -197,12 +265,16 @@ const OverviewView = () => {
               <p className="text-sm font-medium text-gridiron-graphite dark:text-white">
                 Total Picks
               </p>
-              <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
-                {(metadata?.total_teams
-                  ? metadata.total_teams * 20
-                  : 0
-                ).toLocaleString()}
-              </p>
+              {metadataLoading ? (
+                <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              ) : (
+                <p className="text-2xl font-bold text-gridiron-graphite dark:text-white">
+                  {(metadata?.total_teams
+                    ? metadata.total_teams * 20
+                    : 0
+                  ).toLocaleString()}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -212,160 +284,224 @@ const OverviewView = () => {
       <div className={`grid ${responsive.chartGrid}`}>
         {/* Position Distribution Pie Chart */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
+          <h2 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Position Draft Distribution
-          </h3>
-          <div className={responsive.chartHeight}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  label={(props: any) => (
-                    <ResponsivePieLabel
-                      name={props.name}
-                      value={props.value ?? 0}
-                      cx={props.cx}
-                      cy={props.cy}
-                      midAngle={props.midAngle}
-                      outerRadius={props.outerRadius}
-                      isMobile={isMobile}
-                    />
-                  )}
-                  labelLine={false}
-                  outerRadius={responsive.pieRadius}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0];
-                      return (
-                        <div
-                          style={{
-                            backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-                            border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
-                            borderRadius: '6px',
-                            boxShadow: isDark
-                              ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                              : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                            color: isDark ? '#FFFFFF' : '#1F2937',
-                            padding: '10px',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          <p
+          </h2>
+          <div className="h-80" style={{ minHeight: '320px' }}>
+            {positionStatsLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader />
+              </div>
+            ) : !pieData || pieData.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No data available
+              </div>
+            ) : (
+              <ResponsiveContainer
+                key={`pie-container-${key}`}
+                width="100%"
+                height={320}
+              >
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    label={(props: any) => (
+                      <ResponsivePieLabel
+                        name={props.name}
+                        value={props.value ?? 0}
+                        cx={props.cx}
+                        cy={props.cy}
+                        midAngle={props.midAngle}
+                        outerRadius={props.outerRadius}
+                        isMobile={isMobile}
+                      />
+                    )}
+                    labelLine={false}
+                    outerRadius={responsive.pieRadius}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0];
+                        return (
+                          <div
                             style={{
-                              margin: '0 0 6px 0',
-                              fontWeight: 600,
+                              backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                              border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
+                              borderRadius: '6px',
+                              boxShadow: isDark
+                                ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                                : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                              color: isDark ? '#FFFFFF' : '#1F2937',
+                              padding: '10px',
+                              whiteSpace: 'nowrap',
                             }}
                           >
-                            {data.name}
-                          </p>
-                          <p style={{ margin: 0, color: '#00A86B' }}>
-                            {data.value?.toFixed(2)}%
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend
-                  verticalAlign="bottom"
-                  height={responsive.pieLegendHeight}
-                  wrapperStyle={{ fontSize: responsive.fontSize.pieLegend }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+                            <p
+                              style={{
+                                margin: '0 0 6px 0',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {data.name}
+                            </p>
+                            <p style={{ margin: 0, color: '#00A86B' }}>
+                              {data.value?.toFixed(2)}%
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={responsive.pieLegendHeight}
+                    wrapperStyle={{ fontSize: responsive.fontSize.pieLegend }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
         {/* Median Players Drafted per Team Bar Chart */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
+          <h2 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Median Players Drafted per Draft Lobby
-          </h3>
-          <div className={responsive.chartHeight}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={isDark ? '#555' : '#e5e7eb'}
-                />
-                <XAxis
-                  dataKey="position"
-                  fontSize={responsive.fontSize.medium}
-                  tick={{ fill: tickColor }}
-                  axisLine={{ stroke: tickColor }}
-                  tickLine={{ stroke: tickColor }}
-                />
-                <YAxis
-                  fontSize={responsive.fontSize.medium}
-                  tick={{ fill: tickColor }}
-                  axisLine={{ stroke: tickColor }}
-                  tickLine={{ stroke: tickColor }}
-                />
-                <Tooltip
-                  formatter={(v: number) => v.toFixed(2)}
-                  contentStyle={getTooltipStyle(isDark)}
-                />
-                <Bar
-                  dataKey="medianDraftCount"
-                  name="Median Draft Count"
-                  fill="#00A86B"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+          </h2>
+          <div className="h-80" style={{ minHeight: '320px' }}>
+            {positionStatsLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader />
+              </div>
+            ) : !barData || barData.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No data available
+              </div>
+            ) : (
+              <ResponsiveContainer
+                key={`bar-container-${key}`}
+                width="100%"
+                height={320}
+              >
+                <BarChart data={barData}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={isDark ? '#555' : '#e5e7eb'}
+                  />
+                  <XAxis
+                    dataKey="position"
+                    fontSize={responsive.fontSize.medium}
+                    tick={{ fill: tickColor }}
+                    axisLine={{ stroke: tickColor }}
+                    tickLine={{ stroke: tickColor }}
+                  />
+                  <YAxis
+                    fontSize={responsive.fontSize.medium}
+                    tick={{ fill: tickColor }}
+                    axisLine={{ stroke: tickColor }}
+                    tickLine={{ stroke: tickColor }}
+                  />
+                  <Tooltip
+                    formatter={(v: number) => v.toFixed(2)}
+                    contentStyle={getTooltipStyle(isDark)}
+                  />
+                  <Bar
+                    dataKey="medianDraftCount"
+                    name="Median Draft Count"
+                    fill="#00A86B"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>
 
       {/* Position Analysis */}
       <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-        <h4 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
+        <h2 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
           Position Analysis
-        </h4>
+        </h2>
 
         {/* Quick Stats */}
         <div className={`grid ${responsive.positionStatsGrid} mb-6`}>
-          {positionStats?.position_stats.map(stat => (
-            <div
-              key={stat.position}
-              className={`text-center border rounded-md ${responsive.positionStatsPadding}`}
-            >
-              <p className="uppercase text-xs font-semibold text-gray-500">
-                {stat.position} Drafted
-              </p>
-              <p
-                className={`text-signal-green mt-1 font-bold ${responsive.statText}`}
+          {positionStatsLoading ? (
+            <>
+              {['QB', 'RB', 'WR', 'TE'].map(pos => (
+                <div
+                  key={pos}
+                  className={`text-center border rounded-md ${responsive.positionStatsPadding}`}
+                >
+                  <p className="uppercase text-xs font-semibold text-gray-500">
+                    {pos} Drafted
+                  </p>
+                  <div className="h-6 w-20 mx-auto mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </>
+          ) : (
+            positionStats?.position_stats.map(stat => (
+              <div
+                key={stat.position}
+                className={`text-center border rounded-md ${responsive.positionStatsPadding}`}
               >
-                {stat.total_drafted.toLocaleString()}
-              </p>
-            </div>
-          ))}
+                <p className="uppercase text-xs font-semibold text-gray-500">
+                  {stat.position} Drafted
+                </p>
+                <p
+                  className={`text-signal-green mt-1 font-bold ${responsive.statText}`}
+                >
+                  {stat.total_drafted.toLocaleString()}
+                </p>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Bar Chart & Controls */}
         <div className={`grid ${responsive.controlsGrid} items-end`}>
           <div className={responsive.controlsColumn}>
-            <h5 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">
+            <h3 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">
               Position Stats by Round
-            </h5>
+            </h3>
             <div className="h-80">
               {roundCountsLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader />
                 </div>
+              ) : roundCountsError ? (
+                <div className="flex items-center justify-center h-full">
+                  <Alert
+                    color="red"
+                    title="Failed to load chart"
+                    variant="light"
+                  >
+                    {roundCountsErrorObj instanceof Error
+                      ? roundCountsErrorObj.message
+                      : 'Unexpected error'}
+                  </Alert>
+                </div>
+              ) : roundBarData.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  No data available.
+                </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer
+                  key={`round-container-${roundChartKey}`}
+                  width="100%"
+                  height="100%"
+                >
                   <BarChart data={roundBarData}>
                     <CartesianGrid
                       strokeDasharray="3 3"
