@@ -20,12 +20,13 @@ import {
 import { Select, SegmentedControl, Loader } from '@mantine/core';
 import type { Position } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
+import { PositionLegend } from '../ui/PositionLegend';
 import {
   getTooltipStyle,
   POSITION_COLORS_CORE,
-  CORE_POSITIONS,
   type CorePosition,
   getPrimaryChartColor,
+  isCorePosition,
 } from '../../utils/chartTheme';
 
 const OverviewView = () => {
@@ -37,7 +38,7 @@ const OverviewView = () => {
   const tickColor = isDark ? '#ffffff' : '#374151';
 
   // Shared chart color map to keep legend and segments in sync (brand-based)
-  const chartColors: Record<CorePosition, string> = POSITION_COLORS_CORE;
+  const chartColors = useMemo(() => POSITION_COLORS_CORE, []);
 
   const { isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
@@ -94,6 +95,24 @@ const OverviewView = () => {
   // Quick stats ordered for display
   const quickStats = useQuickStats(positionStats);
 
+  // Memoized pie data for core positions
+  const pieData = useMemo(() => {
+    const stats = positionStats?.position_stats ?? [];
+    const coreStats = stats.filter(
+      (s): s is typeof s & { position: CorePosition } => isCorePosition(s.position)
+    );
+    const totalCoreDrafted = coreStats.reduce(
+      (sum, s) => sum + s.total_drafted,
+      0
+    );
+    return coreStats.map(s => ({
+      name: s.position,
+      value: totalCoreDrafted ? (s.total_drafted / totalCoreDrafted) * 100 : 0,
+      count: s.total_drafted,
+      color: chartColors[s.position],
+    }));
+  }, [positionStats, chartColors]);
+
   // Handle error state for position stats query
   if (positionStatsError) {
     if (import.meta.env.DEV) {
@@ -124,21 +143,7 @@ const OverviewView = () => {
     );
   }
 
-  const totalDrafted =
-    positionStats?.position_stats.reduce(
-      (sum, stat) => sum + stat.total_drafted,
-      0
-    ) || 0;
-  const pieData =
-    positionStats?.position_stats
-      // Bestball-only core positions
-      .filter(stat => (CORE_POSITIONS as readonly string[]).includes(stat.position))
-      .map(stat => ({
-        name: stat.position,
-        value: totalDrafted ? (stat.total_drafted / totalDrafted) * 100 : 0,
-        count: stat.total_drafted,
-        color: chartColors[stat.position as CorePosition],
-      })) || [];
+
   // Removed unused barData derivation; keep focused on current charts
 
   // Quick stats already computed above
@@ -201,6 +206,10 @@ const OverviewView = () => {
                     content={({ active, payload }: { active?: boolean; payload?: Array<{ name?: string; value?: number; payload?: { count?: number } }> }) => {
                       if (active && payload && payload.length) {
                         const data = payload[0];
+                        const positionName = (data.name ?? '') as string;
+                        const color = isCorePosition(positionName)
+                          ? chartColors[positionName]
+                          : chartColors.WR;
                         return (
                           <div
                             style={{
@@ -223,7 +232,7 @@ const OverviewView = () => {
                             >
                               {data.name}
                             </p>
-                            <p style={{ margin: 0, color: chartColors.WR }}>
+                            <p style={{ margin: 0, color }}>
                               {data.value?.toFixed(2)}% · {data.payload?.count?.toLocaleString?.()}
                             </p>
                           </div>
@@ -235,14 +244,7 @@ const OverviewView = () => {
                   {/* Legend moved outside to avoid overlay/clipping */}
                 </PieChart>
               </ResponsiveContainer>
-              <div className="mt-0 text-center text-sm font-medium text-gridiron-graphite dark:text-white">
-                <div className="inline-flex items-center justify-center gap-4 flex-wrap">
-                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: chartColors.WR }} /> WR</span>
-                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: chartColors.RB }} /> RB</span>
-                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: chartColors.TE }} /> TE</span>
-                  <span className="inline-flex items-center gap-2"><span className="inline-block w-4 h-4 rounded-sm" style={{ backgroundColor: chartColors.QB }} /> QB</span>
-                </div>
-              </div>
+              <PositionLegend colors={chartColors} />
               </div>
             </div>
             <div>

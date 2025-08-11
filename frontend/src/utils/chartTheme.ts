@@ -124,6 +124,12 @@ export const POSITION_COLORS_CORE: Record<CorePosition, string> = {
 };
 
 /**
+ * Type guard for core bestball positions
+ */
+export const isCorePosition = (value: string): value is CorePosition =>
+  (CORE_POSITIONS as readonly string[]).includes(value);
+
+/**
  * Get position color by position name
  */
 export const getPositionColor = (position: string): string => {
