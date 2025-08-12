@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event-14';
+import userEvent from '@testing-library/user-event';
 import { MantineProvider } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import CombinationsView from '../CombinationsView';
