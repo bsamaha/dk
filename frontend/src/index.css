@@ -577,7 +577,7 @@ body {
   padding: 10px 12px;
   border-radius: 8px;
   background-color: var(--color-white);
-  color: var(--color-text-primary);
+  color: var(--color-gridiron-graphite);
   border-color: #e5e7eb;
 }
 
@@ -591,4 +591,16 @@ body {
   outline: 2px solid var(--color-audible-gold);
   box-shadow: 0 0 0 2px rgba(255, 195, 0, 0.35);
   border-color: var(--color-audible-gold);
+}
+
+/* When a single value is selected, give the input a gold background and black text */
+.brand-input.brand-input-selected .mantine-Input-input,
+.brand-input.brand-input-selected .mantine-Select-input {
+  background-color: var(--color-audible-gold) !important;
+  color: var(--color-gridiron-graphite) !important;
+}
+
+.brand-input.brand-input-selected .mantine-Input-input::placeholder,
+.brand-input.brand-input-selected .mantine-Select-input::placeholder {
+  color: var(--color-gridiron-graphite) !important;
 }

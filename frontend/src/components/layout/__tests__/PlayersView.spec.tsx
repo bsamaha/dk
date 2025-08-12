@@ -30,6 +30,8 @@ describe('PlayersView - single input selection', () => {
     const input = screen.getByPlaceholderText(/search and select a player/i);
     expect(input).toBeInTheDocument();
     expect(input.closest('.brand-input')).not.toBeNull();
+    // No selection yet, so it should not have selected class
+    expect(input.closest('.brand-input-selected')).toBeNull();
     // Ensure no chips/pills are rendered for selection (MultiSelect would render pills area)
     expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });

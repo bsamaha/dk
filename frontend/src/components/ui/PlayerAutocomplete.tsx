@@ -121,9 +121,10 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
   if (props.multiple === false) {
     // Single select
     const { value, onChange } = props as PlayerAutocompleteSingleProps;
+    const selectedClass = value ? 'brand-input-selected' : '';
     return (
       <Select
-        className={`brand-input ${className}`}
+        className={`brand-input ${selectedClass} ${className}`}
         data={filteredOptions}
         value={value}
         onChange={v => onChange(v || '')}
