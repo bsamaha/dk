@@ -539,6 +539,18 @@ body {
   color: var(--color-gridiron-graphite) !important;
 }
 
+/* Generic Pill styles (applies to Mantine Pill component used by MultiSelect) */
+.mantine-Pill-root {
+  background-color: var(--color-audible-gold) !important;
+  color: var(--color-gridiron-graphite) !important;
+  border: none !important;
+}
+
+.mantine-Pill-label {
+  color: var(--color-gridiron-graphite) !important;
+  font-weight: 600;
+}
+
 /* Checkbox styling inside dropdown options */
 .mantine-Checkbox-input {
   border-color: var(--color-audible-gold) !important;
@@ -551,4 +563,32 @@ body {
 /* Option hover/active with gold left border accent */
 .mantine-Select-item[data-hovered] {
   border-left: 3px solid var(--color-audible-gold);
+}
+
+/* Reusable brand input styling across inputs (Select, MultiSelect, TextInput) */
+.brand-input .mantine-Input-input,
+.brand-input .mantine-MultiSelect-inputField,
+.mantine-Select-root.brand-input .mantine-Input-input,
+.mantine-MultiSelect-root.brand-input .mantine-MultiSelect-inputField,
+.mantine-TextInput-root.brand-input .mantine-Input-input {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background-color: var(--color-white);
+  color: var(--color-text-primary);
+  border-color: #e5e7eb;
+}
+
+.brand-input .mantine-Input-input::placeholder,
+.brand-input .mantine-MultiSelect-inputField::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.brand-input .mantine-Input-input:focus,
+.brand-input .mantine-MultiSelect-inputField:focus {
+  outline: 2px solid var(--color-audible-gold);
+  box-shadow: 0 0 0 2px rgba(255, 195, 0, 0.35);
+  border-color: var(--color-audible-gold);
 }

@@ -198,6 +198,8 @@ describe('CombinationsView', () => {
     }
 
     const input = screen.getByPlaceholderText(/a\.j\. brown/i);
+    // brand-input wrapper should exist for reusable styling
+    expect(input.closest('.brand-input')).not.toBeNull();
     await user.type(input, 'Player A');
     await user.keyboard('{Enter}');
     await user.type(input, 'Player B');
@@ -208,5 +210,10 @@ describe('CombinationsView', () => {
     expect(
       await screen.findByRole('heading', { name: /results \(/i })
     ).toBeInTheDocument();
+
+    // At least one pill label should be present with Mantine Pill label class
+    const pillLabel = await screen.findByText('Player A');
+    expect(pillLabel).toBeInTheDocument();
+    expect(pillLabel).toHaveClass('mantine-Pill-label');
   });
 });

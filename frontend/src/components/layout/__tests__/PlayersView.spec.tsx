@@ -26,9 +26,10 @@ describe('PlayersView - single input selection', () => {
       );
     });
 
-    // Ensure Mantine Select input is present
+    // Ensure Mantine Select input is present with brand-input class applied
     const input = screen.getByPlaceholderText(/search and select a player/i);
     expect(input).toBeInTheDocument();
+    expect(input.closest('.brand-input')).not.toBeNull();
     // Ensure no chips/pills are rendered for selection (MultiSelect would render pills area)
     expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });

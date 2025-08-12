@@ -123,6 +123,7 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
     const { value, onChange } = props as PlayerAutocompleteSingleProps;
     return (
       <Select
+        className="brand-input"
         data={filteredOptions}
         value={value}
         onChange={v => onChange(v || '')}
@@ -151,7 +152,7 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
   const { value, onChange } = props as PlayerAutocompleteMultiProps;
   return (
     <MultiSelect
-      classNames={{ input: 'border-audible-gold' }}
+      className={`brand-input ${className}`}
       data={filteredOptions}
       value={value}
       onChange={newValues => {
