@@ -1,5 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MantineProvider } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import CombinationsView from '../CombinationsView';
@@ -177,6 +178,35 @@ describe('CombinationsView', () => {
     // Check for the main heading
     expect(
       screen.getByRole('heading', { name: /player combinations/i })
+    ).toBeInTheDocument();
+  });
+
+  it('allows selecting multiple required players', async () => {
+    const user = userEvent.setup();
+
+    await act(async () => {
+      render(
+        <MantineProvider>
+          <CombinationsView />
+        </MantineProvider>
+      );
+    });
+
+    const playerTab = screen.getByRole('radio', { name: /player combinations/i });
+    if (!playerTab.getAttribute('aria-checked')) {
+      await user.click(playerTab);
+    }
+
+    const input = screen.getByPlaceholderText(/a\.j\. brown/i);
+    await user.type(input, 'Player A');
+    await user.keyboard('{Enter}');
+    await user.type(input, 'Player B');
+    await user.keyboard('{Enter}');
+
+    await user.click(screen.getByRole('button', { name: /find teams/i }));
+
+    expect(
+      await screen.findByRole('heading', { name: /results \(/i })
     ).toBeInTheDocument();
   });
 });

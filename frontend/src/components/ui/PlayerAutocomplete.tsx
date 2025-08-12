@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { Select } from '@mantine/core';
+import { MultiSelect } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { apiService } from '../../services/api';
 import { sanitizeSearchTerm } from '../../utils/sanitization';
 
 interface PlayerAutocompleteProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: string[];
+  onChange: (value: string[]) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -106,41 +106,27 @@ const PlayerAutocomplete = ({
   }
 
   return (
-    <Select
+    <MultiSelect
       data={filteredOptions}
       value={value}
-      onChange={newValue => {
-        onChange(newValue || '');
-        // Clear the search value after selection for better UX
-        setSearchValue('');
+      onChange={newValues => {
+        onChange(newValues);
       }}
       searchValue={searchValue}
-      onSearchChange={value => setSearchValue(sanitizeSearchTerm(value))}
+      onSearchChange={val => setSearchValue(sanitizeSearchTerm(val))}
       placeholder={isLoading ? 'Loading players...' : placeholder}
       searchable
       clearable
       disabled={disabled || isLoading}
       className={className}
-      limit={20}
-      maxDropdownHeight={300}
-      comboboxProps={{
-        transitionProps: { duration: 200, transition: 'pop' },
-      }}
+      limit={50}
+      maxDropdownHeight={320}
+      comboboxProps={{ transitionProps: { duration: 200, transition: 'pop' } }}
       styles={{
-        dropdown: {
-          border: '1px solid #e5e7eb',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-        },
-        input: {
-          borderColor: '#e5e7eb',
-          '&:focus': {
-            borderColor: '#00A86B',
-          },
-        },
+        dropdown: { border: '1px solid #e5e7eb', boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)' },
+        input: { borderColor: '#e5e7eb', '&:focus': { borderColor: '#00A86B' } },
       }}
-      classNames={{
-        option: 'player-autocomplete-option',
-      }}
+      classNames={{ option: 'player-autocomplete-option' }}
     />
   );
 };

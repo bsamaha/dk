@@ -27,7 +27,7 @@ const CombinationsView = () => {
   const [view, setView] = useState<'players' | 'rosters'>('players');
 
   // State for Player Combinations
-  const [selectedPlayer, setSelectedPlayer] = useState<string>('');
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [nRounds, setNRounds] = useState<number>(20);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [page, setPage] = useState(1);
@@ -58,15 +58,15 @@ const CombinationsView = () => {
   });
 
   const { data, isLoading, error, isFetching } = useQuery({
-    queryKey: ['combinations', selectedPlayer, nRounds, page],
+    queryKey: ['combinations', selectedPlayers, nRounds, page],
     queryFn: () =>
       apiService.getPlayerCombinations({
-        required_players: selectedPlayer ? [selectedPlayer] : [],
+        required_players: selectedPlayers,
         n_rounds: nRounds,
         limit: pageSize,
         offset: (page - 1) * pageSize,
       }),
-    enabled: isSubmitted && selectedPlayer.length > 0,
+    enabled: isSubmitted && selectedPlayers.length > 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1,
   });
@@ -154,14 +154,16 @@ const CombinationsView = () => {
   }, [processedRosterData]);
 
   const handleSearch = () => {
-    if (selectedPlayer.length > 0) {
+    if (selectedPlayers.length > 0) {
+      setPage(1);
       setIsSubmitted(true);
     }
   };
 
   const handleClear = () => {
-    setSelectedPlayer('');
+    setSelectedPlayers([]);
     setIsSubmitted(false);
+    setPage(1);
   };
 
   const records = useMemo(() => data?.combinations ?? [], [data]);
@@ -195,8 +197,8 @@ const CombinationsView = () => {
             {record.players.map(player => (
               <Badge
                 key={`${record.draft_id}-${record.draft_position}-${player}`}
-                variant={selectedPlayer === player ? 'filled' : 'light'}
-                color={selectedPlayer === player ? 'gold' : 'gray'}
+                variant={selectedPlayers.includes(player) ? 'filled' : 'light'}
+                color={selectedPlayers.includes(player) ? 'gold' : 'gray'}
                 size="sm"
               >
                 {player}
@@ -206,7 +208,7 @@ const CombinationsView = () => {
         ),
       },
     ],
-    [selectedPlayer]
+    [selectedPlayers]
   );
 
   const rosterConstructionColumns: DataTableProps<RosterConstructionCount>['columns'] =
@@ -258,8 +260,8 @@ const CombinationsView = () => {
                   Required Players
                 </Text>
                 <PlayerAutocomplete
-                  value={selectedPlayer}
-                  onChange={setSelectedPlayer}
+                  value={selectedPlayers}
+                  onChange={setSelectedPlayers}
                   placeholder="e.g., A.J. Brown"
                 />
               </div>
@@ -297,7 +299,7 @@ const CombinationsView = () => {
               <Button
                 onClick={handleSearch}
                 disabled={
-                  selectedPlayer.length === 0 || isLoading || isFetching
+                  selectedPlayers.length === 0 || isLoading || isFetching
                 }
                 loading={isLoading || isFetching}
                 className="bg-signal-green hover:bg-turf-dark"
