@@ -539,17 +539,32 @@ body {
   color: var(--color-gridiron-graphite) !important;
 }
 
-/* Generic Pill styles (applies to Mantine Pill component used by MultiSelect) */
-.mantine-Pill-root {
+/* Pill styles for roster players in combinations table */
+/* Required players: gold background with black text */
+.pill-required {
   background-color: var(--color-audible-gold) !important;
   color: var(--color-gridiron-graphite) !important;
   border: none !important;
 }
 
-.mantine-Pill-label {
+.pill-required .mantine-Pill-label {
   color: var(--color-gridiron-graphite) !important;
   font-weight: 600;
 }
+
+/* Non-required players: neutral gray background with darker gray text */
+.pill-default {
+  background-color: #e5e7eb !important; /* Tailwind gray-200 */
+  color: #374151 !important; /* Tailwind gray-700 */
+  border: none !important;
+}
+
+.dark .pill-default {
+  background-color: #374151 !important; /* gray-700 in dark */
+  color: #d1d5db !important; /* gray-300 in dark */
+}
+
+/* Keep MultiSelect pill gold styling for selected inputs only */
 
 /* Checkbox styling inside dropdown options */
 .mantine-Checkbox-input {

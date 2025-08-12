@@ -56,36 +56,43 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
       return [];
     }
     try {
-      if (!metadataData.all_players) {
-        console.log(
-          'No all_players property in metadata:',
-          Object.keys(metadataData)
-        );
+      const { all_players } = metadataData as unknown as {
+        all_players?: unknown;
+      };
+
+      if (!all_players) {
+        console.log('No all_players property in metadata:', Object.keys(metadataData));
         return [];
       }
-      if (!Array.isArray(metadataData.all_players)) {
-        console.log(
-          'all_players is not an array:',
-          typeof metadataData.all_players,
-          metadataData.all_players
-        );
+      if (!Array.isArray(all_players)) {
+        console.log('all_players is not an array:', typeof all_players, all_players);
         return [];
+      }
+
+      // Normalize to string[] whether the API returns string[] or { name: string }[]
+      const names: string[] = [];
+      for (const item of all_players as unknown[]) {
+        if (typeof item === 'string') {
+          names.push(item);
+        } else if (
+          item &&
+          typeof item === 'object' &&
+          'name' in (item as Record<string, unknown>) &&
+          typeof (item as Record<string, unknown>).name === 'string'
+        ) {
+          names.push((item as Record<string, unknown>).name as string);
+        }
       }
 
       // Use Set to track unique player names and prevent duplicates
       const uniqueNames = new Set<string>();
       const options: string[] = [];
-
-      metadataData.all_players.forEach((playerName: string) => {
-        if (
-          playerName &&
-          typeof playerName === 'string' &&
-          !uniqueNames.has(playerName)
-        ) {
-          uniqueNames.add(playerName);
-          options.push(playerName);
+      for (const name of names) {
+        if (name && !uniqueNames.has(name)) {
+          uniqueNames.add(name);
+          options.push(name);
         }
-      });
+      }
 
       return options.sort();
     } catch (error) {
@@ -97,15 +104,13 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
   // Filter options based on search value
   const filteredOptions = useMemo(() => {
     try {
-      if (!debouncedSearch) return playerOptions;
-
       const search = debouncedSearch.toLowerCase();
       return playerOptions.filter(
         playerName => playerName && playerName.toLowerCase().includes(search)
       );
     } catch (err) {
       console.error('Error filtering options:', err);
-      return playerOptions;
+      return [];
     }
   }, [playerOptions, debouncedSearch]);
 
@@ -135,9 +140,11 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
         searchable
         clearable
         disabled={disabled || isLoading}
-
         maxDropdownHeight={320}
-        comboboxProps={{ transitionProps: { duration: 200, transition: 'pop' } }}
+        comboboxProps={{
+          transitionProps: { duration: 200, transition: 'pop' },
+          onOptionSubmit: (val: string) => onChange(val || ''),
+        }}
         styles={{
           dropdown: {
             border: '1px solid #e5e7eb',
@@ -168,7 +175,28 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
       disabled={disabled || isLoading}
       limit={50}
       maxDropdownHeight={320}
-      comboboxProps={{ transitionProps: { duration: 200, transition: 'pop' } }}
+      onKeyDown={e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const trimmed = searchValue.trim().toLowerCase();
+          const exactMatch = filteredOptions.find(
+            opt => opt.toLowerCase() === trimmed
+          );
+          const candidate = exactMatch || filteredOptions[0];
+          if (candidate && !value.includes(candidate)) {
+            onChange([...value, candidate]);
+            setSearchValue('');
+          }
+        }
+      }}
+      comboboxProps={{
+        transitionProps: { duration: 200, transition: 'pop' },
+        onOptionSubmit: (val: string) => {
+          if (val && !value.includes(val)) {
+            onChange([...value, val]);
+          }
+        },
+      }}
       styles={{
         dropdown: {
           border: '1px solid #e5e7eb',

@@ -12,10 +12,10 @@ import {
   Group,
   Slider,
   Button,
-  Badge,
   SegmentedControl,
   NumberInput,
   Grid,
+  Badge,
 } from '@mantine/core';
 import { DataTable } from 'mantine-datatable';
 import type { TeamCombination, RosterConstructionCount } from '../../types';
@@ -192,16 +192,22 @@ const CombinationsView = () => {
         title: 'Roster',
         render: (record: TeamCombination) => (
           <div className="flex flex-wrap gap-1">
-            {record.players.map(player => (
-              <Badge
-                key={`${record.draft_id}-${record.draft_position}-${player}`}
-                variant={selectedPlayers.includes(player) ? 'filled' : 'light'}
-                color={selectedPlayers.includes(player) ? 'gold' : 'gray'}
-                size="sm"
-              >
-                {player}
-              </Badge>
-            ))}
+            {record.players.map(player => {
+              const isRequired = selectedPlayers
+                .map(p => p.toLowerCase())
+                .includes(player.toLowerCase());
+              return (
+                <Badge
+                  key={`${record.draft_id}-${record.draft_position}-${player}`}
+                  size="sm"
+                  radius="sm"
+                  color={isRequired ? 'gold' : 'gray'}
+                  variant={isRequired ? 'filled' : 'light'}
+                >
+                  {player}
+                </Badge>
+              );
+            })}
           </div>
         ),
       },
@@ -258,6 +264,7 @@ const CombinationsView = () => {
                   Required Players
                 </Text>
                 <PlayerAutocomplete
+                  multiple
                   value={selectedPlayers}
                   onChange={setSelectedPlayers}
                   placeholder="e.g., A.J. Brown"
@@ -320,7 +327,7 @@ const CombinationsView = () => {
             </Alert>
           )}
 
-          {isSubmitted && !isLoading && !isFetching && !error && (
+          {data && !isLoading && !isFetching && !error && (
             <Paper
               withBorder
               shadow="sm"
@@ -404,6 +411,7 @@ const CombinationsView = () => {
                   Required Players
                 </Text>
                 <PlayerAutocomplete
+                  multiple
                   value={rosterSelectedPlayers}
                   onChange={setRosterSelectedPlayers}
                   placeholder="e.g., A.J. Brown"
