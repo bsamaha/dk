@@ -162,7 +162,7 @@ def test_get_player_combinations(query_service):
     if len(players) >= 2:
         required_players = [players[0].name, players[1].name]
         combinations = query_service.get_player_combinations(
-            required_players=required_players, n_rounds=20, limit=10
+            required_players=required_players, n_rounds=20, limit=10, offset=0
         )
         assert isinstance(combinations, list)
         # We might not have combinations, but the structure should be correct
@@ -182,7 +182,7 @@ def test_get_player_combinations(query_service):
 def test_get_player_combinations_empty_list(query_service):
     """Test player combinations with empty required players list."""
     combinations = query_service.get_player_combinations(
-        required_players=[], n_rounds=20, limit=10
+        required_players=[], n_rounds=20, limit=10, offset=0
     )
     assert combinations == []
 

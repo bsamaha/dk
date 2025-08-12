@@ -168,6 +168,34 @@ def test_player_combinations(client):
     assert "required_players" in data["filter_applied"]
 
 
+def test_player_combinations_pagination(client):
+    """Ensure combinations endpoint supports limit/offset and returns total."""
+    base = (
+        "/api/combinations/?required_players=Josh Allen"
+        "&required_players=Stefon Diggs"
+        "&limit=1"
+    )
+    # First page
+    r1 = client.get(base + "&offset=0")
+    assert r1.status_code == 200
+    d1 = r1.json()
+    assert "total_combinations" in d1
+    assert "combinations" in d1
+    assert len(d1["combinations"]) <= 1
+    assert d1["filter_applied"].get("limit") == 1
+    assert d1["filter_applied"].get("offset") == 0
+
+    # Second page
+    r2 = client.get(base + "&offset=1")
+    assert r2.status_code == 200
+    d2 = r2.json()
+    assert "total_combinations" in d2
+    assert "combinations" in d2
+    assert len(d2["combinations"]) <= 1
+    assert d2["filter_applied"].get("limit") == 1
+    assert d2["filter_applied"].get("offset") == 1
+
+
 def test_player_combinations_missing_required_players(client):
     """Test player combinations endpoint with missing required_players parameter."""
     response = client.get("/api/combinations/")
