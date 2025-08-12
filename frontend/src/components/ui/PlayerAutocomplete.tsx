@@ -107,6 +107,9 @@ const PlayerAutocomplete = ({
 
   return (
     <MultiSelect
+      classNames={{
+        input: 'border-audible-gold',
+      }}
       data={filteredOptions}
       value={value}
       onChange={newValues => {

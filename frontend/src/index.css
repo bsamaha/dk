@@ -508,3 +508,44 @@ body {
   background-color: #e6f9f2 !important; /* Light green tint */
   color: #016140 !important; /* Turf Dark Green from brand book */
 }
+
+/* Gold outline styling for inputs and multiselect chips (Audible Gold) */
+.mantine-MultiSelect-root .mantine-Input-input,
+.mantine-Select-root .mantine-Input-input,
+.mantine-TextInput-root .mantine-Input-input {
+  border-color: var(--color-audible-gold);
+}
+
+.mantine-MultiSelect-root .mantine-Input-input:focus,
+.mantine-Select-root .mantine-Input-input:focus,
+.mantine-TextInput-root .mantine-Input-input:focus {
+  outline: 2px solid var(--color-audible-gold);
+  box-shadow: 0 0 0 2px rgba(255, 195, 0, 0.35);
+  border-color: var(--color-audible-gold);
+}
+
+/* MultiSelect pill/chip styling */
+.mantine-MultiSelect-pill {
+  background-color: rgba(255, 195, 0, 0.15) !important;
+  color: var(--color-gridiron-graphite) !important;
+  border: 1px solid var(--color-audible-gold) !important;
+}
+
+.dark .mantine-MultiSelect-pill {
+  background-color: rgba(255, 195, 0, 0.2) !important;
+  color: var(--color-white) !important;
+}
+
+/* Checkbox styling inside dropdown options */
+.mantine-Checkbox-input {
+  border-color: var(--color-audible-gold) !important;
+}
+.mantine-Checkbox-input:checked {
+  background-color: var(--color-audible-gold) !important;
+  border-color: var(--color-audible-gold) !important;
+}
+
+/* Option hover/active with gold left border accent */
+.mantine-Select-item[data-hovered] {
+  border-left: 3px solid var(--color-audible-gold);
+}
