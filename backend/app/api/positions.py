@@ -3,8 +3,8 @@ from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from pydantic import ValidationError
-from starlette.concurrency import run_in_threadpool
 
+from ..core.async_utils import run_service
 from ..dependencies import get_query_service
 from ..models.schemas import (
     AggregationType,
@@ -28,7 +28,7 @@ router = APIRouter()
 async def get_position_stats(qs: QueryService = Depends(get_query_service)):
     """Get statistics for all positions and log raw payload when validation fails."""
     try:
-        stats = await run_in_threadpool(qs.get_position_stats)
+        stats = await run_service(qs.get_position_stats)
         # Compute total picks defensively; treat None as 0
         total_picks = sum((s.total_drafted or 0) for s in stats)
         return PositionStatsResponse(position_stats=stats, total_picks=total_picks)
@@ -80,7 +80,7 @@ async def get_first_player_position_stats(
 ):
     """Get the avg, min, and max pick for the first player drafted at each position."""
     try:
-        stats = await run_in_threadpool(qs.get_first_player_draft_stats)
+        stats = await run_service(qs.get_first_player_draft_stats)
         return {"first_player_stats": stats}
     except Exception as exc:
         logger.exception("Error getting first player stats")
@@ -101,7 +101,7 @@ async def get_position_draft_counts_by_round(
         # Validate query parameters using Pydantic schema
         params = PositionStatsQueryParams(position=position, aggregation=aggregation)
 
-        return await run_in_threadpool(
+        return await run_service(
             qs.get_position_draft_counts_by_round,
             params.position,
             params.aggregation,
@@ -119,7 +119,7 @@ async def get_roster_construction(
 ) -> List[RosterConstruction]:
     """Get roster construction statistics."""
     try:
-        return await run_in_threadpool(qs.get_roster_construction)
+        return await run_service(qs.get_roster_construction)
     except Exception as exc:
         logger.exception("Error getting roster construction")
         raise HTTPException(
@@ -138,7 +138,7 @@ async def get_roster_construction_counts(
         # Validate query parameters using Pydantic schema
         params = RosterConstructionCountsQueryParams(required_players=required_players)
 
-        return await run_in_threadpool(
+        return await run_service(
             qs.get_roster_construction_counts, params.required_players
         )
     except Exception as exc:

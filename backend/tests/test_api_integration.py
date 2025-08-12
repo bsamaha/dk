@@ -26,8 +26,10 @@ def client(app):
 def client_qs_variants(app, request):
     """Yield a TestClient with QueryService present or removed from DI."""
     with TestClient(app, raise_server_exceptions=True) as test_client:
-        if not request.param and hasattr(test_client.app.state, "query_service"):
-            delattr(test_client.app.state, "query_service")
+        app_obj = getattr(test_client, "app", None)
+        state = getattr(app_obj, "state", None)
+        if not request.param and state and hasattr(state, "query_service"):
+            delattr(state, "query_service")
         yield test_client
 
 
@@ -572,6 +574,30 @@ def test_503_when_query_service_missing(client):
     response = client.get("/api/metadata/")
     assert response.status_code == 503
     assert "unavailable" in response.text.lower()
+
+
+def test_player_combinations_invalid_limit_offset(client):
+    """Test invalid limit and offset query params are rejected with 422."""
+    base = "/api/combinations/?required_players=Aaron%20Jones"
+    r_neg_limit = client.get(base + "&limit=-1")
+    assert r_neg_limit.status_code in (400, 422)
+    assert "limit" in r_neg_limit.text.lower()
+
+    r_neg_offset = client.get(base + "&offset=-5")
+    assert r_neg_offset.status_code in (400, 422)
+    assert "offset" in r_neg_offset.text.lower()
+
+    r_zero_limit = client.get(base + "&limit=0")
+    assert r_zero_limit.status_code in (400, 422)
+    assert "limit" in r_zero_limit.text.lower()
+
+    r_str_offset = client.get(base + "&offset=abc")
+    assert r_str_offset.status_code in (400, 422)
+    assert "offset" in r_str_offset.text.lower()
+
+    r_str_limit = client.get(base + "&limit=xyz")
+    assert r_str_limit.status_code in (400, 422)
+    assert "limit" in r_str_limit.text.lower()
 
 
 def test_startup_failure_returns_503(monkeypatch):

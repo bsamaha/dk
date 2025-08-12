@@ -2,8 +2,8 @@ import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query, Request
-from starlette.concurrency import run_in_threadpool
 
+from ..core.async_utils import run_service
 from ..dependencies import get_query_service
 from ..models.validation import (
     CombinationsQueryParams,
@@ -33,7 +33,7 @@ async def get_player_combinations(
     )
 
     # Fetch total count (without pagination) and a paged window
-    combinations_all = await run_in_threadpool(
+    combinations_all = await run_service(
         qs.get_player_combinations,
         params.required_players,
         params.n_rounds,
@@ -41,7 +41,7 @@ async def get_player_combinations(
         0,
     )
     total_count = len(combinations_all)
-    combinations = await run_in_threadpool(
+    combinations = await run_service(
         qs.get_player_combinations,
         params.required_players,
         params.n_rounds,
@@ -63,7 +63,7 @@ async def get_player_combinations(
 @router.get("/roster-construction/")
 async def get_roster_construction(qs: QueryService = Depends(get_query_service)):
     """Get roster construction counts."""
-    result = await run_in_threadpool(qs.get_roster_construction)
+    result = await run_service(qs.get_roster_construction)
     return {"roster_constructions": result}
 
 
@@ -76,7 +76,7 @@ async def get_roster_construction_counts(
     """Get aggregated counts of unique roster constructions."""
     # Validate query parameters using Pydantic schema
     params = RosterConstructionCountsQueryParams(required_players=required_players)
-    counts = await run_in_threadpool(
+    counts = await run_service(
         qs.get_roster_construction_counts, params.required_players
     )
     return {"roster_construction_counts": counts}

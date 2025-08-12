@@ -29,10 +29,11 @@ type PlayerAutocompleteProps =
 
 const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
   const {
+    multiple = false,
     placeholder = 'Search and select players...',
     disabled = false,
     className = '',
-  } = props;
+  } = props as PlayerAutocompleteProps & { multiple?: boolean };
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch] = useDebouncedValue(searchValue, 300);
 
@@ -118,7 +119,7 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
     );
   }
 
-  if (props.multiple === false) {
+  if (multiple === false) {
     // Single select
     const { value, onChange } = props as PlayerAutocompleteSingleProps;
     const selectedClass = value ? 'brand-input-selected' : '';

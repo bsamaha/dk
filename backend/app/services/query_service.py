@@ -318,36 +318,6 @@ class QueryService:
             logger.exception(f"Unexpected error while validating path: {file_path}")
             raise
 
-    @staticmethod
-    def _get_data_path() -> str:
-        """Return absolute path to the parquet data file defined by settings.DATA_PATH.
-
-        Falls back to the repository root `data/` directory when running tests locally.
-        """
-        data_dir: Path = Path(settings.DATA_PATH).expanduser()
-
-        # If container mount exists, prefer it
-        container_data = Path("/app/data")
-        if container_data.exists():
-            data_dir = container_data
-
-        # Common local/dev fallbacks
-        if not data_dir.exists():
-            # If running under backend/ working directory, jump to repo root
-            project_root = Path(__file__).resolve().parents[3]
-            candidate = project_root / "data"
-            if candidate.exists():
-                data_dir = candidate
-
-        # Container path fallback
-        if str(data_dir) == "/app/data" and not data_dir.exists():
-            project_root = Path(__file__).resolve().parents[3]
-            data_dir = project_root / "data"
-
-        data_path: Path = data_dir / "updated_bestball_data.parquet"
-        validated_path = QueryService._validate_and_sanitize_path(data_path, data_dir)
-        return str(validated_path)
-
     def _load_week17_matchups(self) -> None:
         """Load Week 17 matchups data into DuckDB."""
         # Get path to Week 17 matchups file
@@ -389,8 +359,10 @@ class QueryService:
         ]
 
         # Create DuckDB table from the data
-        self._con.execute("DROP TABLE IF EXISTS week17_matchups")
-        self._con.execute("""
+        assert self._con is not None
+        con = self._con
+        con.execute("DROP TABLE IF EXISTS week17_matchups")
+        con.execute("""
             CREATE TABLE week17_matchups (
                 team VARCHAR,
                 opponent VARCHAR
@@ -398,7 +370,7 @@ class QueryService:
         """)
 
         # Insert data
-        self._con.executemany(
+        con.executemany(
             "INSERT INTO week17_matchups (team, opponent) VALUES (?, ?)", matchups_rows
         )
 

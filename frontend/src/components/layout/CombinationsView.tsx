@@ -166,7 +166,7 @@ const CombinationsView = () => {
 
   const records = useMemo(() => data?.combinations ?? [], [data]);
   const totalCombinations = data?.total_combinations ?? records.length;
-  const totalPages = Math.max(1, Math.ceil(totalCombinations / pageSize));
+  // totalPages is derived by DataTable internally via totalRecords/recordsPerPage
 
   const columns = useMemo(
     () => [

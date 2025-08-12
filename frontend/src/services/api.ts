@@ -288,8 +288,8 @@ export const apiService = {
     filters.required_players.forEach(p => params.append('required_players', p));
     params.append('n_rounds', filters.n_rounds.toString());
     params.append('limit', String(filters.limit ?? 50));
-    if (typeof (filters as any).offset === 'number') {
-      params.append('offset', String((filters as any).offset));
+    if (typeof filters.offset === 'number') {
+      params.append('offset', String(filters.offset));
     }
     const response = await api.get(`/combinations/?${params.toString()}`);
     return response.data;
