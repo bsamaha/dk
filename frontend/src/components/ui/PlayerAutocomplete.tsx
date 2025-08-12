@@ -165,7 +165,6 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
       searchable
       clearable
       disabled={disabled || isLoading}
-      className={className}
       limit={50}
       maxDropdownHeight={320}
       comboboxProps={{ transitionProps: { duration: 200, transition: 'pop' } }}
