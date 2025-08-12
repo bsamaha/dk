@@ -168,7 +168,7 @@ const PlayersView = () => {
           <Title order={4} className="text-white">
             Player Search & Filters
           </Title>
-          {(selectedPlayer || activePositions.length > 0) && (
+          {(selectedPlayers.length > 0 || activePositions.length > 0) && (
             <Button
               variant="outline"
               onClick={handleClearFilters}
