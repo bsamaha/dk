@@ -107,6 +107,7 @@ const OverviewView = () => {
   // Quick stats and pie data
   const quickStats = useQuickStats(positionStats);
   const pieData = useCorePieData(positionStats);
+  const CORE_POSITIONS = ['QB', 'RB', 'WR', 'TE'] as const;
 
   // Stabilize charts once on data ready
   useEffect(() => {
@@ -259,10 +260,16 @@ const OverviewView = () => {
             </div>
             <div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-                {quickStats.map(stat => (
-                  <div key={stat.position} className="text-center border rounded-md p-3">
-                    <p className="uppercase text-xs font-semibold text-gray-500">{stat.position} Drafted</p>
-                    <p className="text-signal-green mt-1 font-bold text-lg">{stat.total.toLocaleString()}</p>
+                {(quickStats.length ? quickStats.map(s => s.position) : CORE_POSITIONS).map((pos, idx) => (
+                  <div key={`${pos}-${idx}`} className="text-center border rounded-md p-3">
+                    <p className="uppercase text-xs font-semibold text-gray-500">{pos} Drafted</p>
+                    {quickStats.length ? (
+                      <p className="text-signal-green mt-1 font-bold text-lg">
+                        {quickStats.find(s => s.position === pos)?.total.toLocaleString()}
+                      </p>
+                    ) : (
+                      <div className="h-6 w-20 mx-auto mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                    )}
                   </div>
                 ))}
               </div>

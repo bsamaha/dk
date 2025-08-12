@@ -83,6 +83,7 @@ export interface CombinationsResponse {
     required_players: string[];
     n_rounds: number;
     limit: number;
+    offset?: number;
   };
 }
 
@@ -169,6 +170,7 @@ export interface CombinationFilter {
   required_players: string[];
   n_rounds: number;
   limit?: number;
+  offset?: number;
 }
 
 // UI State Types

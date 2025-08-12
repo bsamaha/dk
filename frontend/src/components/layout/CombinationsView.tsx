@@ -30,6 +30,8 @@ const CombinationsView = () => {
   const [selectedPlayer, setSelectedPlayer] = useState<string>('');
   const [nRounds, setNRounds] = useState<number>(20);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
 
   // State for Roster Constructions
   const [rosterView, setRosterView] = useState<'table' | 'chart'>('table');
@@ -56,12 +58,13 @@ const CombinationsView = () => {
   });
 
   const { data, isLoading, error, isFetching } = useQuery({
-    queryKey: ['combinations', selectedPlayer, nRounds],
+    queryKey: ['combinations', selectedPlayer, nRounds, page],
     queryFn: () =>
       apiService.getPlayerCombinations({
         required_players: selectedPlayer ? [selectedPlayer] : [],
         n_rounds: nRounds,
-        limit: 500,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
       }),
     enabled: isSubmitted && selectedPlayer.length > 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -163,6 +166,7 @@ const CombinationsView = () => {
 
   const records = useMemo(() => data?.combinations ?? [], [data]);
   const totalCombinations = data?.total_combinations ?? records.length;
+  const totalPages = Math.max(1, Math.ceil(totalCombinations / pageSize));
 
   const columns = useMemo(
     () => [
@@ -340,6 +344,10 @@ const CombinationsView = () => {
                 }
                 columns={columns}
                 noRecordsText="No teams found with this combination. Try expanding your search criteria."
+                totalRecords={totalCombinations}
+                recordsPerPage={pageSize}
+                page={page}
+                onPageChange={setPage}
               />
             </Paper>
           )}

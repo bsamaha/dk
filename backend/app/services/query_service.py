@@ -785,7 +785,8 @@ class QueryService:
         self,
         required_players: List[str],
         n_rounds: int = 20,
-        limit: int = 100,
+        limit: int = 50,
+        offset: int = 0,
     ) -> List[Dict[str, Any]]:
         """Return teams that drafted all required players within first n_rounds."""
         # Validate inputs
@@ -793,6 +794,8 @@ class QueryService:
             raise ValueError("n_rounds must be between 1 and 50")
         if not isinstance(limit, int) or limit < 1 or limit > 1000:
             raise ValueError("limit must be between 1 and 1000")
+        if not isinstance(offset, int) or offset < 0:
+            raise ValueError("offset must be >= 0")
 
         # Validate and clean required_players
         required_players = self._validate_required_players(required_players)
@@ -852,7 +855,6 @@ class QueryService:
             )
             .collect()
             .sort(["draft_id", "draft_position"])
-            .head(limit)
         )
 
         if result_df.is_empty():
@@ -897,8 +899,16 @@ class QueryService:
                 pl.lit(None, dtype=pl.String).alias("position_counts")
             )
 
-        logger.info("Combination query returned %d teams", final_result_df.height)
-        return final_result_df.to_dicts()
+        # Apply pagination window (offset, limit) on team rows
+        paged_df = final_result_df.slice(offset, limit)
+
+        logger.info(
+            "Combination query returned %d teams (paged: %d from offset %d)",
+            final_result_df.height,
+            paged_df.height,
+            offset,
+        )
+        return paged_df.to_dicts()
 
     def get_stacks(self, n_rounds: int = 10, limit: int = 100) -> List[Dict[str, Any]]:
         """Find QB/receiver stacks drafted within first n_rounds."""

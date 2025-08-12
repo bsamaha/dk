@@ -64,10 +64,14 @@ async def get_position_stats(qs: QueryService = Depends(get_query_service)):
             )
         except Exception:  # pragma: no cover – logging helper should never crash
             logger.exception("Failed to serialise offending payload for log")
-        raise HTTPException(status_code=500, detail="Invalid position stats payload")
-    except Exception:
+        raise HTTPException(
+            status_code=500, detail="Invalid position stats payload"
+        ) from exc
+    except Exception as exc:
         logger.exception("Error getting position stats")
-        raise HTTPException(status_code=500, detail="An internal error occurred")
+        raise HTTPException(
+            status_code=500, detail="An internal error occurred"
+        ) from exc
 
 
 @router.get("/stats/first_player")
@@ -78,9 +82,11 @@ async def get_first_player_position_stats(
     try:
         stats = await run_in_threadpool(qs.get_first_player_draft_stats)
         return {"first_player_stats": stats}
-    except Exception:
+    except Exception as exc:
         logger.exception("Error getting first player stats")
-        raise HTTPException(status_code=500, detail="An internal error occurred")
+        raise HTTPException(
+            status_code=500, detail="An internal error occurred"
+        ) from exc
 
 
 @router.get("/stats/{position}/by_round")
@@ -100,9 +106,11 @@ async def get_position_draft_counts_by_round(
             params.position,
             params.aggregation,
         )
-    except Exception:
+    except Exception as exc:
         logger.exception("Error getting position draft counts")
-        raise HTTPException(status_code=500, detail="An internal error occurred")
+        raise HTTPException(
+            status_code=500, detail="An internal error occurred"
+        ) from exc
 
 
 @router.get("/roster-construction")
@@ -112,9 +120,11 @@ async def get_roster_construction(
     """Get roster construction statistics."""
     try:
         return await run_in_threadpool(qs.get_roster_construction)
-    except Exception:
+    except Exception as exc:
         logger.exception("Error getting roster construction")
-        raise HTTPException(status_code=500, detail="An internal error occurred")
+        raise HTTPException(
+            status_code=500, detail="An internal error occurred"
+        ) from exc
 
 
 @router.get("/roster-construction/counts")
@@ -131,6 +141,8 @@ async def get_roster_construction_counts(
         return await run_in_threadpool(
             qs.get_roster_construction_counts, params.required_players
         )
-    except Exception:
+    except Exception as exc:
         logger.exception("Error getting roster construction counts")
-        raise HTTPException(status_code=500, detail="An internal error occurred")
+        raise HTTPException(
+            status_code=500, detail="An internal error occurred"
+        ) from exc
