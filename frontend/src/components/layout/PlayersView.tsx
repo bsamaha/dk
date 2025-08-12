@@ -65,7 +65,7 @@ const PlayersView = () => {
   // State for filters
   const [activePage, setActivePage] = useState(1);
   const [activePositions, setActivePositions] = useState<Position[]>([]);
-  const [selectedPlayer, setSelectedPlayer] = useState<string>('');
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
 
   const [selectedPlayerDetails, setSelectedPlayerDetails] =
     useState<Player | null>(null);
@@ -75,11 +75,7 @@ const PlayersView = () => {
     data: playersData,
     isFetching: isPlayersFetching,
     error: playersError,
-  } = usePlayers(
-    activePage,
-    activePositions,
-    selectedPlayer ? [selectedPlayer] : []
-  );
+  } = usePlayers(activePage, activePositions, selectedPlayers);
 
   const { data: playerDetailsData, isLoading: isPlayerDetailsLoading } =
     useQuery({
@@ -116,15 +112,18 @@ const PlayersView = () => {
 
   // Track player selection when data loads
   useEffect(() => {
-    if (playersData && selectedPlayer) {
-      debouncedTrackPlayerSearch(selectedPlayer, playersData.total_count || 0);
+    if (playersData && selectedPlayers.length > 0) {
+      debouncedTrackPlayerSearch(
+        selectedPlayers.join(', '),
+        playersData.total_count || 0
+      );
     }
-  }, [playersData, selectedPlayer, debouncedTrackPlayerSearch]);
+  }, [playersData, selectedPlayers, debouncedTrackPlayerSearch]);
 
   // Handlers
   const handleClearFilters = () => {
     setActivePositions([]);
-    setSelectedPlayer('');
+    setSelectedPlayers([]);
     setActivePage(1);
   };
 
@@ -186,16 +185,16 @@ const PlayersView = () => {
             <Text size="sm" fw={500} mb="xs">
               Search Player:
             </Text>
-            <PlayerAutocomplete
-              value={selectedPlayer}
-              onChange={setSelectedPlayer}
-              placeholder="Search and select a player..."
-            />
-            {selectedPlayer && (
-              <Text size="sm" c="dimmed" mt="xs">
-                Selected: {selectedPlayer}
-              </Text>
-            )}
+              <PlayerAutocomplete
+                value={selectedPlayers}
+                onChange={setSelectedPlayers}
+                placeholder="Search and select players..."
+              />
+              {selectedPlayers.length > 0 && (
+                <Text size="sm" c="dimmed" mt="xs">
+                  Selected: {selectedPlayers.join(', ')}
+                </Text>
+              )}
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 6 }}>
