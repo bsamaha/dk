@@ -32,15 +32,12 @@ async def get_player_combinations(
         offset=offset,
     )
 
-    # Fetch total count (without pagination) and a paged window
-    combinations_all = await run_service(
-        qs.get_player_combinations,
+    # Fetch accurate total count (without pagination window)
+    total_count = await run_service(
+        qs.get_player_combinations_count,
         params.required_players,
         params.n_rounds,
-        1000,  # cap for safety to avoid runaway
-        0,
     )
-    total_count = len(combinations_all)
     combinations = await run_service(
         qs.get_player_combinations,
         params.required_players,

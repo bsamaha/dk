@@ -882,6 +882,52 @@ class QueryService:
         )
         return paged_df.to_dicts()
 
+    def get_player_combinations_count(
+        self, required_players: List[str], n_rounds: int = 20
+    ) -> int:
+        """Return the total number of teams that drafted all required players
+        within the first ``n_rounds``.
+
+        This performs a lightweight COUNT over the same filtered set used by
+        ``get_player_combinations`` rather than materializing rows. It ensures
+        the API can report an accurate total even when pagination is applied.
+        """
+        # Validate inputs
+        if not isinstance(n_rounds, int) or n_rounds < 1 or n_rounds > 50:
+            raise ValueError("n_rounds must be between 1 and 50")
+
+        # Validate and clean required_players
+        required_players = self._validate_required_players(required_players)
+
+        if not required_players:
+            return 0
+
+        placeholders: str = ", ".join(["?" for _ in required_players])
+        num_required: int = len(required_players)
+
+        # nosec B608 - static SQL structure, parameters are parameterized
+        sql: str = f"""
+        WITH filtered AS (
+            SELECT draft, draft_position, player, round
+            FROM picks
+            WHERE round <= ?
+        ), target_teams AS (
+            SELECT draft, draft_position
+            FROM filtered
+            WHERE player IN ({placeholders})
+            GROUP BY draft, draft_position
+            HAVING COUNT(DISTINCT player) = ?
+        )
+        SELECT COUNT(*) AS total
+        FROM target_teams;
+        """
+
+        params: List[Any] = [n_rounds] + required_players + [num_required]
+        df: pl.DataFrame = self.query(sql, params)
+        if df.is_empty():
+            return 0
+        return int(df["total"][0])
+
     def get_stacks(self, n_rounds: int = 10, limit: int = 100) -> List[Dict[str, Any]]:
         """Find QB/receiver stacks drafted within first n_rounds."""
         # Validate inputs
