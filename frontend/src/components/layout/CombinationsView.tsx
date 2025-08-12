@@ -47,7 +47,7 @@ const CombinationsView = () => {
     TE: {},
   });
 
-  const [rosterSelectedPlayer, setRosterSelectedPlayer] = useState<string>('');
+  const [rosterSelectedPlayers, setRosterSelectedPlayers] = useState<string[]>([]);
   const [chartData, setChartData] = useState<
     Record<CorePosition, { count: number; teams: number }[]>
   >({
@@ -75,11 +75,9 @@ const CombinationsView = () => {
     data: rosterConstructionCounts,
     isLoading: isRosterConstructionLoading,
   } = useQuery<RosterConstructionCount[], Error>({
-    queryKey: ['rosterConstructionCounts', rosterSelectedPlayer],
+    queryKey: ['rosterConstructionCounts', rosterSelectedPlayers],
     queryFn: () =>
-      apiService.getRosterConstructionCounts(
-        rosterSelectedPlayer ? [rosterSelectedPlayer] : []
-      ),
+      apiService.getRosterConstructionCounts(rosterSelectedPlayers),
     enabled: view === 'rosters',
   });
 
@@ -406,8 +404,8 @@ const CombinationsView = () => {
                   Required Players
                 </Text>
                 <PlayerAutocomplete
-                  value={rosterSelectedPlayer}
-                  onChange={setRosterSelectedPlayer}
+                  value={rosterSelectedPlayers}
+                  onChange={setRosterSelectedPlayers}
                   placeholder="e.g., A.J. Brown"
                 />
               </div>
