@@ -46,24 +46,18 @@ import {
   DraftSlotResponseSchema,
   Week17BringBackResponseSchema,
   SearchPlayersResponseSchema,
+  PositionRoundCountsResponseSchema,
 } from '../utils/api-validation';
 
 // Create axios instance with base configuration
 // Determine API base URL dynamically
 // Determine whether we're running under a local Vite/React dev server.
-const isLocalhost =
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1';
-const isDevServerPort = window.location.port === '5173';
-
 // 1) Prefer explicit build-time environment variable (defined in .env or CI)
+// 2) In development, always talk to the backend at localhost:8000
+// 3) Otherwise (docker / prod) use same-origin relative path handled by FastAPI
 const baseURL =
   import.meta.env.VITE_API_BASE_URL ||
-  // 2) If we're on localhost *and* the port matches a known Vite dev server
-  (isLocalhost && isDevServerPort
-    ? 'http://localhost:8000/api'
-    : // 3) Otherwise (docker / prod) use same-origin relative path handled by FastAPI
-      '/api');
+  (import.meta.env.DEV ? 'http://localhost:8000/api' : '/api');
 
 const api = axios.create({
   baseURL,
@@ -73,6 +67,13 @@ const api = axios.create({
   },
 });
 
+// Dev helper: log resolved API base once on module init
+devLog('[API] baseURL resolved', {
+  baseURL,
+  dev: import.meta.env.DEV,
+  origin: typeof window !== 'undefined' ? window.location.origin : 'n/a',
+});
+
 // Schema mapping for centralized validation
 const endpointSchemas: Record<string, z.ZodSchema> = {
   '/metadata/': MetadataResponseSchema,
@@ -80,6 +81,8 @@ const endpointSchemas: Record<string, z.ZodSchema> = {
   '/players/search': SearchPlayersResponseSchema,
   '/positions/stats': PositionStatsResponseSchema,
   '/positions/stats/first_player': z.array(FirstPlayerDraftStatsSchema),
+  // Dynamic: validate /positions/stats/{position}/by_round
+  '/positions/stats/{position}/by_round': PositionRoundCountsResponseSchema,
   '/combinations/': CombinationsResponseSchema,
   '/positions/roster-construction/': RosterConstructionResponseSchema,
   '/positions/roster-construction/counts': z.array(
@@ -267,9 +270,13 @@ export const apiService = {
     position: Position,
     aggregation: 'mean' | 'median' = 'mean'
   ): Promise<PositionRoundCountsResponse> {
-    const response = await api.get(
-      `/positions/stats/${position}/by_round?aggregation=${aggregation}`
-    );
+    const url = `/positions/stats/${position}/by_round?aggregation=${aggregation}`;
+    devLog('[API] getPositionDraftCountsByRound', {
+      position,
+      aggregation,
+      url,
+    });
+    const response = await api.get(url);
     return response.data;
   },
 
@@ -280,8 +287,9 @@ export const apiService = {
     const params = new URLSearchParams();
     filters.required_players.forEach(p => params.append('required_players', p));
     params.append('n_rounds', filters.n_rounds.toString());
-    if (filters.limit) {
-      params.append('limit', filters.limit.toString());
+    params.append('limit', String(filters.limit ?? 50));
+    if (typeof filters.offset === 'number') {
+      params.append('offset', String(filters.offset));
     }
     const response = await api.get(`/combinations/?${params.toString()}`);
     return response.data;

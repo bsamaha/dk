@@ -347,7 +347,10 @@ class TestCombinationsQueryParams:
     def test_valid_params(self):
         """Test valid parameters."""
         params = CombinationsQueryParams(
-            required_players=["Tom Brady", "Mike Evans"], n_rounds=15, limit=200
+            required_players=["Tom Brady", "Mike Evans"],
+            n_rounds=15,
+            limit=200,
+            offset=0,
         )
         assert params.required_players == ["Tom Brady", "Mike Evans"]
         assert params.n_rounds == 15
@@ -356,14 +359,16 @@ class TestCombinationsQueryParams:
     def test_empty_required_players(self):
         """Test empty required players."""
         with pytest.raises(ValidationError) as exc_info:
-            CombinationsQueryParams(required_players=[], n_rounds=20, limit=100)
+            CombinationsQueryParams(
+                required_players=[], n_rounds=20, limit=100, offset=0
+            )
         assert "At least one required player must be specified" in str(exc_info.value)
 
     def test_invalid_player_name(self):
         """Test invalid player name."""
         with pytest.raises(ValidationError) as exc_info:
             CombinationsQueryParams(
-                required_players=["Tom@Brady"], n_rounds=20, limit=100
+                required_players=["Tom@Brady"], n_rounds=20, limit=100, offset=0
             )
         assert "Invalid player name: Tom@Brady" in str(exc_info.value)
 
@@ -373,6 +378,7 @@ class TestCombinationsQueryParams:
             required_players=["Tom Brady", "Tom Brady", "Mike Evans"],
             n_rounds=20,
             limit=100,
+            offset=0,
         )
         assert params.required_players == ["Tom Brady", "Mike Evans"]
 

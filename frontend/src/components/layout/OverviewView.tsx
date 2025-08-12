@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { apiService } from '../../services/api';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useYouTubePlaylistId } from '../../hooks/useMediaEmbeds';
@@ -17,7 +17,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { Select, SegmentedControl, Loader } from '@mantine/core';
+import { Select, SegmentedControl, Loader, Alert } from '@mantine/core';
 import type { Position } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
 import { PositionLegend } from '../ui/PositionLegend';
@@ -32,13 +32,14 @@ import { useCorePieData } from '../../hooks/useCorePieData';
 const OverviewView = () => {
   const { isMobile, responsive } = useResponsive();
   const { colorScheme } = useColorScheme();
+  const [key, setKey] = useState(0);
+  const hasForcedRerender = useRef(false);
 
   // Theme-aware values
   const isDark = colorScheme === 'dark';
   const tickColor = isDark ? '#ffffff' : '#374151';
 
   // Shared chart color map to keep legend and segments in sync (brand-based)
-  // Static map; reference directly to avoid extra hook usage
   const chartColors = CHART_COLORS_CORE;
 
   const { isLoading: metadataLoading } = useQuery({
@@ -60,14 +61,24 @@ const OverviewView = () => {
     'QB' | 'RB' | 'WR' | 'TE'
   >('QB');
   const [aggregation, setAggregation] = useState<'mean' | 'median'>('mean');
+  const [roundChartKey, setRoundChartKey] = useState(0);
+  const hasForcedRoundRerender = useRef(false);
 
-  const { data: roundCountsData, isLoading: roundCountsLoading } = useQuery({
+  const {
+    data: roundCountsData,
+    isLoading: roundCountsLoading,
+    isError: roundCountsError,
+    error: roundCountsErrorObj,
+  } = useQuery({
     queryKey: ['roundCounts', selectedPosition, aggregation],
     queryFn: () =>
       apiService.getPositionDraftCountsByRound(
         selectedPosition as Position,
         aggregation
       ),
+    retry: 2,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const roundBarData = useMemo(
@@ -79,7 +90,7 @@ const OverviewView = () => {
     [roundCountsData]
   );
 
-  // Embeds (must be declared before any early returns due to hooks naming)
+  // Embeds
   const YOUTUBE_URL = 'https://www.youtube.com/@TheSignalCallers/videos';
   const YT_UPLOADS_PLAYLIST_ID =
     (import.meta as ImportMeta).env?.VITE_YT_UPLOADS_PLAYLIST_ID as
@@ -93,13 +104,35 @@ const OverviewView = () => {
     YT_CHANNEL_ID
   );
 
-  // Quick stats ordered for display
+  // Quick stats and pie data
   const quickStats = useQuickStats(positionStats);
-
-  // Pie data derived via reusable hook (core positions only)
   const pieData = useCorePieData(positionStats);
+  const CORE_POSITIONS = ['QB', 'RB', 'WR', 'TE'] as const;
 
-  // Handle error state for position stats query
+  // Stabilize charts once on data ready
+  useEffect(() => {
+    if (
+      !hasForcedRerender.current &&
+      !positionStatsLoading &&
+      positionStats &&
+      pieData.length > 0
+    ) {
+      hasForcedRerender.current = true;
+      setKey(prev => prev + 1);
+    }
+  }, [positionStatsLoading, positionStats, pieData.length]);
+
+  useEffect(() => {
+    if (
+      !hasForcedRoundRerender.current &&
+      !roundCountsLoading &&
+      roundBarData.length > 0
+    ) {
+      hasForcedRoundRerender.current = true;
+      setRoundChartKey(prev => prev + 1);
+    }
+  }, [roundCountsLoading, roundBarData.length]);
+
   if (positionStatsError) {
     if (import.meta.env.DEV) {
       console.error('Position Stats Query Error:', positionStatsError);
@@ -129,11 +162,6 @@ const OverviewView = () => {
     );
   }
 
-
-  // Removed unused barData derivation; keep focused on current charts
-
-  // Quick stats already computed above
-
   return (
     <div className="space-y-6 text-gridiron-graphite dark:text-white">
       <div>
@@ -149,124 +177,117 @@ const OverviewView = () => {
         </div>
       </div>
 
-      {/* Key Metrics removed (moved to sidebar) */}
-
       {/* Charts */}
       <div className={`grid ${responsive.chartGrid}`}>
         {/* Position Distribution + Quick Stats */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
+          <h2 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
             Position Draft Distribution
-          </h3>
+          </h2>
           <div className="grid grid-cols-1 gap-6 pt-2 md:pt-4">
             <div className={`${responsive.pieContainerHeight} ${responsive.pieContainerMargin} flex flex-col items-center justify-center`}>
               <div className="w-full h-full max-w-[640px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer key={`pie-container-${key}`} width="100%" height="100%">
                   <PieChart margin={{ top: 20, right: isMobile ? 50 : 40, bottom: 20, left: isMobile ? 50 : 40 }}>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="45%"
-                    label={(props: { name?: string; value?: number; cx?: number; cy?: number; midAngle?: number; outerRadius?: number }) => (
-                      <ResponsivePieLabel
-                        name={props.name ?? ''}
-                        value={props.value ?? 0}
-                        cx={props.cx ?? 0}
-                        cy={props.cy ?? 0}
-                        midAngle={props.midAngle ?? 0}
-                        outerRadius={props.outerRadius ?? 0}
-                        isMobile={isMobile}
-                      />
-                    )}
-                    labelLine={false}
-                    outerRadius={isMobile ? 110 : 140}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    // recharts types are permissive; define minimal shape we use
-                    content={({ active, payload }: { active?: boolean; payload?: Array<{ name?: string; value?: number; payload?: { count?: number } }> }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0];
-                        const positionName = (data.name ?? '') as string;
-                        const color = isCorePosition(positionName)
-                          ? chartColors[positionName]
-                          : chartColors.WR;
-                        return (
-                          <div
-                            style={{
-                              backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-                              border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
-                              borderRadius: '6px',
-                              boxShadow: isDark
-                                ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                                : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                              color: isDark ? '#FFFFFF' : '#1F2937',
-                              padding: '10px',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            <p
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="45%"
+                      label={(props: { name?: string; value?: number; cx?: number; cy?: number; midAngle?: number; outerRadius?: number }) => (
+                        <ResponsivePieLabel
+                          name={props.name ?? ''}
+                          value={props.value ?? 0}
+                          cx={props.cx ?? 0}
+                          cy={props.cy ?? 0}
+                          midAngle={props.midAngle ?? 0}
+                          outerRadius={props.outerRadius ?? 0}
+                          isMobile={isMobile}
+                        />
+                      )}
+                      labelLine={false}
+                      outerRadius={isMobile ? 110 : 140}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={({ active, payload }: { active?: boolean; payload?: Array<{ name?: string; value?: number; payload?: { count?: number } }> }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0];
+                          const positionName = (data.name ?? '') as string;
+                          const color = isCorePosition(positionName)
+                            ? chartColors[positionName]
+                            : chartColors.WR;
+                          return (
+                            <div
                               style={{
-                                margin: '0 0 6px 0',
-                                fontWeight: 600,
+                                backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+                                border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
+                                borderRadius: '6px',
+                                boxShadow: isDark
+                                  ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+                                  : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                color: isDark ? '#FFFFFF' : '#1F2937',
+                                padding: '10px',
+                                whiteSpace: 'nowrap',
                               }}
                             >
-                              {data.name}
-                            </p>
-                            <p style={{ margin: 0, color }}>
-                              {data.value?.toFixed(2)}% · {data.payload?.count?.toLocaleString?.()}
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  {/* Legend moved outside to avoid overlay/clipping */}
-                </PieChart>
-              </ResponsiveContainer>
-              <PositionLegend colors={chartColors} />
+                              <p
+                                style={{
+                                  margin: '0 0 6px 0',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {data.name}
+                              </p>
+                              <p style={{ margin: 0, color }}>
+                                {data.value?.toFixed(2)}% · {data.payload?.count?.toLocaleString?.()}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    {/* Legend moved outside to avoid overlay/clipping */}
+                  </PieChart>
+                </ResponsiveContainer>
+                <PositionLegend colors={chartColors} />
               </div>
             </div>
             <div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-                {quickStats.map(stat => (
-                  <div
-                    key={stat.position}
-                    className="text-center border rounded-md p-3"
-                  >
-                    <p className="uppercase text-xs font-semibold text-gray-500">
-                      {stat.position} Drafted
-                    </p>
-                    <p className="text-signal-green mt-1 font-bold text-lg">
-                      {stat.total.toLocaleString()}
-                    </p>
+                {(quickStats.length ? quickStats.map(s => s.position) : CORE_POSITIONS).map((pos, idx) => (
+                  <div key={`${pos}-${idx}`} className="text-center border rounded-md p-3">
+                    <p className="uppercase text-xs font-semibold text-gray-500">{pos} Drafted</p>
+                    {quickStats.length ? (
+                      <p className="text-signal-green mt-1 font-bold text-lg">
+                        {quickStats.find(s => s.position === pos)?.total.toLocaleString()}
+                      </p>
+                    ) : (
+                      <div className="h-6 w-20 mx-auto mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           </div>
         </div>
+
         {/* Latest Media on Overview */}
         <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-          <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
-            Latest From The Signal Callers
-          </h3>
+          <h3 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">Latest From The Signal Callers</h3>
           <div className="space-y-6">
             <div>
-              <h4 className="text-sm font-medium mb-2 text-gridiron-graphite dark:text-gray-200">
-                YouTube
-              </h4>
+              <h4 className="text-sm font-medium mb-2 text-gridiron-graphite dark:text-gray-200">YouTube</h4>
               {YT_EFFECTIVE_PLAYLIST_ID ? (
                 <div className="relative w-full max-w-lg mx-auto" style={{ paddingTop: '40%' }}>
                   <iframe
                     title="YouTube latest uploads"
-                     src={`https://www.youtube-nocookie.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
+                    src={`https://www.youtube-nocookie.com/embed?listType=playlist&list=${YT_EFFECTIVE_PLAYLIST_ID}`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
@@ -277,14 +298,8 @@ const OverviewView = () => {
               ) : (
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Set <code className="font-code">VITE_YT_UPLOADS_PLAYLIST_ID</code> or
-                  <code className="font-code"> VITE_YT_CHANNEL_ID</code> to auto‑embed the
-                  latest video. For now, visit our channel:
-                  <a
-                    href={YOUTUBE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-1 text-signal-green underline"
-                  >
+                  <code className="font-code"> VITE_YT_CHANNEL_ID</code> to auto‑embed the latest video. For now, visit our channel:
+                  <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="ml-1 text-signal-green underline">
                     YouTube @TheSignalCallers
                   </a>
                   .
@@ -297,28 +312,28 @@ const OverviewView = () => {
 
       {/* Position Analysis */}
       <div className="bg-white dark:bg-surface-dark-elev p-6 rounded-lg card-shadow">
-        <h4 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">
-          Position Analysis
-        </h4>
+        <h2 className="text-lg font-semibold text-gridiron-graphite dark:text-white mb-4">Position Analysis</h2>
 
-        {/* Bar Chart & Controls */}
         <div className={`grid ${responsive.controlsGrid} items-end`}>
           <div className={responsive.controlsColumn}>
-            <h5 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">
-              Position Stats by Round
-            </h5>
-              <div className={responsive.chartHeight}>
+            <h3 className="text-center mb-2 font-semibold text-gridiron-graphite dark:text-white">Position Stats by Round</h3>
+            <div className={responsive.chartHeight}>
               {roundCountsLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader />
                 </div>
+              ) : roundCountsError ? (
+                <div className="flex items-center justify-center h-full">
+                  <Alert color="red" title="Failed to load chart" variant="light">
+                    {roundCountsErrorObj instanceof Error ? roundCountsErrorObj.message : 'Unexpected error'}
+                  </Alert>
+                </div>
+              ) : roundBarData.length === 0 ? (
+                <div className="flex items-center justify-center h_full text-gray-500">No data available.</div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer key={`round-container-${roundChartKey}`} width="100%" height="100%">
                   <BarChart data={roundBarData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke={isDark ? '#555' : '#e5e7eb'}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#555' : '#e5e7eb'} />
                     <XAxis
                       dataKey="round"
                       fontSize={responsive.fontSize.small}
@@ -334,12 +349,9 @@ const OverviewView = () => {
                       tick={{ fill: tickColor }}
                       axisLine={{ stroke: tickColor }}
                       tickLine={{ stroke: tickColor }}
-                      tickFormatter={(value) => Math.round(value).toString()}
+                      tickFormatter={value => Math.round(value).toString()}
                     />
-                    <Tooltip
-                      formatter={(v: number) => v.toFixed(2)}
-                      contentStyle={getTooltipStyle(isDark)}
-                    />
+                    <Tooltip formatter={(v: number) => v.toFixed(2)} contentStyle={getTooltipStyle(isDark)} />
                     <Bar dataKey="count" name="Count" fill={getPrimaryChartColor()} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -353,13 +365,10 @@ const OverviewView = () => {
               label="Position"
               data={['QB', 'RB', 'WR', 'TE'].map(p => ({ value: p, label: p }))}
               value={selectedPosition}
-              onChange={v =>
-                v && setSelectedPosition(v as 'QB' | 'RB' | 'WR' | 'TE')
-              }
+              onChange={v => v && setSelectedPosition(v as 'QB' | 'RB' | 'WR' | 'TE')}
               size={responsive.inputSize}
               classNames={{
-                input:
-                  'bg-white dark:bg-surface-dark-elev text-gridiron-graphite dark:text-white',
+                input: 'bg-white dark:bg-surface-dark-elev text-gridiron-graphite dark:text-white',
                 dropdown: 'bg-white dark:bg-surface-dark-elev',
                 option: 'text-gridiron-graphite dark:text-white',
                 label: 'text-gridiron-graphite dark:text-gray-300',

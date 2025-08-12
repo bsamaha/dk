@@ -161,3 +161,21 @@ This document captures proposed improvements across the frontend, backend, and i
 - Split `QueryService` by domain and adopt DI fully.
 - Add structured logs with correlation IDs and basic metrics endpoint (optional).
 - Persisted cache across deploys if dataset grows.
+
+### Progress (branch: `feature/lifespan-query-service-di`)
+
+- Implemented FastAPI lifespan-managed `QueryService` and DI
+  - Replaced global `query_service` singleton with a single `app.state.query_service` initialized in lifespan
+  - Added `QueryService.close()` and ensured graceful shutdown
+  - Used `await run_in_threadpool(qs.close)` during shutdown to avoid blocking the event loop
+  - Introduced `backend/app/dependencies.py` with `get_query_service(Request)` that returns 503 if unavailable
+  - Refactored all routers to inject `QueryService` via `Depends(get_query_service)`; removed router-level dependency injection
+  - Consolidated init/close into `_init_query_service(app)` and `_close_query_service(app)` helpers
+
+- Error handling
+  - Added global catch-all `unhandled_exception_handler` to reduce per-endpoint try/except boilerplate and return consistent 500 responses
+
+- Tests
+  - Updated integration tests to run with FastAPI lifespan and to stop relying on the old singleton
+  - Added a test that asserts a 503 response when `QueryService` is missing from `app.state`
+  - All tests passing locally (137 passed)

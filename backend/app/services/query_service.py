@@ -318,36 +318,6 @@ class QueryService:
             logger.exception(f"Unexpected error while validating path: {file_path}")
             raise
 
-    @staticmethod
-    def _get_data_path() -> str:
-        """Return absolute path to the parquet data file defined by settings.DATA_PATH.
-
-        Falls back to the repository root `data/` directory when running tests locally.
-        """
-        data_dir: Path = Path(settings.DATA_PATH).expanduser()
-
-        # If container mount exists, prefer it
-        container_data = Path("/app/data")
-        if container_data.exists():
-            data_dir = container_data
-
-        # Common local/dev fallbacks
-        if not data_dir.exists():
-            # If running under backend/ working directory, jump to repo root
-            project_root = Path(__file__).resolve().parents[3]
-            candidate = project_root / "data"
-            if candidate.exists():
-                data_dir = candidate
-
-        # Container path fallback
-        if str(data_dir) == "/app/data" and not data_dir.exists():
-            project_root = Path(__file__).resolve().parents[3]
-            data_dir = project_root / "data"
-
-        data_path: Path = data_dir / "updated_bestball_data.parquet"
-        validated_path = QueryService._validate_and_sanitize_path(data_path, data_dir)
-        return str(validated_path)
-
     def _load_week17_matchups(self) -> None:
         """Load Week 17 matchups data into DuckDB."""
         # Get path to Week 17 matchups file
@@ -389,8 +359,10 @@ class QueryService:
         ]
 
         # Create DuckDB table from the data
-        self._con.execute("DROP TABLE IF EXISTS week17_matchups")
-        self._con.execute("""
+        assert self._con is not None
+        con = self._con
+        con.execute("DROP TABLE IF EXISTS week17_matchups")
+        con.execute("""
             CREATE TABLE week17_matchups (
                 team VARCHAR,
                 opponent VARCHAR
@@ -398,7 +370,7 @@ class QueryService:
         """)
 
         # Insert data
-        self._con.executemany(
+        con.executemany(
             "INSERT INTO week17_matchups (team, opponent) VALUES (?, ?)", matchups_rows
         )
 
@@ -637,8 +609,20 @@ class QueryService:
         median_df: pl.DataFrame = self.query(median_sql)
         stats_df: pl.DataFrame = self.query(stats_sql)
 
-        # Join the results
-        combined_df: pl.DataFrame = stats_df.join(median_df, on="Position", how="left")
+        # Join the results and harden against missing medians or unexpected positions
+        combined_df: pl.DataFrame = stats_df.join(
+            median_df, on="Position", how="left"
+        ).with_columns(
+            # Replace null medians with 0.0 so the API model validation does not fail
+            pl.col("median_draft_count").fill_null(0.0).cast(pl.Float64)
+        )
+
+        # Keep only positions we officially support (QB, RB, WR, TE)
+        allowed_positions: List[str] = [p.value for p in Position]
+        if "Position" in combined_df.columns:
+            combined_df = combined_df.filter(
+                pl.col("Position").is_in(allowed_positions)
+            )
 
         # Convert to PositionStats objects and sort
         position_stats_list: List[PositionStats] = [
@@ -646,7 +630,7 @@ class QueryService:
                 position=row["Position"],
                 total_drafted=row["total_drafted"],
                 unique_players=row["unique_players"],
-                median_draft_count=row["median_draft_count"],
+                median_draft_count=float(row["median_draft_count"]),
             )
             for row in combined_df.iter_rows(named=True)
         ]
@@ -773,7 +757,8 @@ class QueryService:
         self,
         required_players: List[str],
         n_rounds: int = 20,
-        limit: int = 100,
+        limit: int = 50,
+        offset: int = 0,
     ) -> List[Dict[str, Any]]:
         """Return teams that drafted all required players within first n_rounds."""
         # Validate inputs
@@ -781,6 +766,8 @@ class QueryService:
             raise ValueError("n_rounds must be between 1 and 50")
         if not isinstance(limit, int) or limit < 1 or limit > 1000:
             raise ValueError("limit must be between 1 and 1000")
+        if not isinstance(offset, int) or offset < 0:
+            raise ValueError("offset must be >= 0")
 
         # Validate and clean required_players
         required_players = self._validate_required_players(required_players)
@@ -840,7 +827,6 @@ class QueryService:
             )
             .collect()
             .sort(["draft_id", "draft_position"])
-            .head(limit)
         )
 
         if result_df.is_empty():
@@ -885,8 +871,62 @@ class QueryService:
                 pl.lit(None, dtype=pl.String).alias("position_counts")
             )
 
-        logger.info("Combination query returned %d teams", final_result_df.height)
-        return final_result_df.to_dicts()
+        # Apply pagination window (offset, limit) on team rows
+        paged_df = final_result_df.slice(offset, limit)
+
+        logger.info(
+            "Combination query returned %d teams (paged: %d from offset %d)",
+            final_result_df.height,
+            paged_df.height,
+            offset,
+        )
+        return paged_df.to_dicts()
+
+    def get_player_combinations_count(
+        self, required_players: List[str], n_rounds: int = 20
+    ) -> int:
+        """Return the total number of teams that drafted all required players
+        within the first ``n_rounds``.
+
+        This performs a lightweight COUNT over the same filtered set used by
+        ``get_player_combinations`` rather than materializing rows. It ensures
+        the API can report an accurate total even when pagination is applied.
+        """
+        # Validate inputs
+        if not isinstance(n_rounds, int) or n_rounds < 1 or n_rounds > 50:
+            raise ValueError("n_rounds must be between 1 and 50")
+
+        # Validate and clean required_players
+        required_players = self._validate_required_players(required_players)
+
+        if not required_players:
+            return 0
+
+        placeholders: str = ", ".join(["?" for _ in required_players])
+        num_required: int = len(required_players)
+
+        # nosec B608 - static SQL structure, parameters are parameterized
+        sql: str = f"""
+        WITH filtered AS (
+            SELECT draft, draft_position, player, round
+            FROM picks
+            WHERE round <= ?
+        ), target_teams AS (
+            SELECT draft, draft_position
+            FROM filtered
+            WHERE player IN ({placeholders})
+            GROUP BY draft, draft_position
+            HAVING COUNT(DISTINCT player) = ?
+        )
+        SELECT COUNT(*) AS total
+        FROM target_teams;
+        """
+
+        params: List[Any] = [n_rounds] + required_players + [num_required]
+        df: pl.DataFrame = self.query(sql, params)
+        if df.is_empty():
+            return 0
+        return int(df["total"][0])
 
     def get_stacks(self, n_rounds: int = 10, limit: int = 100) -> List[Dict[str, Any]]:
         """Find QB/receiver stacks drafted within first n_rounds."""

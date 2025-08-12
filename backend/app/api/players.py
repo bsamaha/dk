@@ -2,6 +2,7 @@ import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from starlette.concurrency import run_in_threadpool
 
 from ..dependencies import get_query_service
 from ..models.schemas import (
@@ -36,42 +37,39 @@ async def get_players(
     qs: QueryService = Depends(get_query_service),
 ):
     """Get players with optional filtering and pagination."""
-    try:
-        # Validate query parameters using Pydantic schema
-        params = PlayersQueryParams(
-            positions=positions,
-            search_term=search_term,
+    # Validate query parameters using Pydantic schema
+    params = PlayersQueryParams(
+        positions=positions,
+        search_term=search_term,
+        limit=limit,
+        offset=offset,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
+
+    players, total_count = await run_in_threadpool(
+        qs.get_players,
+        positions=params.positions,
+        search_term=params.search_term,
+        limit=params.limit,
+        offset=params.offset,
+        sort_by=params.sort_by,
+        sort_order=params.sort_order,
+    )
+
+    return PlayersResponse(
+        players=players,
+        total_count=total_count,
+        page_info=PageInfo(
+            total_count=total_count,
             limit=limit,
             offset=offset,
-            sort_by=sort_by,
-            sort_order=sort_order,
-        )
-
-        players, total_count = qs.get_players(
-            positions=params.positions,
-            search_term=params.search_term,
-            limit=params.limit,
-            offset=params.offset,
-            sort_by=params.sort_by,
-            sort_order=params.sort_order,
-        )
-
-        return PlayersResponse(
-            players=players,
-            total_count=total_count,
-            page_info=PageInfo(
-                total_count=total_count,
-                limit=limit,
-                offset=offset,
-                has_next=offset + limit < total_count,
-                has_previous=offset > 0,
-                current_page=(offset // limit) + 1,
-                total_pages=(total_count + limit - 1) // limit if limit > 0 else 1,
-            ),
-        )
-    except Exception:
-        logger.exception("Error getting players")
-        raise HTTPException(status_code=500, detail="An internal error occurred")
+            has_next=offset + limit < total_count,
+            has_previous=offset > 0,
+            current_page=(offset // limit) + 1,
+            total_pages=(total_count + limit - 1) // limit if limit > 0 else 1,
+        ),
+    )
 
 
 @router.get("/search", response_model=PlayersResponse)
@@ -82,32 +80,29 @@ async def search_players(
     qs: QueryService = Depends(get_query_service),
 ):
     """Search players by name."""
-    try:
-        # Validate query parameters using Pydantic schema
-        params = PlayerSearchQueryParams(q=q, limit=limit)
+    # Validate query parameters using Pydantic schema
+    params = PlayerSearchQueryParams(q=q, limit=limit)
 
-        players, total_count = qs.get_players(
-            search_term=params.q,
-            limit=params.limit,
-            offset=0,
-        )
+    players, total_count = await run_in_threadpool(
+        qs.get_players,
+        search_term=params.q,
+        limit=params.limit,
+        offset=0,
+    )
 
-        return PlayersResponse(
-            players=players,
+    return PlayersResponse(
+        players=players,
+        total_count=total_count,
+        page_info=PageInfo(
             total_count=total_count,
-            page_info=PageInfo(
-                total_count=total_count,
-                limit=limit,
-                offset=0,
-                has_next=total_count > limit,
-                has_previous=False,
-                current_page=1,
-                total_pages=(total_count + limit - 1) // limit if limit > 0 else 1,
-            ),
-        )
-    except Exception:
-        logger.exception("Error searching players")
-        raise HTTPException(status_code=500, detail="An internal error occurred")
+            limit=limit,
+            offset=0,
+            has_next=total_count > limit,
+            has_previous=False,
+            current_page=1,
+            total_pages=(total_count + limit - 1) // limit if limit > 0 else 1,
+        ),
+    )
 
 
 @router.get("/details", response_model=PlayerDetailsResponse)
@@ -119,22 +114,16 @@ async def get_player_details(
     qs: QueryService = Depends(get_query_service),
 ):
     """Get detailed statistics for a specific player."""
-    try:
-        # Validate query parameters using Pydantic schema
-        params = PlayerDetailsQueryParams(
-            player_name=player_name, position=position, team=team
-        )
+    # Validate query parameters using Pydantic schema
+    params = PlayerDetailsQueryParams(
+        player_name=player_name, position=position, team=team
+    )
 
-        details = qs.get_player_details(
-            params.player_name, params.position, params.team
-        )
+    details = await run_in_threadpool(
+        qs.get_player_details, params.player_name, params.position, params.team
+    )
 
-        if details["total_drafts"] == 0:
-            raise HTTPException(status_code=404, detail="Player not found")
+    if details["total_drafts"] == 0:
+        raise HTTPException(status_code=404, detail="Player not found")
 
-        return PlayerDetailsResponse(**details)
-    except HTTPException:
-        raise
-    except Exception:
-        logger.exception("Error getting player details")
-        raise HTTPException(status_code=500, detail="An internal error occurred")
+    return PlayerDetailsResponse(**details)

@@ -75,11 +75,7 @@ const PlayersView = () => {
     data: playersData,
     isFetching: isPlayersFetching,
     error: playersError,
-  } = usePlayers(
-    activePage,
-    activePositions,
-    selectedPlayer ? [selectedPlayer] : []
-  );
+  } = usePlayers(activePage, activePositions, selectedPlayer ? [selectedPlayer] : []);
 
   const { data: playerDetailsData, isLoading: isPlayerDetailsLoading } =
     useQuery({
@@ -148,6 +144,8 @@ const PlayersView = () => {
     }
   };
 
+  const hasFilters = selectedPlayer !== '' || activePositions.length > 0;
+
   return (
     <div className="w-full p-4 text-gridiron-graphite dark:text-white">
       <Title
@@ -169,7 +167,7 @@ const PlayersView = () => {
           <Title order={4} className="text-white">
             Player Search & Filters
           </Title>
-          {(selectedPlayer || activePositions.length > 0) && (
+          {hasFilters && (
             <Button
               variant="outline"
               onClick={handleClearFilters}
@@ -186,16 +184,17 @@ const PlayersView = () => {
             <Text size="sm" fw={500} mb="xs">
               Search Player:
             </Text>
-            <PlayerAutocomplete
-              value={selectedPlayer}
-              onChange={setSelectedPlayer}
-              placeholder="Search and select a player..."
-            />
-            {selectedPlayer && (
-              <Text size="sm" c="dimmed" mt="xs">
-                Selected: {selectedPlayer}
-              </Text>
-            )}
+              <PlayerAutocomplete
+                multiple={false}
+                value={selectedPlayer}
+                onChange={setSelectedPlayer}
+                placeholder="Search and select a player..."
+              />
+              {selectedPlayer && (
+                <Text size="sm" c="dimmed" mt="xs">
+                  Selected: {selectedPlayer}
+                </Text>
+              )}
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 6 }}>

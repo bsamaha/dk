@@ -162,7 +162,10 @@ class CombinationsQueryParams(BaseModel):
 
     required_players: List[str] = Field(..., description="List of required players")
     n_rounds: int = Field(20, description="Number of rounds to consider", ge=1, le=20)
-    limit: int = Field(100, description="Maximum number of results", ge=1, le=1000)
+    limit: int = Field(
+        50, description="Maximum number of results per page", ge=1, le=1000
+    )
+    offset: int = Field(0, description="Offset for pagination", ge=0)
 
     @field_validator("required_players")
     @classmethod

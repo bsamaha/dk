@@ -12,10 +12,10 @@ import {
   Group,
   Slider,
   Button,
-  Badge,
   SegmentedControl,
   NumberInput,
   Grid,
+  Badge,
 } from '@mantine/core';
 import { DataTable } from 'mantine-datatable';
 import type { TeamCombination, RosterConstructionCount } from '../../types';
@@ -27,9 +27,11 @@ const CombinationsView = () => {
   const [view, setView] = useState<'players' | 'rosters'>('players');
 
   // State for Player Combinations
-  const [selectedPlayer, setSelectedPlayer] = useState<string>('');
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [nRounds, setNRounds] = useState<number>(20);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
 
   // State for Roster Constructions
   const [rosterView, setRosterView] = useState<'table' | 'chart'>('table');
@@ -45,7 +47,7 @@ const CombinationsView = () => {
     TE: {},
   });
 
-  const [rosterSelectedPlayer, setRosterSelectedPlayer] = useState<string>('');
+  const [rosterSelectedPlayers, setRosterSelectedPlayers] = useState<string[]>([]);
   const [chartData, setChartData] = useState<
     Record<CorePosition, { count: number; teams: number }[]>
   >({
@@ -56,14 +58,15 @@ const CombinationsView = () => {
   });
 
   const { data, isLoading, error, isFetching } = useQuery({
-    queryKey: ['combinations', selectedPlayer, nRounds],
+    queryKey: ['combinations', selectedPlayers, nRounds, page],
     queryFn: () =>
       apiService.getPlayerCombinations({
-        required_players: selectedPlayer ? [selectedPlayer] : [],
+        required_players: selectedPlayers,
         n_rounds: nRounds,
-        limit: 500,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
       }),
-    enabled: isSubmitted && selectedPlayer.length > 0,
+    enabled: isSubmitted && selectedPlayers.length > 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1,
   });
@@ -72,11 +75,9 @@ const CombinationsView = () => {
     data: rosterConstructionCounts,
     isLoading: isRosterConstructionLoading,
   } = useQuery<RosterConstructionCount[], Error>({
-    queryKey: ['rosterConstructionCounts', rosterSelectedPlayer],
+    queryKey: ['rosterConstructionCounts', rosterSelectedPlayers],
     queryFn: () =>
-      apiService.getRosterConstructionCounts(
-        rosterSelectedPlayer ? [rosterSelectedPlayer] : []
-      ),
+      apiService.getRosterConstructionCounts(rosterSelectedPlayers),
     enabled: view === 'rosters',
   });
 
@@ -151,18 +152,21 @@ const CombinationsView = () => {
   }, [processedRosterData]);
 
   const handleSearch = () => {
-    if (selectedPlayer.length > 0) {
+    if (selectedPlayers.length > 0) {
+      setPage(1);
       setIsSubmitted(true);
     }
   };
 
   const handleClear = () => {
-    setSelectedPlayer('');
+    setSelectedPlayers([]);
     setIsSubmitted(false);
+    setPage(1);
   };
 
   const records = useMemo(() => data?.combinations ?? [], [data]);
   const totalCombinations = data?.total_combinations ?? records.length;
+  // totalPages is derived by DataTable internally via totalRecords/recordsPerPage
 
   const columns = useMemo(
     () => [
@@ -188,21 +192,27 @@ const CombinationsView = () => {
         title: 'Roster',
         render: (record: TeamCombination) => (
           <div className="flex flex-wrap gap-1">
-            {record.players.map(player => (
-              <Badge
-                key={`${record.draft_id}-${record.draft_position}-${player}`}
-                variant={selectedPlayer === player ? 'filled' : 'light'}
-                color={selectedPlayer === player ? 'gold' : 'gray'}
-                size="sm"
-              >
-                {player}
-              </Badge>
-            ))}
+            {record.players.map(player => {
+              const isRequired = selectedPlayers
+                .map(p => p.toLowerCase())
+                .includes(player.toLowerCase());
+              return (
+                <Badge
+                  key={`${record.draft_id}-${record.draft_position}-${player}`}
+                  size="sm"
+                  radius="sm"
+                  color={isRequired ? 'gold' : 'gray'}
+                  variant={isRequired ? 'filled' : 'light'}
+                >
+                  {player}
+                </Badge>
+              );
+            })}
           </div>
         ),
       },
     ],
-    [selectedPlayer]
+    [selectedPlayers]
   );
 
   const rosterConstructionColumns: DataTableProps<RosterConstructionCount>['columns'] =
@@ -254,8 +264,9 @@ const CombinationsView = () => {
                   Required Players
                 </Text>
                 <PlayerAutocomplete
-                  value={selectedPlayer}
-                  onChange={setSelectedPlayer}
+                  multiple
+                  value={selectedPlayers}
+                  onChange={setSelectedPlayers}
                   placeholder="e.g., A.J. Brown"
                 />
               </div>
@@ -293,7 +304,7 @@ const CombinationsView = () => {
               <Button
                 onClick={handleSearch}
                 disabled={
-                  selectedPlayer.length === 0 || isLoading || isFetching
+                  selectedPlayers.length === 0 || isLoading || isFetching
                 }
                 loading={isLoading || isFetching}
                 className="bg-signal-green hover:bg-turf-dark"
@@ -316,7 +327,7 @@ const CombinationsView = () => {
             </Alert>
           )}
 
-          {isSubmitted && !isLoading && !isFetching && !error && (
+          {data && !isLoading && !isFetching && !error && (
             <Paper
               withBorder
               shadow="sm"
@@ -340,6 +351,10 @@ const CombinationsView = () => {
                 }
                 columns={columns}
                 noRecordsText="No teams found with this combination. Try expanding your search criteria."
+                totalRecords={totalCombinations}
+                recordsPerPage={pageSize}
+                page={page}
+                onPageChange={setPage}
               />
             </Paper>
           )}
@@ -396,8 +411,9 @@ const CombinationsView = () => {
                   Required Players
                 </Text>
                 <PlayerAutocomplete
-                  value={rosterSelectedPlayer}
-                  onChange={setRosterSelectedPlayer}
+                  multiple
+                  value={rosterSelectedPlayers}
+                  onChange={setRosterSelectedPlayers}
                   placeholder="e.g., A.J. Brown"
                 />
               </div>

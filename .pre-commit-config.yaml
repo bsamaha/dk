@@ -60,6 +60,15 @@ repos:
         # Skip B101 (assert_used) and B608 (hardcoded_sql_expressions) warnings
 
   # ===== FRONTEND (handled in CI job) =====
+  - repo: local
+    hooks:
+      - id: eslint-frontend
+        name: 'ESLint (frontend)'
+        entry: bash -c 'cd frontend && pnpm install --silent --frozen-lockfile && pnpm run lint'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false
+        stages: [pre-commit, pre-push]
 
   # ===== PACKAGE MANAGEMENT =====
   - repo: https://github.com/pre-commit/mirrors-prettier
