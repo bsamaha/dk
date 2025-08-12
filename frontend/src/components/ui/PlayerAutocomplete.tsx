@@ -123,7 +123,7 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
     const { value, onChange } = props as PlayerAutocompleteSingleProps;
     return (
       <Select
-        className="brand-input"
+        className={`brand-input ${className}`}
         data={filteredOptions}
         value={value}
         onChange={v => onChange(v || '')}
@@ -133,7 +133,7 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
         searchable
         clearable
         disabled={disabled || isLoading}
-        className={className}
+
         maxDropdownHeight={320}
         comboboxProps={{ transitionProps: { duration: 200, transition: 'pop' } }}
         styles={{

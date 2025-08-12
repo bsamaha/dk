@@ -144,6 +144,8 @@ const PlayersView = () => {
     }
   };
 
+  const hasFilters = selectedPlayer !== '' || activePositions.length > 0;
+
   return (
     <div className="w-full p-4 text-gridiron-graphite dark:text-white">
       <Title
@@ -165,7 +167,7 @@ const PlayersView = () => {
           <Title order={4} className="text-white">
             Player Search & Filters
           </Title>
-          {(selectedPlayers.length > 0 || activePositions.length > 0) && (
+          {hasFilters && (
             <Button
               variant="outline"
               onClick={handleClearFilters}
