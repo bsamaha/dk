@@ -65,7 +65,7 @@ const PlayersView = () => {
   // State for filters
   const [activePage, setActivePage] = useState(1);
   const [activePositions, setActivePositions] = useState<Position[]>([]);
-  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [selectedPlayer, setSelectedPlayer] = useState<string>('');
 
   const [selectedPlayerDetails, setSelectedPlayerDetails] =
     useState<Player | null>(null);
@@ -75,7 +75,7 @@ const PlayersView = () => {
     data: playersData,
     isFetching: isPlayersFetching,
     error: playersError,
-  } = usePlayers(activePage, activePositions, selectedPlayers);
+  } = usePlayers(activePage, activePositions, selectedPlayer ? [selectedPlayer] : []);
 
   const { data: playerDetailsData, isLoading: isPlayerDetailsLoading } =
     useQuery({
@@ -112,18 +112,15 @@ const PlayersView = () => {
 
   // Track player selection when data loads
   useEffect(() => {
-    if (playersData && selectedPlayers.length > 0) {
-      debouncedTrackPlayerSearch(
-        selectedPlayers.join(', '),
-        playersData.total_count || 0
-      );
+    if (playersData && selectedPlayer) {
+      debouncedTrackPlayerSearch(selectedPlayer, playersData.total_count || 0);
     }
-  }, [playersData, selectedPlayers, debouncedTrackPlayerSearch]);
+  }, [playersData, selectedPlayer, debouncedTrackPlayerSearch]);
 
   // Handlers
   const handleClearFilters = () => {
     setActivePositions([]);
-    setSelectedPlayers([]);
+    setSelectedPlayer('');
     setActivePage(1);
   };
 
@@ -186,13 +183,14 @@ const PlayersView = () => {
               Search Player:
             </Text>
               <PlayerAutocomplete
-                value={selectedPlayers}
-                onChange={setSelectedPlayers}
-                placeholder="Search and select players..."
+                multiple={false}
+                value={selectedPlayer}
+                onChange={setSelectedPlayer}
+                placeholder="Search and select a player..."
               />
-              {selectedPlayers.length > 0 && (
+              {selectedPlayer && (
                 <Text size="sm" c="dimmed" mt="xs">
-                  Selected: {selectedPlayers.join(', ')}
+                  Selected: {selectedPlayer}
                 </Text>
               )}
           </Grid.Col>

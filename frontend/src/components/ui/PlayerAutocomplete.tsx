@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { MultiSelect } from '@mantine/core';
+import { MultiSelect, Select } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { apiService } from '../../services/api';
 import { sanitizeSearchTerm } from '../../utils/sanitization';
 
-interface PlayerAutocompleteProps {
+interface PlayerAutocompleteMultiProps {
+  multiple?: true;
   value: string[];
   onChange: (value: string[]) => void;
   placeholder?: string;
@@ -13,13 +14,25 @@ interface PlayerAutocompleteProps {
   className?: string;
 }
 
-const PlayerAutocomplete = ({
-  value,
-  onChange,
-  placeholder = 'Search and select players...',
-  disabled = false,
-  className = '',
-}: PlayerAutocompleteProps) => {
+interface PlayerAutocompleteSingleProps {
+  multiple: false;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+}
+
+type PlayerAutocompleteProps =
+  | PlayerAutocompleteMultiProps
+  | PlayerAutocompleteSingleProps;
+
+const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
+  const {
+    placeholder = 'Search and select players...',
+    disabled = false,
+    className = '',
+  } = props;
   const [searchValue, setSearchValue] = useState('');
   const [debouncedSearch] = useDebouncedValue(searchValue, 300);
 
@@ -105,11 +118,40 @@ const PlayerAutocomplete = ({
     );
   }
 
+  if (props.multiple === false) {
+    // Single select
+    const { value, onChange } = props as PlayerAutocompleteSingleProps;
+    return (
+      <Select
+        data={filteredOptions}
+        value={value}
+        onChange={v => onChange(v || '')}
+        searchValue={searchValue}
+        onSearchChange={v => setSearchValue(sanitizeSearchTerm(v))}
+        placeholder={isLoading ? 'Loading players...' : placeholder}
+        searchable
+        clearable
+        disabled={disabled || isLoading}
+        className={className}
+        maxDropdownHeight={320}
+        comboboxProps={{ transitionProps: { duration: 200, transition: 'pop' } }}
+        styles={{
+          dropdown: {
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+          },
+          input: { borderColor: '#e5e7eb', '&:focus': { borderColor: '#00A86B' } },
+        }}
+        classNames={{ option: 'player-autocomplete-option' }}
+      />
+    );
+  }
+
+  // Multi-select (default)
+  const { value, onChange } = props as PlayerAutocompleteMultiProps;
   return (
     <MultiSelect
-      classNames={{
-        input: 'border-audible-gold',
-      }}
+      classNames={{ input: 'border-audible-gold' }}
       data={filteredOptions}
       value={value}
       onChange={newValues => {
@@ -126,7 +168,10 @@ const PlayerAutocomplete = ({
       maxDropdownHeight={320}
       comboboxProps={{ transitionProps: { duration: 200, transition: 'pop' } }}
       styles={{
-        dropdown: { border: '1px solid #e5e7eb', boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)' },
+        dropdown: {
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+        },
         input: { borderColor: '#e5e7eb', '&:focus': { borderColor: '#00A86B' } },
       }}
       classNames={{ option: 'player-autocomplete-option' }}
