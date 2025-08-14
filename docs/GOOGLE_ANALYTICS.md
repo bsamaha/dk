@@ -152,7 +152,7 @@ export const trackEvent = (options) => {
 # .env.production
 VITE_GA_TRACKING_ID=G-951R3NH68H
 
-# .env (production server)
+# .env.production (production server)
 VITE_GA_TRACKING_ID=G-951R3NH68H
 ```
 
