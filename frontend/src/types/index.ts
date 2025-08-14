@@ -120,8 +120,6 @@ export interface RosterConstructionCount {
   RB: number;
   WR: number;
   TE: number;
-  K?: number;
-  DST?: number;
   count: number;
 }
 
@@ -131,8 +129,6 @@ export const Position = {
   RB: 'RB',
   WR: 'WR',
   TE: 'TE',
-  K: 'K',
-  DST: 'DST',
 } as const;
 
 export type Position = (typeof Position)[keyof typeof Position];

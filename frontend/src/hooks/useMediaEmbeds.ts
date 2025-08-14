@@ -10,5 +10,3 @@ export function useYouTubePlaylistId(
 export function useSpotifyEmbedUrl(showId: string): string {
   return `https://open.spotify.com/embed/show/${showId}?utm_source=generator`;
 }
-
-

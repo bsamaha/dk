@@ -21,6 +21,16 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   nginx:
     image: nginx:alpine
@@ -35,10 +45,16 @@ services:
       - ./certbot/www:/var/www/certbot
       - nginx-logs:/var/log/nginx
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - app-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   # Certbot is defined for manual/cron invocation; it is not started automatically.
   certbot:

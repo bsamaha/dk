@@ -457,6 +457,12 @@ class QueryService:
             where_clauses.append("lower(player) LIKE ?")
             params.append(f"%{search_term.lower()}%")
 
+        # Always restrict to core positions the API supports
+        allowed_positions: List[str] = [p.value for p in Position]
+        placeholders_allowed: str = ", ".join(["?" for _ in allowed_positions])
+        where_clauses.append(f"Position IN ({placeholders_allowed})")
+        params.extend(allowed_positions)
+
         where_sql: str = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
 
         # Base aggregation SQL - safe as it uses parameterized queries
