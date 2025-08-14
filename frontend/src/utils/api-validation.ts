@@ -120,8 +120,6 @@ export const RosterConstructionCountSchema = z.object({
   RB: z.number(),
   WR: z.number(),
   TE: z.number(),
-  K: z.number().optional(),
-  DST: z.number().optional(),
   count: z.number(),
 });
 

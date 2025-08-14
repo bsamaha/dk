@@ -92,6 +92,13 @@ class PlayersResponse(BaseModel):
     page_info: PageInfo = Field(..., description="Pagination information")
 
 
+class TeamsResponse(BaseModel):
+    """Response model for unique team list."""
+
+    teams: List[str] = Field(..., description="List of unique NFL teams")
+    total_count: int = Field(..., description="Total number of unique teams")
+
+
 class PositionStats(BaseModel):
     """Position statistics model."""
 

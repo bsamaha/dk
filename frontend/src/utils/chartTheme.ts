@@ -104,8 +104,6 @@ export const POSITION_COLORS = {
   RB: CHART_COLORS.secondary, // Audible Gold
   WR: CHART_COLORS.tertiary, // Turf Dark Green
   TE: CHART_COLORS.quaternary, // Gridiron Graphite
-  K: CHART_COLORS.accent1, // Lighter green
-  DST: CHART_COLORS.accent2, // Blue-ish
 } as const;
 
 /**

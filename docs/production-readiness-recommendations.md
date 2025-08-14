@@ -403,8 +403,8 @@ services:
 
 ## Checklist (trackable)
 
-- [ ] P0: Fix deploy port mapping or deploy via compose (app + nginx) with healthchecks.
-- [ ] P0: Resolve `/teams/` endpoint drift and unify `Position` domain across FE/BE.
+- [x] P0: Fix deploy port mapping or deploy via compose (app + nginx) with healthchecks.
+- [x] P0: Resolve `/teams/` endpoint drift and unify `Position` domain across FE/BE.
 - [ ] P1: Enforce exception chaining; standardize error schema with `request_id`.
 - [ ] P1: Add healthchecks; adopt zero-downtime (blue/green or compose gating).
 - [ ] P1: Add structured JSON logging with correlation IDs; propagate `X-Request-ID`.

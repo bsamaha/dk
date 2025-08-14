@@ -29,7 +29,7 @@ fi
 echo "Starting new container..."
 docker run -d \
   --name "$CONTAINER_NAME" \
-  -p 80:80 \
+  -p 80:8000 \
   -e ENV=prod \
   --restart always \
   "$IMAGE"
