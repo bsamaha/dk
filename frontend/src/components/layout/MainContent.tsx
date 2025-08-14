@@ -3,10 +3,17 @@ import AnalyticsView from './AnalyticsView';
 import PlayersView from './PlayersView';
 import CombinationsView from './CombinationsView';
 import AboutView from './AboutView';
+import ToolsView from './ToolsView';
 import { useResponsive } from '../../hooks/useResponsive';
 
 interface MainContentProps {
-  view: 'overview' | 'players' | 'combinations' | 'analytics' | 'about';
+  view:
+    | 'overview'
+    | 'players'
+    | 'combinations'
+    | 'analytics'
+    | 'about'
+    | 'tools';
 }
 
 const MainContent = ({ view }: MainContentProps) => {
@@ -23,6 +30,8 @@ const MainContent = ({ view }: MainContentProps) => {
         return <AnalyticsView />;
       case 'about':
         return <AboutView />;
+      case 'tools':
+        return <ToolsView />;
       default:
         return <OverviewView />;
     }
