@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_GA_TRACKING_ID: ${VITE_GA_TRACKING_ID}
+        VITE_YT_CHANNEL_ID: ${VITE_YT_CHANNEL_ID}
+        VITE_YT_UPLOADS_PLAYLIST_ID: ${VITE_YT_UPLOADS_PLAYLIST_ID}
     container_name: fantasy-analytics-app
     # No public ports; nginx handles external traffic
     volumes:
