@@ -7,14 +7,20 @@ import {
   NumberInput,
   Select,
   TextInput,
-  SegmentedControl,
   Badge,
+  Tooltip,
+  Divider,
+  Slider,
 } from '@mantine/core';
 import {
   expectedValuePerUnit,
   isPositiveEv,
   toDecimalOdds,
   toImpliedProbabilityFromDecimal,
+  probabilityToDecimal,
+  decimalToAmerican,
+  decimalToFractional,
+  formatAmerican,
   type OddsFormat,
 } from '../../utils/odds';
 import {
@@ -32,8 +38,7 @@ const OddsCalculatorTab = () => {
   const [format, setFormat] = useState<OddsFormat>('american');
   const [odds, setOdds] = useState<string>('-110');
   const [stake, setStake] = useState<number>(100);
-  const [pTruePct, setPTruePct] = useState<number | ''>('');
-  const [inputMode, setInputMode] = useState<'odds' | 'prob'>('odds');
+  const [pTruePct, setPTruePct] = useState<number>(50);
 
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -44,10 +49,10 @@ const OddsCalculatorTab = () => {
       const implied = toImpliedProbabilityFromDecimal(d);
       const breakevenPct = (1 / d) * 100;
       const impliedPct = implied * 100;
-      const pTrue = pTruePct === '' ? undefined : Number(pTruePct) / 100;
-      const ev = pTrue == null ? undefined : expectedValuePerUnit(d, pTrue, stake);
-      const roi = ev == null ? undefined : (ev / stake) * 100;
-      const positive = pTrue == null ? undefined : isPositiveEv(d, pTrue);
+      const pTrue = pTruePct / 100;
+      const ev = expectedValuePerUnit(d, pTrue, stake);
+      const roi = (ev / stake) * 100;
+      const positive = isPositiveEv(d, pTrue);
       return { d, impliedPct, breakevenPct, ev, roi, positive, error: undefined };
     } catch (e) {
       return { d: undefined, impliedPct: undefined, breakevenPct: undefined, ev: undefined, roi: undefined, positive: undefined, error: (e as Error).message };
@@ -69,79 +74,100 @@ const OddsCalculatorTab = () => {
     }
   }, [odds, format, stake]);
 
+  // Derived fair odds from user's probability (if provided)
+  const fair = useMemo(() => {
+    if (pTruePct <= 0 || pTruePct >= 100) return undefined;
+    try {
+      const p = pTruePct / 100;
+      const d = probabilityToDecimal(p);
+      return {
+        decimal: d,
+        american: decimalToAmerican(d),
+        fractional: decimalToFractional(d),
+      };
+    } catch {
+      return undefined;
+    }
+  }, [pTruePct]);
+
   return (
     <Paper withBorder p="lg" radius="md" className="bg-white dark:bg-surface-dark-elev">
       <Title order={3} className="font-heading">Odds Calculator</Title>
       <Text c="dimmed" mt="xs">Convert odds to implied probability and evaluate positive vs negative EV.</Text>
 
-      <Group mt="lg" grow>
-        <SegmentedControl
-          value={inputMode}
-          onChange={v => setInputMode(v as 'odds' | 'prob')}
-          data={[{ label: 'Enter Odds', value: 'odds' }, { label: 'Enter Probability', value: 'prob' }]}
-        />
-      </Group>
-
-      {inputMode === 'odds' && (
-        <Group mt="md" grow align="end">
-          <Select
-            label="Odds Format"
-            value={format}
-            onChange={v => setFormat(v as OddsFormat)}
-            data={[
-              { value: 'american', label: 'American' },
-              { value: 'decimal', label: 'Decimal' },
-              { value: 'fractional', label: 'Fractional' },
-            ]}
-          />
-          <TextInput
-            label="Odds"
-            value={odds}
-            onChange={e => setOdds(e.currentTarget.value)}
-            placeholder={format === 'fractional' ? 'e.g., 5/2' : format === 'decimal' ? 'e.g., 2.50' : 'e.g., -110'}
-          />
-          <NumberInput label="Stake" value={stake} onChange={v => setStake(Number(v) || 0)} min={0} />
-          <NumberInput
-            label="Your True Probability (%)"
-            value={pTruePct}
-            onChange={v => setPTruePct(v === '' ? '' : Number(v))}
-            min={0}
-            max={100}
-            clampBehavior="strict"
-            placeholder="Optional — classify EV"
-          />
-        </Group>
-      )}
-
-      {inputMode === 'prob' && (
-        <Group mt="md" grow align="end">
-          <NumberInput
-            label="Your True Probability (%)"
-            value={pTruePct}
-            onChange={v => setPTruePct(v === '' ? '' : Number(v))}
-            min={0}
-            max={100}
-            clampBehavior="strict"
-          />
-          <Select
-            label="Odds Format"
-            value={format}
-            onChange={v => setFormat(v as OddsFormat)}
-            data={[
-              { value: 'american', label: 'American' },
-              { value: 'decimal', label: 'Decimal' },
-              { value: 'fractional', label: 'Fractional' },
-            ]}
-          />
-          <TextInput
-            label="Odds"
-            value={odds}
-            onChange={e => setOdds(e.currentTarget.value)}
-            placeholder={format === 'fractional' ? 'e.g., 5/2' : format === 'decimal' ? 'e.g., 2.50' : 'e.g., -110'}
-          />
-          <NumberInput label="Stake" value={stake} onChange={v => setStake(Number(v) || 0)} min={0} />
-        </Group>
-      )}
+      {/* Inputs grouped by source: Sportsbook vs Your Model */}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+          <Title order={5} className="mb-2">Sportsbook Odds</Title>
+          <Group grow align="end">
+            <Select
+              label={
+                <Group gap="xs">
+                  <Text>Odds Format</Text>
+                  <Tooltip label="Choose the format the sportsbook quotes (American, Decimal, Fractional)"><span>ⓘ</span></Tooltip>
+                </Group>
+              }
+              value={format}
+              onChange={v => setFormat(v as OddsFormat)}
+              data={[
+                { value: 'american', label: 'American' },
+                { value: 'decimal', label: 'Decimal' },
+                { value: 'fractional', label: 'Fractional' },
+              ]}
+            />
+            <TextInput
+              label={
+                <Group gap="xs">
+                  <Text>Odds</Text>
+                  <Tooltip label="The line offered by the book. Example: -110 (American), 2.50 (Decimal), 5/2 (Fractional)"><span>ⓘ</span></Tooltip>
+                </Group>
+              }
+              value={odds}
+              onChange={e => setOdds(e.currentTarget.value)}
+              placeholder={format === 'fractional' ? 'e.g., 5/2' : format === 'decimal' ? 'e.g., 2.50' : 'e.g., -110'}
+            />
+            <NumberInput label={
+              <Group gap="xs">
+                <Text>Stake</Text>
+                <Tooltip label="Amount you plan to wager (in units). EV/ROI will scale with stake."><span>ⓘ</span></Tooltip>
+              </Group>
+            } value={stake} onChange={v => setStake(Number(v) || 0)} min={0} />
+          </Group>
+        </div>
+        <div>
+          <Title order={5} className="mb-2">Your Model</Title>
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <Text>Your True Probability (%)</Text>
+              <Tooltip label="Your estimated chance of the bet winning, based on your own model or research."><span>ⓘ</span></Tooltip>
+              <Badge variant="light">{pTruePct}%</Badge>
+            </div>
+            <Slider
+              value={pTruePct}
+              onChange={setPTruePct}
+              min={0}
+              max={100}
+              step={1}
+              marks={[
+                { value: 0, label: '0%' },
+                { value: 25, label: '25%' },
+                { value: 50, label: '50%' },
+                { value: 75, label: '75%' },
+                { value: 100, label: '100%' },
+              ]}
+              label={value => `${value}%`}
+            />
+          </div>
+          {fair && (
+            <Group mt="sm" gap="md">
+              <Badge variant="outline">Fair (Decimal): {fair.decimal.toFixed(2)}</Badge>
+              <Badge variant="outline">Fair (American): {formatAmerican(fair.american)}</Badge>
+              <Badge variant="outline">Fair (Fractional): {fair.fractional}</Badge>
+            </Group>
+          )}
+        </div>
+      </div>
+      <Divider my="lg" />
 
       <Group mt="xl">
         {result.error ? (
