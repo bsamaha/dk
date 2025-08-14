@@ -66,7 +66,7 @@ graph TD
 - **Key Components**:
   - `Settings` class inheriting from `BaseSettings`.
   - Fields: API prefix, project name, allowed CORS origins (list of localhost variants), data path.
-  - Loads from `.env` file if present.
+  - Loads from `.env.production` (preferred) or `.env.development` for local runs.
   - Instantiates a global `settings` object.
 - **Flow**: Accessed globally (e.g., in `main.py` for CORS). No dynamic logic.
 - **Dependencies**: pydantic-settings.

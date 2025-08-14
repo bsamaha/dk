@@ -76,7 +76,8 @@ class Settings(BaseSettings):
             ]
 
     model_config = SettingsConfigDict(
-        env_file=[".env.development", ".env.production"],
+        # Prefer production env file when present; development is fallback for local runs
+        env_file=[".env.production", ".env.development"],
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
