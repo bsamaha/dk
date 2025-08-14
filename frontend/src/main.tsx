@@ -17,7 +17,7 @@ import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MantineProvider theme={brandTheme} defaultColorScheme="light">
+    <MantineProvider theme={brandTheme} defaultColorScheme="auto">
       <ErrorBoundary>
         <App />
       </ErrorBoundary>

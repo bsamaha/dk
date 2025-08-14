@@ -136,18 +136,35 @@ const OddsCalculatorTab = () => {
   const displayedOdds = useMemo(() => formatOddsFromDecimal(oddsDecimal, format), [oddsDecimal, format]);
   // Input field state (editable)
   const [oddsInput, setOddsInput] = useState<string>(displayedOdds);
+  const [oddsInputError, setOddsInputError] = useState<string | null>(null);
   // Keep input synchronized with computed display value without updating during render
   useEffect(() => {
     setOddsInput(displayedOdds);
+    setOddsInputError(null);
   }, [displayedOdds]);
 
   const commitOddsInput = () => {
+    // Fractional odds validation
+    if (format === 'fractional') {
+      const parts = oddsInput.split('/');
+      if (
+        parts.length !== 2 ||
+        Number.isNaN(Number(parts[0])) ||
+        Number.isNaN(Number(parts[1])) ||
+        Number(parts[1]) === 0
+      ) {
+        setOddsInputError("Malformed fractional odds. Please use the format 'a/b' with numeric values.");
+        setOddsInput(displayedOdds);
+        return;
+      }
+    }
     try {
       const d = toDecimalOdds(oddsInput, format);
       const clamped = Math.min(Math.max(d, ODDS_DECIMAL_MIN), ODDS_DECIMAL_MAX);
       setOddsDecimal(clamped);
+      setOddsInputError(null);
     } catch {
-      // ignore invalid input; field will snap back on next render
+      setOddsInputError('Invalid odds input. Please check your entry.');
       setOddsInput(displayedOdds);
     }
   };
@@ -405,6 +422,7 @@ const OddsCalculatorTab = () => {
                       onBlur={commitOddsInput}
                       onKeyDown={(e) => { if (e.key === 'Enter') { commitOddsInput(); } }}
                       size="sm"
+                      error={oddsInputError || undefined}
                       styles={{ input: { width: 120, textAlign: 'center' } }}
                     />
                     <ActionIcon
