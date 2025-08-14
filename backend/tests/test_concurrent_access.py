@@ -38,9 +38,9 @@ class TestConcurrentAccess:
         assert not errors, f"Errors during concurrent access: {errors}"
         assert len(instances) == 10, "Should have 10 instances"
         first_instance = instances[0]
-        assert all(
-            instance is first_instance for instance in instances
-        ), "All instances should be the same object"
+        assert all(instance is first_instance for instance in instances), (
+            "All instances should be the same object"
+        )
 
     def test_concurrent_initialization(self):
         """Test that concurrent initialization doesn't cause race conditions."""
@@ -86,9 +86,9 @@ class TestConcurrentAccess:
         # Only one initialization should have taken significant time
         # Others should be nearly instantaneous
         significant_times = [t for t in initialization_times if t > 1.0]
-        assert (
-            len(significant_times) <= 1
-        ), f"Too many threads did full initialization: {significant_times}"
+        assert len(significant_times) <= 1, (
+            f"Too many threads did full initialization: {significant_times}"
+        )
 
     def test_singleton_performance(self):
         """Test that singleton doesn't impact performance."""
@@ -103,9 +103,9 @@ class TestConcurrentAccess:
         end_time = time.time()
 
         # Should complete within reasonable time (very fast for 100 accesses)
-        assert (
-            end_time - start_time < 1.0
-        ), f"Singleton access too slow: {end_time - start_time:.2f}s"
+        assert end_time - start_time < 1.0, (
+            f"Singleton access too slow: {end_time - start_time:.2f}s"
+        )
 
     def test_concurrent_queries(self):
         """Test concurrent query execution."""
@@ -137,9 +137,9 @@ class TestConcurrentAccess:
         # Verify all results are consistent
         assert len(results) == 30  # 6 threads * 5 queries each
         first_count = results[0]
-        assert all(
-            count == first_count for count in results
-        ), "Query results should be consistent across threads"
+        assert all(count == first_count for count in results), (
+            "Query results should be consistent across threads"
+        )
 
     def test_singleton_state_consistency(self):
         """Test that singleton state remains consistent across threads."""
@@ -170,9 +170,9 @@ class TestConcurrentAccess:
         # All metadata should be identical
         assert len(metadata_results) == 8
         for metadata in metadata_results:
-            assert (
-                metadata == initial_metadata
-            ), "Metadata should be consistent across all threads"
+            assert metadata == initial_metadata, (
+                "Metadata should be consistent across all threads"
+            )
 
     def test_error_handling_during_initialization(self):
         """Test error handling when initialization fails."""
@@ -254,6 +254,6 @@ class TestConcurrentAccess:
 
         # Results should be consistent (all should return same number of positions)
         first_result = results[0]
-        assert all(
-            r == first_result for r in results
-        ), "Results should be consistent under concurrent load"
+        assert all(r == first_result for r in results), (
+            "Results should be consistent under concurrent load"
+        )
