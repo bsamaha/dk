@@ -13,6 +13,7 @@ const Header = () => {
     { id: 'players', label: 'Players', icon: '👤' },
     { id: 'analytics', label: 'Analytics', icon: '📈' },
     { id: 'combinations', label: 'Combinations', icon: '🔗' },
+    { id: 'tools', label: 'Tools', icon: '🧰' },
     { id: 'about', label: 'About', icon: 'ℹ️' },
   ] as const;
 
