@@ -18,7 +18,10 @@ async def get_teams(
 
     def _query() -> TeamsResponse:
         # Unique teams and total count
-        df = qs.query("SELECT DISTINCT Team AS team FROM picks ORDER BY team LIMIT ?", [limit])
+        df = qs.query(
+            "SELECT DISTINCT Team AS team FROM picks ORDER BY team LIMIT ?",
+            [limit],
+        )
         count_df = qs.query("SELECT COUNT(DISTINCT Team) AS cnt FROM picks")
         teams = df["team"].to_list() if not df.is_empty() else []
         total_count = int(count_df["cnt"][0]) if not count_df.is_empty() else 0

@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
-from . import analytics, combinations, metadata, players, positions
-from . import teams
+from . import analytics, combinations, metadata, players, positions, teams
 
 router = APIRouter()
 
