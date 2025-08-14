@@ -30,7 +30,7 @@ import {
   CartesianGrid,
   XAxis,
   YAxis,
-  Tooltip,
+  Tooltip as RechartsTooltip,
 } from 'recharts';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
 
@@ -207,7 +207,7 @@ const OddsCalculatorTab = () => {
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#E5E7EB'} />
               <XAxis dataKey="p" tickFormatter={v => `${v}%`} />
               <YAxis tickFormatter={v => `$${v}`} />
-              <Tooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'EV']} labelFormatter={l => `True Probability: ${l}%`} />
+              <RechartsTooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'EV']} labelFormatter={l => `True Probability: ${l}%`} />
               <Area type="monotone" dataKey="ev" stroke="#00A86B" fillOpacity={1} fill="url(#evArea)" />
             </AreaChart>
           </ResponsiveContainer>
