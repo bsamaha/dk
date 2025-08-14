@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Title,
   Text,
@@ -67,7 +67,6 @@ const DECIMAL_TICK_COUNT = 9; // evenly spread for decimal/fractional
 const OddsCalculatorTab = () => {
   useMantineTheme();
   const [format, setFormat] = useState<OddsFormat>('american');
-  const [odds, setOdds] = useState<string>('-110');
   const [oddsDecimal, setOddsDecimal] = useState<number>(() => {
     try {
       return toDecimalOdds('-110', 'american');
@@ -137,13 +136,10 @@ const OddsCalculatorTab = () => {
   const displayedOdds = useMemo(() => formatOddsFromDecimal(oddsDecimal, format), [oddsDecimal, format]);
   // Input field state (editable)
   const [oddsInput, setOddsInput] = useState<string>(displayedOdds);
-  if (odds !== displayedOdds) setOdds(displayedOdds);
-  // Sync input display when underlying decimal/format changes
-  if (oddsInput !== displayedOdds) {
-    // Update only if the user is not currently typing a different value (best-effort)
-    // In practice, this runs on re-render and keeps the field consistent after commits
+  // Keep input synchronized with computed display value without updating during render
+  useEffect(() => {
     setOddsInput(displayedOdds);
-  }
+  }, [displayedOdds]);
 
   const commitOddsInput = () => {
     try {
@@ -233,7 +229,6 @@ const OddsCalculatorTab = () => {
 
   const resetForm = () => {
     setFormat('american');
-    setOdds('-110');
     setOddsDecimal(toDecimalOdds('-110', 'american'));
     setStake(100);
     setPTruePct(50);
@@ -367,7 +362,7 @@ const OddsCalculatorTab = () => {
             <Stack gap="lg">
               <div>
                 <Group gap="xs" mb="xs">
-                  <Text size="sm" fw={500}>Odds Format</Text>
+                  <Text size="sm" fw={500} style={{ color: isDark ? '#FFFFFF' : GRAPHITE }}>Odds Format</Text>
                   <Tooltip label="Choose how the sportsbook quotes odds">
                     <ActionIcon variant="subtle" size="xs">
                       <IconInfoCircle size={14} />
@@ -388,7 +383,7 @@ const OddsCalculatorTab = () => {
               <div>
                 <Group justify="space-between" align="center" mb="xs">
                   <Group gap="xs">
-                    <Text size="sm" fw={500}>Odds</Text>
+                    <Text size="sm" fw={500} style={{ color: isDark ? '#FFFFFF' : GRAPHITE }}>Odds</Text>
                     <Tooltip label="The line offered by the sportsbook">
                       <ActionIcon variant="subtle" size="xs">
                         <IconInfoCircle size={14} />
@@ -448,7 +443,7 @@ const OddsCalculatorTab = () => {
 
               <div>
                 <Group gap="xs" mb="xs">
-                  <Text size="sm" fw={500}>Stake</Text>
+                  <Text size="sm" fw={500} style={{ color: isDark ? '#FFFFFF' : GRAPHITE }}>Stake</Text>
                   <Tooltip label="Amount you plan to wager">
                     <ActionIcon variant="subtle" size="xs">
                       <IconInfoCircle size={14} />
@@ -469,6 +464,7 @@ const OddsCalculatorTab = () => {
                     checked={perUnit}
                     onChange={(e) => setPerUnit(e.currentTarget.checked)}
                     size="sm"
+                    styles={{ label: { color: isDark ? '#FFFFFF' : GRAPHITE } }}
                   />
                 </Group>
               </div>
@@ -484,7 +480,7 @@ const OddsCalculatorTab = () => {
             <div>
               <Group justify="space-between" align="center" mb="xs">
                 <Group gap="xs">
-                  <Text size="sm" fw={500}>True Probability</Text>
+                  <Text size="sm" fw={500} style={{ color: isDark ? '#FFFFFF' : GRAPHITE }}>True Probability</Text>
                   <Tooltip label="Your estimated chance of the bet winning">
                     <ActionIcon variant="subtle" size="xs">
                       <IconInfoCircle size={14} />
@@ -528,13 +524,13 @@ const OddsCalculatorTab = () => {
                   </ActionIcon>
                 </Group>
                 <Stack gap="xs">
-                  <Text size="sm">
+                  <Text size="sm" style={{ color: isDark ? '#FFFFFF' : GRAPHITE }}>
                     <strong>Decimal:</strong> {fair.decimal.toFixed(2)}
                   </Text>
-                  <Text size="sm">
+                  <Text size="sm" style={{ color: isDark ? '#FFFFFF' : GRAPHITE }}>
                     <strong>American:</strong> {formatAmerican(fair.american)}
                   </Text>
-                  <Text size="sm">
+                  <Text size="sm" style={{ color: isDark ? '#FFFFFF' : GRAPHITE }}>
                     <strong>Fractional:</strong> {fair.fractional}
                   </Text>
                 </Stack>
@@ -545,7 +541,7 @@ const OddsCalculatorTab = () => {
           {/* Education Section */}
           <Card withBorder p="md" radius="md" style={{ backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', borderColor: getGridStroke(isDark) }}>
             <Group justify="space-between" align="center" onClick={toggleEducation} style={{ cursor: 'pointer' }}>
-              <Text size="sm" fw={600}>What is implied probability?</Text>
+              <Text size="sm" fw={600} style={{ color: isDark ? '#FFFFFF' : GRAPHITE }}>What is implied probability?</Text>
               <ActionIcon variant="subtle" size="sm">
                 <IconChevronDown
                   size={16}
