@@ -30,6 +30,7 @@ import {
   CartesianGrid,
   XAxis,
   YAxis,
+  ReferenceLine,
   Tooltip as RechartsTooltip,
 } from 'recharts';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
@@ -66,7 +67,7 @@ const OddsCalculatorTab = () => {
       const points = Array.from({ length: 21 }, (_, i) => i * 5).map(p => {
         const pTrue = p / 100;
         const ev = expectedValuePerUnit(d, pTrue, stake);
-        return { p, ev };
+        return { p, ev, evPos: Math.max(ev, 0), evNeg: Math.min(ev, 0) };
       });
       return points;
     } catch {
@@ -96,7 +97,7 @@ const OddsCalculatorTab = () => {
       <Text c="dimmed" mt="xs">Convert odds to implied probability and evaluate positive vs negative EV.</Text>
 
       {/* Inputs grouped by source: Sportsbook vs Your Model */}
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div>
           <Title order={5} className="mb-2">Sportsbook Odds</Title>
           <Group grow align="end">
@@ -134,10 +135,10 @@ const OddsCalculatorTab = () => {
             } value={stake} onChange={v => setStake(Number(v) || 0)} min={0} />
           </Group>
         </div>
-        <div>
-          <Title order={5} className="mb-2">Your Model</Title>
+        <div className="space-y-4">
+          <Title order={5} className="mb-3">Your Model</Title>
           <div>
-            <div className="mb-2 flex items-center gap-2">
+            <div className="mb-3 flex items-center gap-2">
               <Text>Your True Probability (%)</Text>
               <Tooltip label="Your estimated chance of the bet winning, based on your own model or research."><span>ⓘ</span></Tooltip>
               <Badge variant="light">{pTruePct}%</Badge>
@@ -159,7 +160,7 @@ const OddsCalculatorTab = () => {
             />
           </div>
           {fair && (
-            <Group mt="sm" gap="md">
+            <Group mt="md" gap="md">
               <Badge variant="outline">Fair (Decimal): {fair.decimal.toFixed(2)}</Badge>
               <Badge variant="outline">Fair (American): {formatAmerican(fair.american)}</Badge>
               <Badge variant="outline">Fair (Fractional): {fair.fractional}</Badge>
@@ -199,16 +200,22 @@ const OddsCalculatorTab = () => {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={evCurveData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="evArea" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={isDark ? '#00A86B' : '#00A86B'} stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor={isDark ? '#00A86B' : '#00A86B'} stopOpacity={0.1}/>
+                <linearGradient id="evAreaPos" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#00A86B" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#00A86B" stopOpacity={0.1}/>
+                </linearGradient>
+                <linearGradient id="evAreaNeg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#DC2626" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#DC2626" stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#E5E7EB'} />
               <XAxis dataKey="p" tickFormatter={v => `${v}%`} />
               <YAxis tickFormatter={v => `$${v}`} />
               <RechartsTooltip formatter={(v: number) => [`$${v.toFixed(2)}`, 'EV']} labelFormatter={l => `True Probability: ${l}%`} />
-              <Area type="monotone" dataKey="ev" stroke="#00A86B" fillOpacity={1} fill="url(#evArea)" />
+              <ReferenceLine y={0} stroke={isDark ? '#9CA3AF' : '#9CA3AF'} strokeDasharray="4 4" />
+              <Area type="monotone" dataKey="evNeg" stroke="#DC2626" fillOpacity={1} fill="url(#evAreaNeg)" isAnimationActive={false} />
+              <Area type="monotone" dataKey="evPos" stroke="#00A86B" fillOpacity={1} fill="url(#evAreaPos)" isAnimationActive={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
