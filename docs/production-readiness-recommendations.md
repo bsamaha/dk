@@ -405,13 +405,13 @@ services:
 
 - [x] P0: Fix deploy port mapping or deploy via compose (app + nginx) with healthchecks.
 - [x] P0: Resolve `/teams/` endpoint drift and unify `Position` domain across FE/BE.
-- [ ] P1: Enforce exception chaining; standardize error schema with `request_id`.
-- [ ] P1: Add healthchecks; adopt zero-downtime (blue/green or compose gating).
-- [ ] P1: Add structured JSON logging with correlation IDs; propagate `X-Request-ID`.
+- [x] P1: Enforce exception chaining; standardize error schema with `request_id`.
+- [x] P1: Add healthchecks; adopt zero-downtime (blue/green or compose gating).
+- [x] P1: Add structured JSON logging with correlation IDs; propagate `X-Request-ID`.
 - [ ] P1: (Defer) External error reporting/metrics.
-- [ ] P1: Adopt `uv` for Python installs in Docker; consider `pyproject.toml` + `uv lock` for pins.
-- [ ] P1: Ensure Nginx-only rate limiting (ADR-0003) is applied; drop app-level limiting.
-- [ ] P1: Ensure arm64 builds when building from x86_64 CI/dev (pin `platform: linux/arm64`).
+- [x] P1: Adopt `uv` for Python installs in Docker; consider `pyproject.toml` + `uv lock` for pins.
+- [x] P1: Ensure Nginx-only rate limiting (ADR-0003) is applied; drop app-level limiting.
+- [x] P1: Ensure arm64 builds when building from x86_64 CI/dev (pin `platform: linux/arm64`).
 - [ ] P2: Pin backend deps with `uv lock` (or `requirements.txt` pins); add SBOM + vulnerability scan.
 - [ ] P2: Generate frontend TS + Zod from OpenAPI; phase out manual types/schemas.
 - [ ] P2: Add caching/materialization for hot endpoints with TTL.

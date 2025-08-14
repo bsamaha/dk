@@ -31,6 +31,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    platform: linux/arm64
 
   nginx:
     image: nginx:alpine
@@ -55,6 +56,7 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+    platform: linux/arm64
 
   # Certbot is defined for manual/cron invocation; it is not started automatically.
   certbot:

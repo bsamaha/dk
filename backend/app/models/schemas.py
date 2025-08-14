@@ -338,3 +338,4 @@ class ErrorResponse(BaseModel):
     error: str = Field(..., description="Error message")
     detail: Optional[str] = Field(None, description="Detailed error information")
     code: Optional[int] = Field(None, description="Error code")
+    request_id: Optional[str] = Field(None, description="Correlation ID for this request")

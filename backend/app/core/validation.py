@@ -1,13 +1,29 @@
 """Validation middleware and error handling for API endpoints."""
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
+
+
+async def http_error_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    """Standard HTTPException handler that returns unified error schema with request_id."""
+    request_id: Optional[str] = getattr(getattr(request, "state", object()), "request_id", None)
+
+    # Map to unified error content
+    detail = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
+    content = {
+        "error": "HTTPException",
+        "detail": detail,
+        "code": exc.status_code,
+        "request_id": request_id,
+    }
+    headers = {"X-Request-ID": request_id} if request_id else None
+    return JSONResponse(status_code=exc.status_code, content=content, headers=headers)
 
 
 async def validation_exception_handler(
@@ -32,9 +48,17 @@ async def validation_exception_handler(
         }
         errors.append(error_detail)
 
-    # Log validation errors for debugging
+    request_id: Optional[str] = getattr(getattr(request, "state", object()), "request_id", None)
+
+    # Log validation errors for debugging (structured)
     logger.warning(
-        "Validation error for %s %s: %s", request.method, request.url.path, errors
+        "validation_error",
+        extra={
+            "request_id": request_id,
+            "path": request.url.path,
+            "method": request.method,
+            "validation_errors": errors,
+        },
     )
 
     # Return a structured error response
@@ -43,10 +67,12 @@ async def validation_exception_handler(
         "detail": "One or more fields failed validation",
         "validation_errors": errors,
         "code": status.HTTP_422_UNPROCESSABLE_ENTITY,
+        "request_id": request_id,
     }
 
+    headers = {"X-Request-ID": request_id} if request_id else None
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=error_response
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=error_response, headers=headers
     )
 
 
@@ -75,7 +101,7 @@ def validate_query_params(params: Dict[str, Any], validation_schema: Any) -> Any
         validated_params = validation_schema(**cleaned_params)
         return validated_params
     except ValidationError as e:
-        # Convert validation error to HTTP exception
+        # Convert validation error to HTTP exception (preserve cause)
         errors = []
         for error in e.errors():
             field_path = " -> ".join(str(loc) for loc in error["loc"])
@@ -85,7 +111,7 @@ def validate_query_params(params: Dict[str, Any], validation_schema: Any) -> Any
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid query parameters: {error_message}",
-        )
+        ) from e
 
 
 def sanitize_string_input(value: str, max_length: int = 100) -> str:
@@ -239,9 +265,27 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
         # Defer to FastAPI's default or our registered handlers
         raise exc
 
-    logger.exception("Unhandled error for %s %s", request.method, request.url.path)
+    request_id: Optional[str] = getattr(getattr(request, "state", object()), "request_id", None)
 
+    # Structured error log with context
+    logger.exception(
+        "unhandled_error",
+        extra={
+            "request_id": request_id,
+            "path": request.url.path,
+            "method": request.method,
+        },
+    )
+
+    content = {
+        "error": "Internal Server Error",
+        "detail": "An internal error occurred",
+        "code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+        "request_id": request_id,
+    }
+    headers = {"X-Request-ID": request_id} if request_id else None
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "An internal error occurred"},
+        content=content,
+        headers=headers,
     )
