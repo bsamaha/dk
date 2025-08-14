@@ -402,6 +402,17 @@ body {
   color: var(--color-audible-gold) !important;
 }
 
+/* Non-active segmented items – subtle light/dark background for readability */
+.mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active='false'] {
+  background-color: rgba(0, 0, 0, 0.04) !important; /* light grey in light mode */
+}
+.dark .mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active='false'] {
+  background-color: rgba(255, 255, 255, 0.08) !important; /* light grey-ish in dark */
+}
+.mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active='false'] .mantine-SegmentedControl-innerLabel {
+  color: inherit !important;
+}
+
 /* Custom Tabs styles */
 .mantine-Tabs-root .mantine-Tabs-list {
   border-bottom: 2px solid #e5e7eb;
