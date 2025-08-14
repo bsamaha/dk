@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Title,
   Text,
@@ -67,7 +67,6 @@ const DECIMAL_TICK_COUNT = 9; // evenly spread for decimal/fractional
 const OddsCalculatorTab = () => {
   useMantineTheme();
   const [format, setFormat] = useState<OddsFormat>('american');
-  const [odds, setOdds] = useState<string>('-110');
   const [oddsDecimal, setOddsDecimal] = useState<number>(() => {
     try {
       return toDecimalOdds('-110', 'american');
@@ -137,13 +136,10 @@ const OddsCalculatorTab = () => {
   const displayedOdds = useMemo(() => formatOddsFromDecimal(oddsDecimal, format), [oddsDecimal, format]);
   // Input field state (editable)
   const [oddsInput, setOddsInput] = useState<string>(displayedOdds);
-  if (odds !== displayedOdds) setOdds(displayedOdds);
-  // Sync input display when underlying decimal/format changes
-  if (oddsInput !== displayedOdds) {
-    // Update only if the user is not currently typing a different value (best-effort)
-    // In practice, this runs on re-render and keeps the field consistent after commits
+  // Keep input synchronized with computed display value without updating during render
+  useEffect(() => {
     setOddsInput(displayedOdds);
-  }
+  }, [displayedOdds]);
 
   const commitOddsInput = () => {
     try {
@@ -233,7 +229,6 @@ const OddsCalculatorTab = () => {
 
   const resetForm = () => {
     setFormat('american');
-    setOdds('-110');
     setOddsDecimal(toDecimalOdds('-110', 'american'));
     setStake(100);
     setPTruePct(50);
