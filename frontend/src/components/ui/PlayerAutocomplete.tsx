@@ -191,20 +191,17 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
       }}
       comboboxProps={{
         transitionProps: { duration: 200, transition: 'pop' },
-        onOptionSubmit: (val: string) => {
-          if (val && !value.includes(val)) {
-            onChange([...value, val]);
-          }
+        classNames: {
+          option: 'player-autocomplete-option',
+          dropdown: 'player-autocomplete-dropdown',
+        },
+        styles: {
+          dropdown: {
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+          },
         },
       }}
-      styles={{
-        dropdown: {
-          border: '1px solid #e5e7eb',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-        },
-        input: { borderColor: '#e5e7eb', '&:focus': { borderColor: '#00A86B' } },
-      }}
-      classNames={{ option: 'player-autocomplete-option' }}
     />
   );
 };

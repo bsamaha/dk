@@ -99,38 +99,7 @@ function App() {
             },
             primaryColor: 'brand',
             defaultRadius: 'md',
-            components: {
-              MultiSelect: {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                styles: (theme: any) => ({
-                  dropdown: {
-                    backgroundColor:
-                      theme.colorScheme === 'dark'
-                        ? theme.colors.dark[7]
-                        : theme.white,
-                  },
-                  option: {
-                    color:
-                      theme.colorScheme === 'dark' ? theme.white : theme.black,
-                  },
-                }),
-              },
-              Select: {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                styles: (theme: any) => ({
-                  dropdown: {
-                    backgroundColor:
-                      theme.colorScheme === 'dark'
-                        ? theme.colors.dark[7]
-                        : theme.white,
-                  },
-                  option: {
-                    color:
-                      theme.colorScheme === 'dark' ? theme.white : theme.black,
-                  },
-                }),
-              },
-            },
+            components: {},
           }}
         >
           <Notifications position="top-right" />

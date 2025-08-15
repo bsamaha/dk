@@ -10,20 +10,32 @@ from pydantic import ValidationError
 logger = logging.getLogger(__name__)
 
 
-async def http_error_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    """Standard HTTPException handler that returns unified error schema with request_id."""
-    request_id: Optional[str] = getattr(getattr(request, "state", object()), "request_id", None)
+async def http_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Unified error schema for HTTPException.
 
-    # Map to unified error content
-    detail = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
+    Signature uses ``Exception`` for broad compatibility with FastAPI/Starlette
+    type hints on ``add_exception_handler``. We still only register this handler
+    for ``HTTPException`` in app setup.
+    """
+    request_id: Optional[str] = getattr(
+        getattr(request, "state", object()), "request_id", None
+    )
+
+    # Resolve status code and detail safely regardless of static type
+    status_code: int = getattr(
+        exc, "status_code", status.HTTP_500_INTERNAL_SERVER_ERROR
+    )
+    raw_detail = getattr(exc, "detail", str(exc))
+    detail: str = raw_detail if isinstance(raw_detail, str) else str(raw_detail)
+
     content = {
         "error": "HTTPException",
         "detail": detail,
-        "code": exc.status_code,
+        "code": status_code,
         "request_id": request_id,
     }
     headers = {"X-Request-ID": request_id} if request_id else None
-    return JSONResponse(status_code=exc.status_code, content=content, headers=headers)
+    return JSONResponse(status_code=status_code, content=content, headers=headers)
 
 
 async def validation_exception_handler(
@@ -48,7 +60,9 @@ async def validation_exception_handler(
         }
         errors.append(error_detail)
 
-    request_id: Optional[str] = getattr(getattr(request, "state", object()), "request_id", None)
+    request_id: Optional[str] = getattr(
+        getattr(request, "state", object()), "request_id", None
+    )
 
     # Log validation errors for debugging (structured)
     logger.warning(
@@ -72,7 +86,9 @@ async def validation_exception_handler(
 
     headers = {"X-Request-ID": request_id} if request_id else None
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=error_response, headers=headers
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=error_response,
+        headers=headers,
     )
 
 
@@ -265,7 +281,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
         # Defer to FastAPI's default or our registered handlers
         raise exc
 
-    request_id: Optional[str] = getattr(getattr(request, "state", object()), "request_id", None)
+    request_id: Optional[str] = getattr(
+        getattr(request, "state", object()), "request_id", None
+    )
 
     # Structured error log with context
     logger.exception(
