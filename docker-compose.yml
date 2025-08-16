@@ -31,6 +31,10 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    # Light runtime guardrails; safe defaults for single-host
+    pids_limit: 256
+    ulimits:
+      nofile: 4096
     platform: linux/arm64
 
   nginx:

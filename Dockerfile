@@ -56,5 +56,10 @@ EXPOSE 8000
 # Container healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD curl -f http://127.0.0.1:8000/health || exit 1
 
+# Create non-root user and adjust permissions
+RUN adduser --disabled-password --gecos "appuser" appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
 # Default command runs the API server
 CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]

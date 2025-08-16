@@ -14,24 +14,11 @@ import {
   Popover,
 } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-} from 'recharts';
+//
+import { ThemedBarChart } from '../ui/charts/ThemedBarChart';
 import type { Week17BringBackPlayer, Week17Scope } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
-import {
-  getResponsiveTooltipStyle,
-  getCursorStyle,
-  getBarChartProps,
-  getGridStroke,
-  POSITION_COLORS,
-} from '../../utils/chartTheme';
+import { POSITION_COLORS } from '../../utils/chartTheme';
 
 // Custom hook for window size
 const useWindowSize = () => {
@@ -103,7 +90,7 @@ const Week17BringBackTab = () => {
   // Theme-aware values
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const axisTickColor = isDark ? '#E5E7EB' : '#4B5563';
+  // keep for possible styling downstream
 
   // Fetch all players from metadata
   const { data: metadataData } = useQuery({
@@ -394,135 +381,16 @@ const Week17BringBackTab = () => {
             </div>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{
-                left: 10,
-                right: windowWidth < 640 ? 20 : 80,
-                top: windowWidth < 640 ? 15 : 30,
-                bottom: windowWidth < 640 ? 15 : 30,
-              }}
-              barCategoryGap="15%"
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke={getGridStroke(isDark)}
-                horizontal={true}
-                vertical={false}
-              />
-              <XAxis
-                type="number"
-                domain={[0, 'auto']}
-                tickFormatter={value => `${value.toFixed(1)}%`}
-                tick={{
-                  fill: axisTickColor,
-                  fontSize: windowWidth < 640 ? '10px' : '12px',
-                }}
-                axisLine={{ stroke: axisTickColor }}
-                tickLine={{ stroke: axisTickColor }}
-                label={{
-                  value: 'Draft Percentage',
-                  position: 'insideBottom',
-                  offset: windowWidth < 640 ? -10 : -15,
-                  style: {
-                    textAnchor: 'middle',
-                    fill: axisTickColor,
-                    fontSize: windowWidth < 640 ? '11px' : '13px',
-                    fontWeight: 500,
-                  },
-                }}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                width={windowWidth < 640 ? 100 : 150}
-                tick={{
-                  fill: axisTickColor,
-                  fontSize: windowWidth < 640 ? '10px' : '12px',
-                  textAnchor: 'end',
-                  fontWeight: 500,
-                }}
-                tickFormatter={value =>
-                  windowWidth < 640
-                    ? value.length > 12
-                      ? value.substring(0, 12) + '...'
-                      : value
-                    : value
-                }
-                interval={0}
-                axisLine={false}
-                tickLine={false}
-              />
-              <RechartsTooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0].payload;
-                    return (
-                      <div
-                        style={getResponsiveTooltipStyle(isDark, windowWidth)}
-                      >
-                        <p
-                          style={{
-                            margin: '0 0 6px 0',
-                            fontWeight: 600,
-                            fontSize: windowWidth < 640 ? '13px' : '14px',
-                          }}
-                        >
-                          {data.name}
-                        </p>
-                        <p
-                          style={{
-                            margin: '0 0 4px 0',
-                            color: '#666',
-                            fontSize: windowWidth < 640 ? '10px' : '11px',
-                          }}
-                        >
-                          Position: {data.position}
-                        </p>
-                        <p
-                          style={{
-                            margin: '0 0 6px 0',
-                            color: '#00A86B',
-                            fontSize: windowWidth < 640 ? '14px' : '15px',
-                            fontWeight: 600,
-                          }}
-                        >
-                          {`${data.value.toFixed(1)}%`}
-                        </p>
-                        <p
-                          style={{
-                            margin: 0,
-                            color: '#888',
-                            fontSize: windowWidth < 640 ? '10px' : '11px',
-                            fontStyle: 'italic',
-                          }}
-                        >
-                          {scope === 'team'
-                            ? `Drafted in ${data.value.toFixed(1)}% of all drafts`
-                            : `Co-drafted ${data.value.toFixed(1)}% of the time with your player`}
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-                cursor={getCursorStyle(isDark)}
-              />
-              <Bar
-                dataKey="value"
-                fill={getBarChartProps().fill}
-                radius={[
-                  0,
-                  windowWidth < 640 ? 4 : 6,
-                  windowWidth < 640 ? 4 : 6,
-                  0,
-                ]}
-                barSize={windowWidth < 640 ? 25 : 35}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <ThemedBarChart
+            data={chartData}
+            layout="vertical"
+            xLabel="Draft Percentage"
+            valueFormatter={(v: number) => `${v.toFixed(1)}%`}
+            yDataKey="value"
+            xDataKey="name"
+            height={windowWidth < 640 ? 400 : 700}
+            marginLeft={windowWidth < 640 ? 100 : 150}
+          />
         )}
       </div>
     </div>
