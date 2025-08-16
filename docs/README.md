@@ -43,8 +43,8 @@ flowchart LR
         A[React Components] -->|TanStack Query| B(Api Layer)
     end
     subgraph Back-End (FastAPI 8000)
-        C[Routers] --> D[Services Layer]\n(data_service / analytics_service)
-        D --> E[DuckDB / Polars]
+        C[Routers] --> D[QueryService]
+        D --> E[ DuckDB + Polars shaping ]
     end
     B -- REST/JSON --> C
     E -- parquet --> F[data/bestball.parquet]
@@ -78,9 +78,7 @@ README.md (this file)
  │   └─ schemas.md                       # Field-level docs
  └─ services/
      ├─ README.md                        # Service catalogue & patterns
-     ├─ duckdb_service.md
-     ├─ data_service.md
-     └─ analytics_service.md
+     └─ query_service.md
 ```
 
 ---
@@ -100,7 +98,7 @@ README.md (this file)
 
 * Prefer **relative links** above to fetch detailed docs quickly.
 * When you need request/response shapes, open [`models/schemas.md`](models/schemas.md) instead of scraping code.
-* For query logic performance tweaks, inspect [`services/analytics_service.md`](services/analytics_service.md).
+* For query logic, inspect [`services/query_service.md`](services/query_service.md).
 * ADR-0002 is the *north star*—avoid suggesting Redis, Prometheus, or multi-service deployments unless refactor is explicitly underway.
 
 ---

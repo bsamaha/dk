@@ -79,9 +79,8 @@ graph TD
 
 - **Purpose**: Defines Pydantic models, enums, and response schemas for API contracts.
 - **Key Components**:
-  - Enums: `Position` (QB, RB, etc.), `SortableColumn`, `SortOrder`, `AggregationType`.
-  - Models: `MetadataResponse`, `Player`, `PlayersResponse`, `PositionStats`, `PositionStatsResponse`, `TeamCombination`, `CombinationsResponse`, and many more for various endpoints (e.g., `DraftSlotRow`, `HeatMapCell`).
-  - Used for request validation, response serialization, and type safety.
+  - Enums: `Position`, `SortableColumn`, `SortOrder`, `AggregationType`.
+  - Models: `MetadataResponse`, `Player`, `PlayersResponse`, `PositionStats`, `PositionStatsResponse`, `PlayerDetailsResponse`, `RosterConstruction`, `TeamsResponse`, Week 17 bringback models.
 - **Flow**: Models are used in API routers for response types and in services for data shaping.
 - **Dependencies**: pydantic, typing, enum.
 
@@ -107,20 +106,11 @@ graph TD
 ```mermaid
 flowchart TD
     A[Start: Analytics Method Called]
-    A --> B{Is Query Complex?}
-    B -- Yes --> C[Build SQL]
-    C --> D[Time DuckDB Query]
-    D --> E{DuckDB Time >50ms?}
-    E -- No --> F[Use DuckDB Result]
-    E -- Yes --> G[Benchmark Polars Equivalent]
-    G --> H{Polars >20% Faster?}
-    H -- Yes --> I[Use Polars Result]
-    H -- No --> F
-    B -- No --> J[Use DataService (Polars)]
-    F --> K[Shape to Models/Dicts]
-    I --> K
-    J --> K
-    K --> L[Return to Router]
+    A --> B[Build parameterized SQL]
+    B --> C[Execute via DuckDB]
+    C --> D[Convert to Arrow/Polars]
+    D --> E[Shape to dicts/models]
+    E --> F[Return to Router]
 ```
 
 ### `app/api/__init__.py`
@@ -133,16 +123,16 @@ flowchart TD
 ### `app/api/analytics.py`
 
 - **Purpose**: Router for analytics endpoints (e.g., /analytics/heat-map, /stacks, /draft-slot, /drift).
-- **Key Components**: APIRouter with prefix/tags; endpoints delegate to `analytics_service`, handle exceptions.
+- **Key Components**: APIRouter with prefix/tags; endpoints delegate to `QueryService`, handle exceptions.
 - **Flow**: Request -> validate queries -> call service -> return response model.
-- **Dependencies**: fastapi, logging, schemas, analytics_service.
+- **Dependencies**: fastapi, logging, schemas, query_service.
 
 ### `app/api/combinations.py`
 
 - **Purpose**: Router for player combinations and roster construction.
 - **Key Components**: Endpoints for /combinations/ (teams with required players) and /roster-construction/.
-- **Flow**: Similar to above; uses `analytics_service` for combinations, `data_service` for rosters.
-- **Dependencies**: fastapi, typing, logging, schemas, services.
+- **Flow**: Delegates to `QueryService`; offloads blocking work with `run_in_threadpool` directly.
+- **Dependencies**: fastapi, typing, logging, schemas, query_service.
 
 ### `app/api/metadata.py`
 
@@ -162,8 +152,8 @@ flowchart TD
 
 - **Purpose**: Router for position stats (/positions/stats, /first_player, /by_round, /roster-construction).
 - **Key Components**: Aggregations by position, round counts, roster constructions.
-- **Flow**: Delegates to `data_service`; shapes responses.
-- **Dependencies**: fastapi, typing, logging, schemas, data_service.
+- **Flow**: Delegates to `QueryService`; offloads blocking work with `run_in_threadpool` directly.
+- **Dependencies**: fastapi, typing, logging, schemas, query_service.
 
 ### `backend/requirements.txt`
 
@@ -172,9 +162,9 @@ flowchart TD
 
 ## Flow Control Overview
 
-1. **Startup**: `main.py` initializes app, loads services (which load data into memory via Polars/DuckDB).
+1. **Startup**: `main.py` initializes app and sets up `QueryService` in lifespan.
 2. **Request Handling**: FastAPI routes to appropriate api router -> validates params -> calls service method.
-3. **Service Layer**: `analytics_service` prefers DuckDB for complex queries, falls back to Polars if slower; `data_service` uses Polars directly.
+3. **Service Layer**: `QueryService` executes parameterized SQL via DuckDB and returns shaped results; Polars is used for light shaping where helpful.
 4. **Data Access**: Queries hit in-memory Parquet views/tables; results shaped to Pydantic models.
 5. **Response**: JSON via FastAPI, with error handling.
 6. **Error Flow**: Exceptions logged and raised as HTTP 500 with details.
@@ -184,21 +174,14 @@ sequenceDiagram
     participant Client
     participant FastAPI
     participant Router
-    participant AnalyticsService
-    participant DuckDBService
-    participant DataService
+    participant QueryService
+    participant DuckDB
     Client->>FastAPI: HTTP Request (e.g., GET /api/players)
     FastAPI->>Router: Route to handler
-    Router->>AnalyticsService: Call method (e.g., get_players)
-    alt Complex Analytics
-        AnalyticsService->>DuckDBService: Execute SQL Query
-        DuckDBService-->>AnalyticsService: Return Polars DF
-    else Fallback or Simple Query
-        AnalyticsService->>DataService: Execute Polars Operations
-        DataService-->>AnalyticsService: Return Data
-    end
-    Note over AnalyticsService: Benchmark and fallback if needed
-    AnalyticsService-->>Router: Shaped Response Data
+    Router->>QueryService: Call method (e.g., get_players)
+    QueryService->>DuckDB: Execute parameterized SQL
+    DuckDB-->>QueryService: Arrow/Polars result
+    QueryService-->>Router: Shaped Response Data
     Router-->>FastAPI: Response Model
     FastAPI-->>Client: JSON Response
 ```

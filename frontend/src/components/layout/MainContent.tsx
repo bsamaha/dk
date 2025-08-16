@@ -1,10 +1,12 @@
-import OverviewView from './OverviewView';
-import AnalyticsView from './AnalyticsView';
-import PlayersView from './PlayersView';
-import CombinationsView from './CombinationsView';
-import AboutView from './AboutView';
-import ToolsView from './ToolsView';
+import { Suspense, lazy } from 'react';
 import { useResponsive } from '../../hooks/useResponsive';
+
+const OverviewView = lazy(() => import('./OverviewView'));
+const AnalyticsView = lazy(() => import('./AnalyticsView'));
+const PlayersView = lazy(() => import('./PlayersView'));
+const CombinationsView = lazy(() => import('./CombinationsView'));
+const AboutView = lazy(() => import('./AboutView'));
+const ToolsView = lazy(() => import('./ToolsView'));
 
 interface MainContentProps {
   view:
@@ -39,7 +41,11 @@ const MainContent = ({ view }: MainContentProps) => {
 
   return (
     <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gridiron-graphite-light min-h-0">
-      <div className={`${responsive.padding} max-w-full`}>{renderView()}</div>
+      <div className={`${responsive.padding} max-w-full`}>
+        <Suspense fallback={<div className="p-6 text-gray-500">Loading…</div>}>
+          {renderView()}
+        </Suspense>
+      </div>
     </main>
   );
 };

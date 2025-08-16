@@ -40,7 +40,19 @@ export default defineConfig(({ mode }) => {
         input: {
           main: path.resolve(__dirname, 'index.html'),
         },
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('/react/') || id.includes('react-dom')) return 'vendor-react';
+              if (id.includes('@mantine/core') || id.includes('@mantine/hooks') || id.includes('@mantine/notifications')) return 'vendor-mantine';
+              if (id.includes('recharts')) return 'vendor-recharts';
+              if (id.includes('@tanstack/react-query')) return 'vendor-react-query';
+              return 'vendor';
+            }
+          },
+        },
       },
+      chunkSizeWarningLimit: 1200,
     },
     server: {
       host: env.VITE_HOST || 'localhost',
@@ -48,6 +60,12 @@ export default defineConfig(({ mode }) => {
       headers: {
         ...securityHeaders,
         'Content-Security-Policy': getDevCSPHeader(),
+      },
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+        },
       },
     },
     preview: {

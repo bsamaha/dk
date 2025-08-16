@@ -81,6 +81,21 @@ const Header = () => {
                 <IconMoon size={18} />
               )}
             </button>
+            <button
+              onClick={async () => {
+                if (import.meta.env.PROD) {
+                  await import('../../ga-init');
+                } else {
+                  // In dev/test, this will no-op since GA is disabled
+                  console.log('[GA] Manual init');
+                }
+              }}
+              className="ml-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gridiron-graphite/20 transition"
+              aria-label="Initialize analytics"
+              title="Initialize analytics"
+            >
+              <span className="text-xs">GA</span>
+            </button>
           </nav>
         </div>
       </div>

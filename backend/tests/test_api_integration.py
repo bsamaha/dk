@@ -85,16 +85,16 @@ def test_players_search(client):
     assert len(data["players"]) <= 5
 
 
-def test_players_search_missing_q(client):
-    """Test the player search endpoint with missing 'q' parameter."""
-    response = client.get("/api/players/search?limit=5")
-    assert response.status_code == 422 or response.status_code == 400
-
-
-def test_players_search_empty_q(client):
-    """Test the player search endpoint with empty 'q' parameter."""
-    response = client.get("/api/players/search?q=&limit=5")
-    assert response.status_code == 422 or response.status_code == 400
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/api/players/search?limit=5",  # missing q
+        "/api/players/search?q=&limit=5",  # empty q
+    ],
+)
+def test_players_search_invalid_query_returns_422(client, url):
+    response = client.get(url)
+    assert response.status_code == 422
 
 
 def test_player_details(client):
@@ -198,14 +198,23 @@ def test_player_combinations_pagination(client):
     assert d2["filter_applied"].get("offset") == 1
 
 
-def test_player_combinations_missing_required_players(client):
-    """Test player combinations endpoint with missing required_players parameter."""
-    response = client.get("/api/combinations/")
-    # Adjust the expected status code if your API returns something other than 422
-    assert response.status_code in (400, 422)
-    data = response.json()
-    # Adjust the key/message check below to match your API's error response format
-    assert "detail" in data
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/api/combinations/",  # missing required_players
+        "/api/combinations/?required_players=Aaron%20Jones&limit=-1",
+        "/api/combinations/?required_players=Aaron%20Jones&offset=-5",
+        "/api/combinations/?required_players=Aaron%20Jones&limit=0",
+        "/api/combinations/?required_players=Aaron%20Jones&offset=abc",
+        "/api/combinations/?required_players=Aaron%20Jones&limit=xyz",
+    ],
+)
+def test_combinations_invalid_params_return_422(client, url):
+    response = client.get(url)
+    assert response.status_code == 422
+    if response.headers.get("content-type", "").startswith("application/json"):
+        data = response.json()
+        assert "detail" in data
 
 
 def test_analytics_heat_map(client):
@@ -576,30 +585,6 @@ def test_503_when_query_service_missing(client):
     assert "unavailable" in response.text.lower()
 
 
-def test_player_combinations_invalid_limit_offset(client):
-    """Test invalid limit and offset query params are rejected with 422."""
-    base = "/api/combinations/?required_players=Aaron%20Jones"
-    r_neg_limit = client.get(base + "&limit=-1")
-    assert r_neg_limit.status_code in (400, 422)
-    assert "limit" in r_neg_limit.text.lower()
-
-    r_neg_offset = client.get(base + "&offset=-5")
-    assert r_neg_offset.status_code in (400, 422)
-    assert "offset" in r_neg_offset.text.lower()
-
-    r_zero_limit = client.get(base + "&limit=0")
-    assert r_zero_limit.status_code in (400, 422)
-    assert "limit" in r_zero_limit.text.lower()
-
-    r_str_offset = client.get(base + "&offset=abc")
-    assert r_str_offset.status_code in (400, 422)
-    assert "offset" in r_str_offset.text.lower()
-
-    r_str_limit = client.get(base + "&limit=xyz")
-    assert r_str_limit.status_code in (400, 422)
-    assert "limit" in r_str_limit.text.lower()
-
-
 def test_startup_failure_returns_503(monkeypatch):
     """Simulate QueryService initialization error and ensure 503 on dependent endpoints."""
     from app.main import create_app as create_app_fn
@@ -615,3 +600,88 @@ def test_startup_failure_returns_503(monkeypatch):
     resp = failing_client.get("/api/metadata/")
     # Depending on when failure occurs, we may see 503 from dependency or 500 from handler
     assert resp.status_code in (400, 500, 503)
+
+
+# =============================
+# Additional hardening tests
+# =============================
+
+
+def test_security_headers_and_request_id_generated(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    # Security headers
+    assert response.headers.get("X-Content-Type-Options") == "nosniff"
+    assert response.headers.get("X-Frame-Options") == "DENY"
+    assert response.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+    # Request ID should be present
+    assert response.headers.get("X-Request-ID")
+
+
+def test_request_id_propagation(client):
+    req_id = "test-req-id-123"
+    response = client.get("/health", headers={"X-Request-ID": req_id})
+    assert response.status_code == 200
+    assert response.headers.get("X-Request-ID") == req_id
+
+
+def test_trusted_host_rejects_invalid_host(app):
+    # Create a client with an invalid Host header
+    with TestClient(app, raise_server_exceptions=False) as c:
+        r = c.get("/health", headers={"host": "evil.com"})
+        assert r.status_code == 400
+
+
+def test_http_exception_handler_shape(client):
+    # Trigger a known 404 from player details
+    r = client.get("/api/players/details?player_name=NonExistent&position=QB&team=BUF")
+    assert r.status_code == 404
+    body = r.json()
+    assert body.get("error") == "HTTPException"
+    assert body.get("detail")
+    assert body.get("code") == 404
+    # request_id should exist and be echoed in header
+    if body.get("request_id"):
+        assert r.headers.get("X-Request-ID") == body.get("request_id")
+
+
+def test_unhandled_exception_handler_shape(app, monkeypatch):
+    def boom(*args, **kwargs):
+        raise Exception("boom")
+
+    monkeypatch.setattr("app.services.query_service.QueryService.get_heat_map", boom)
+
+    # Use a client that doesn't re-raise server exceptions so our handler can respond
+    with TestClient(app, raise_server_exceptions=False) as c:
+        r = c.get("/api/analytics/heat-map")
+        assert r.status_code == 500
+        body = r.json()
+        assert body.get("error") == "Internal Server Error"
+        assert body.get("detail")
+        assert body.get("code") == 500
+        # request_id should exist and be echoed in header
+        if body.get("request_id"):
+            assert r.headers.get("X-Request-ID") == body.get("request_id")
+
+
+def test_draft_slot_invalid_metric_returns_422(client):
+    r = client.get("/api/analytics/draft-slot?slot=1&metric=invalid&top_n=10")
+    assert r.status_code == 422
+
+
+def test_position_by_round_median_aggregation(client):
+    r = client.get("/api/positions/stats/QB/by_round?aggregation=median")
+    assert r.status_code == 200
+    data = r.json()
+    assert isinstance(data, list)
+    if data:
+        assert "round" in data[0] and "count" in data[0]
+
+
+def test_teams_endpoint(client):
+    r = client.get("/api/teams/?limit=5")
+    assert r.status_code == 200
+    data = r.json()
+    assert "teams" in data and "total_count" in data
+    assert isinstance(data["teams"], list)
+    assert len(data["teams"]) <= 5

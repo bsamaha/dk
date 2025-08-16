@@ -14,7 +14,7 @@ import threading
 import time
 from pathlib import Path
 from time import time as now_seconds
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple, cast
 
 import duckdb  # type: ignore
 import polars as pl
@@ -981,17 +981,20 @@ class QueryService:
             return []
 
         # Calculate position counts
-        position_counts_df: pl.DataFrame = (
+        counts_df: pl.DataFrame = (
             result_df.lazy()
             .select(["draft", "draft_position", "positions"])
             .explode("positions")
             .group_by(["draft", "draft_position", "positions"])
             .agg(pl.len().alias("count"))
             .collect()
-            # Use pivot with keyword args supported by our pinned Polars
+        )
+        # Use keyword args compatible with runtime Polars (columns is deprecated but supported)
+        position_counts_df: pl.DataFrame = (
+            cast(Any, counts_df)
             .pivot(
                 values="count", index=["draft", "draft_position"], columns="positions"
-            )  # type: ignore[call-arg]
+            )
             .fill_null(0)
         )
 
@@ -1273,7 +1276,8 @@ class QueryService:
 
         # Pivot to get positions as columns
         roster_df: pl.DataFrame = (
-            df.pivot(index=["draft", "team_id"], on="Position", values="count")
+            cast(Any, df)
+            .pivot(values="count", index=["draft", "team_id"], columns="Position")
             .fill_null(0)
             .rename({"draft": "draft_id"})
         )

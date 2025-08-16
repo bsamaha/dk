@@ -30,7 +30,6 @@ import type {
 } from '../types';
 import { sanitizeSearchTerm, isValidSearchTerm } from '../utils/sanitization';
 import { trackPerformance, trackError } from '../utils/analytics';
-import { devLog, devError } from '../utils/logger';
 import { z } from 'zod';
 import {
   validateApiResponse,
@@ -55,9 +54,10 @@ import {
 // 1) Prefer explicit build-time environment variable (defined in .env or CI)
 // 2) In development, always talk to the backend at localhost:8000
 // 3) Otherwise (docker / prod) use same-origin relative path handled by FastAPI
-const baseURL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.DEV ? 'http://localhost:8000/api' : '/api');
+// Prefer relative '/api' so Vite dev proxy handles CORS locally; allow explicit override via VITE_API_BASE_URL
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+
+const loadLogger = () => import('../utils/logger');
 
 const api = axios.create({
   baseURL,
@@ -68,11 +68,15 @@ const api = axios.create({
 });
 
 // Dev helper: log resolved API base once on module init
-devLog('[API] baseURL resolved', {
-  baseURL,
-  dev: import.meta.env.DEV,
-  origin: typeof window !== 'undefined' ? window.location.origin : 'n/a',
-});
+if (import.meta.env.DEV) {
+  loadLogger().then(({ devLog }) =>
+    devLog('[API] baseURL resolved', {
+      baseURL,
+      dev: import.meta.env.DEV,
+      origin: typeof window !== 'undefined' ? window.location.origin : 'n/a',
+    })
+  );
+}
 
 // Schema mapping for centralized validation
 const endpointSchemas: Record<string, z.ZodSchema> = {
@@ -135,14 +139,19 @@ function findSchemaForUrl(url: string): z.ZodSchema | null {
 
 // Add request interceptor for logging and performance tracking
 api.interceptors.request.use(
-  config => {
-    devLog(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+  async config => {
+    // Lazy-load logger for dev-only usage to keep initial bundle smaller
+    if (import.meta.env.DEV) {
+      const { devLog } = await loadLogger();
+      devLog(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    }
     // Add timestamp for performance tracking using symbol
     config[METADATA_SYMBOL] = { startTime: performance.now() };
     return config;
   },
   error => {
-    devError('API Request Error:', error);
+    // Lazy log errors in dev
+    if (import.meta.env.DEV) loadLogger().then(({ devError }) => devError('API Request Error:', error));
     trackError('API Request', error.message);
     return Promise.reject(error);
   }
@@ -150,8 +159,11 @@ api.interceptors.request.use(
 
 // Add response interceptor for centralized validation and error handling
 api.interceptors.response.use(
-  response => {
-    devLog(`API Response: ${response.status} ${response.config.url}`);
+  async response => {
+    if (import.meta.env.DEV) {
+      const { devLog } = await loadLogger();
+      devLog(`API Response: ${response.status} ${response.config.url}`);
+    }
 
     // Track performance if we have start time
     if (response.config[METADATA_SYMBOL]?.startTime) {
@@ -179,11 +191,7 @@ api.interceptors.response.use(
     return response;
   },
   error => {
-    devError(
-      'API Response Error:',
-      error.response?.status,
-      error.response?.data
-    );
+    if (import.meta.env.DEV) loadLogger().then(({ devError }) => devError('API Response Error:', error.response?.status, error.response?.data));
 
     // Track API errors
     const endpoint = error.config?.url?.split('?')[0] || 'unknown';
@@ -271,11 +279,15 @@ export const apiService = {
     aggregation: 'mean' | 'median' = 'mean'
   ): Promise<PositionRoundCountsResponse> {
     const url = `/positions/stats/${position}/by_round?aggregation=${aggregation}`;
-    devLog('[API] getPositionDraftCountsByRound', {
-      position,
-      aggregation,
-      url,
-    });
+    if (import.meta.env.DEV) {
+      loadLogger().then(({ devLog }) =>
+        devLog('[API] getPositionDraftCountsByRound', {
+          position,
+          aggregation,
+          url,
+        })
+      );
+    }
     const response = await api.get(url);
     return response.data;
   },
