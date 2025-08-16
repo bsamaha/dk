@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQueryPlus } from '../../hooks/useQueryPlus';
 import {
   Title,
   Grid,
@@ -30,16 +31,19 @@ const usePlayers = (
 ) => {
   return useQuery({
     queryKey: ['players', page, positions, playerNames],
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       // Use selected players for the API call
       const searchTerm = playerNames.length > 0 ? playerNames.join(' ') : '';
 
-      return apiService.getPlayers({
-        offset: (page - 1) * 20,
-        limit: 20,
-        positions: positions.length > 0 ? positions : undefined,
-        search_term: searchTerm || undefined,
-      });
+      return apiService.getPlayers(
+        {
+          offset: (page - 1) * 20,
+          limit: 20,
+          positions: positions.length > 0 ? positions : undefined,
+          search_term: searchTerm || undefined,
+        },
+        signal
+      );
     },
     placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -78,19 +82,20 @@ const PlayersView = () => {
   } = usePlayers(activePage, activePositions, selectedPlayer ? [selectedPlayer] : []);
 
   const { data: playerDetailsData, isLoading: isPlayerDetailsLoading } =
-    useQuery({
+    useQueryPlus({
       queryKey: [
         'playerDetails',
         selectedPlayerDetails?.name,
         selectedPlayerDetails?.position,
         selectedPlayerDetails?.team,
       ],
-      queryFn: () =>
+      queryFn: ({ signal }) =>
         selectedPlayerDetails
           ? apiService.getPlayerDetails(
               selectedPlayerDetails.name,
               selectedPlayerDetails.position,
-              selectedPlayerDetails.team
+              selectedPlayerDetails.team,
+              signal
             )
           : null,
       enabled: !!selectedPlayerDetails,

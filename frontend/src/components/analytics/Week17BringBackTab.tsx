@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useWeek17Bringback } from '../../hooks/useWeek17Bringback';
-import { useQuery } from '@tanstack/react-query';
+import { useQueryPlus } from '../../hooks/useQueryPlus';
 import { apiService } from '../../services/api';
 import {
   SegmentedControl,
@@ -20,29 +20,7 @@ import type { Week17BringBackPlayer, Week17Scope } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
 import { POSITION_COLORS } from '../../utils/chartTheme';
 
-// Custom hook for window size
-const useWindowSize = () => {
-  const [windowSize, setWindowSize] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 1024,
-    height: typeof window !== 'undefined' ? window.innerHeight : 768,
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  return windowSize;
-};
+import { useWindowSize } from '../../hooks/useWindowSize';
 
 // Sample teams and players for demo (in production, these would come from metadata)
 const TEAMS = [
@@ -93,9 +71,9 @@ const Week17BringBackTab = () => {
   // keep for possible styling downstream
 
   // Fetch all players from metadata
-  const { data: metadataData } = useQuery({
-    queryKey: ['metadata', 'all-players'],
-    queryFn: () => apiService.getMetadata(),
+  const { data: metadataData } = useQueryPlus({
+    queryKey: ['metadata'],
+    queryFn: ({ signal }) => apiService.getMetadata(signal),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     retry: 3,
     retryDelay: 1000,

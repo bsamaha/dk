@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueryPlus } from '../../hooks/useQueryPlus';
 import { apiService } from '../../services/api';
 import { useAppStore } from '../../store/appStore';
 import { useResponsive } from '../../hooks/useResponsive';
@@ -8,9 +8,9 @@ const Sidebar = () => {
   const { isMobile, responsive } = useResponsive();
 
   // Get metadata for sidebar stats
-  const { data: metadata, isLoading } = useQuery({
+  const { data: metadata, isLoading } = useQueryPlus({
     queryKey: ['metadata'],
-    queryFn: apiService.getMetadata,
+    queryFn: ({ signal }) => apiService.getMetadata(signal),
   });
 
   return (

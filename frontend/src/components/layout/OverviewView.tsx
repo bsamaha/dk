@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+// import { useQuery } from '@tanstack/react-query';
+import { useQueryPlus } from '../../hooks/useQueryPlus';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { apiService } from '../../services/api';
 import { useResponsive } from '../../hooks/useResponsive';
@@ -26,18 +27,20 @@ const OverviewView = () => {
   // Shared chart color map to keep legend and segments in sync (brand-based)
   const chartColors = CHART_COLORS_CORE;
 
-  const { isLoading: metadataLoading } = useQuery({
+  const { isLoading: metadataLoading } = useQueryPlus({
     queryKey: ['metadata'],
-    queryFn: apiService.getMetadata,
+    queryFn: ({ signal }) => apiService.getMetadata(signal),
+    refetchOnMount: false,
   });
 
   const {
     data: positionStats,
     isLoading: positionStatsLoading,
     error: positionStatsError,
-  } = useQuery({
+  } = useQueryPlus({
     queryKey: ['positionStats'],
-    queryFn: apiService.getPositionStats,
+    queryFn: ({ signal }) => apiService.getPositionStats(signal),
+    refetchOnMount: false,
   });
 
   // State for position analysis controls
@@ -52,12 +55,13 @@ const OverviewView = () => {
     isLoading: roundCountsLoading,
     isError: roundCountsError,
     error: roundCountsErrorObj,
-  } = useQuery({
+  } = useQueryPlus({
     queryKey: ['roundCounts', selectedPosition, aggregation],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiService.getPositionDraftCountsByRound(
         selectedPosition as Position,
-        aggregation
+        aggregation,
+        signal
       ),
     retry: 2,
     refetchOnMount: 'always',

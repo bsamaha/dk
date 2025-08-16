@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { MultiSelect, Select } from '@mantine/core';
-import { useQuery } from '@tanstack/react-query';
+import { useQueryPlus } from '../../hooks/useQueryPlus';
 import { apiService } from '../../services/api';
 import { sanitizeSearchTerm } from '../../utils/sanitization';
 
@@ -42,9 +42,10 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
     data: metadataData,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ['metadata', 'all-players'],
-    queryFn: () => apiService.getMetadata(),
+  } = useQueryPlus({
+    // Reuse same cache entry as sidebar and overview to avoid duplicate requests
+    queryKey: ['metadata'],
+    queryFn: ({ signal }) => apiService.getMetadata(signal),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     retry: 3,
     retryDelay: 1000,
@@ -94,7 +95,8 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
         }
       }
 
-      return options.sort();
+      // Avoid huge option arrays causing perf issues: hard cap
+      return options.sort().slice(0, 5000);
     } catch (error) {
       console.error('Error processing player options:', error);
       return [];

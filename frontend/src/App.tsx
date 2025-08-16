@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useEffect } from 'react';
 import { MantineProvider } from '@mantine/core';
 import { ColorSchemeContext } from './contexts/ColorSchemeContext';
 import { useLocalStorage } from '@mantine/hooks';
@@ -55,10 +56,12 @@ function App() {
   const toggleColorScheme = (value?: 'light' | 'dark') =>
     setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
 
-  // Sync Tailwind dark class
-  if (typeof document !== 'undefined') {
-    document.documentElement.classList.toggle('dark', colorScheme === 'dark');
-  }
+  // Sync Tailwind dark class when color scheme changes
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark', colorScheme === 'dark');
+    }
+  }, [colorScheme]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -117,7 +120,7 @@ function App() {
               <MainContent view={currentView} />
             </div>
           </div>
-          <ReactQueryDevtools initialIsOpen={false} />
+          {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
         </MantineProvider>
       </ColorSchemeContext.Provider>
     </QueryClientProvider>

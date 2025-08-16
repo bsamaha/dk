@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getOrSet } from './httpCache';
 
 // Create a unique symbol for metadata to prevent conflicts
 const METADATA_SYMBOL = Symbol('analytics-metadata');
@@ -150,6 +151,13 @@ api.interceptors.request.use(
     return config;
   },
   error => {
+    // Ignore noisy logs for canceled requests (React StrictMode / fast nav)
+    if (
+      (error && (error.code === 'ERR_CANCELED' || error.name === 'CanceledError')) ||
+      (typeof error?.message === 'string' && error.message.includes('canceled'))
+    ) {
+      return Promise.reject(error);
+    }
     // Lazy log errors in dev
     if (import.meta.env.DEV) loadLogger().then(({ devError }) => devError('API Request Error:', error));
     trackError('API Request', error.message);
@@ -191,6 +199,14 @@ api.interceptors.response.use(
     return response;
   },
   error => {
+    // Ignore canceled requests to avoid log noise in dev
+    if (
+      (error && (error.code === 'ERR_CANCELED' || error.name === 'CanceledError')) ||
+      (typeof error?.message === 'string' && error.message.includes('canceled'))
+    ) {
+      return Promise.reject(error);
+    }
+
     if (import.meta.env.DEV) loadLogger().then(({ devError }) => devError('API Response Error:', error.response?.status, error.response?.data));
 
     // Track API errors
@@ -205,13 +221,22 @@ api.interceptors.response.use(
 // API Functions
 export const apiService = {
   // Get metadata
-  async getMetadata(): Promise<MetadataResponse> {
-    const response = await api.get('/metadata/');
-    return response.data;
+  async getMetadata(signal?: AbortSignal): Promise<MetadataResponse> {
+    return getOrSet(
+      'GET /metadata/',
+      async () => {
+        const response = await api.get('/metadata/', { signal });
+        return response.data;
+      },
+      500
+    );
   },
 
   // Get players with filtering
-  async getPlayers(filters: PlayerFilter = {}): Promise<PlayersResponse> {
+  async getPlayers(
+    filters: PlayerFilter = {},
+    signal?: AbortSignal
+  ): Promise<PlayersResponse> {
     const params = new URLSearchParams();
 
     const sanitizedSearch =
@@ -242,7 +267,7 @@ export const apiService = {
       params.append('sort_order', filters.sort_order);
     }
 
-    const response = await api.get(`/players/?${params.toString()}`);
+    const response = await api.get(`/players/?${params.toString()}`, { signal });
     return response.data;
   },
 
@@ -262,14 +287,20 @@ export const apiService = {
   },
 
   // Get position statistics
-  async getPositionStats(): Promise<PositionStatsResponse> {
-    const response = await api.get('/positions/stats');
-    return response.data;
+  async getPositionStats(signal?: AbortSignal): Promise<PositionStatsResponse> {
+    return getOrSet(
+      'GET /positions/stats',
+      async () => {
+        const response = await api.get('/positions/stats', { signal });
+        return response.data;
+      },
+      500
+    );
   },
 
   // Get first player draft stats
-  async getFirstPlayerDraftStats(): Promise<FirstPlayerDraftStats[]> {
-    const response = await api.get('/positions/stats/first_player');
+  async getFirstPlayerDraftStats(signal?: AbortSignal): Promise<FirstPlayerDraftStats[]> {
+    const response = await api.get('/positions/stats/first_player', { signal });
     return response.data;
   },
 
@@ -277,7 +308,7 @@ export const apiService = {
   async getPositionDraftCountsByRound(
     position: Position,
     aggregation: 'mean' | 'median' = 'mean'
-  ): Promise<PositionRoundCountsResponse> {
+  , signal?: AbortSignal): Promise<PositionRoundCountsResponse> {
     const url = `/positions/stats/${position}/by_round?aggregation=${aggregation}`;
     if (import.meta.env.DEV) {
       loadLogger().then(({ devLog }) =>
@@ -288,13 +319,20 @@ export const apiService = {
         })
       );
     }
-    const response = await api.get(url);
-    return response.data;
+    return getOrSet(
+      `GET ${url}`,
+      async () => {
+        const response = await api.get(url, { signal });
+        return response.data;
+      },
+      400
+    );
   },
 
   // Get player combinations
   async getPlayerCombinations(
-    filters: CombinationFilter
+    filters: CombinationFilter,
+    signal?: AbortSignal
   ): Promise<CombinationsResponse> {
     const params = new URLSearchParams();
     filters.required_players.forEach(p => params.append('required_players', p));
@@ -303,36 +341,63 @@ export const apiService = {
     if (typeof filters.offset === 'number') {
       params.append('offset', String(filters.offset));
     }
-    const response = await api.get(`/combinations/?${params.toString()}`);
-    return response.data;
+    const url = `/combinations/?${params.toString()}`;
+    return getOrSet(
+      `GET ${url}`,
+      async () => {
+        const response = await api.get(url, { signal });
+        return response.data;
+      },
+      400
+    );
   },
 
   // Get roster construction data
-  async getRosterConstruction(): Promise<RosterConstructionResponse> {
-    const response = await api.get('/positions/roster-construction/');
-    return response.data;
+  async getRosterConstruction(signal?: AbortSignal): Promise<RosterConstructionResponse> {
+    return getOrSet(
+      'GET /positions/roster-construction/',
+      async () => {
+        const response = await api.get('/positions/roster-construction/', { signal });
+        return response.data;
+      },
+      500
+    );
   },
 
   // Get aggregated roster construction counts
   async getRosterConstructionCounts(
-    required_players?: string[]
+    required_players?: string[],
+    signal?: AbortSignal
   ): Promise<RosterConstructionCount[]> {
     const params = new URLSearchParams();
     if (required_players && required_players.length > 0) {
       required_players.forEach(p => params.append('required_players', p));
     }
-    const response = await api.get(
-      `/positions/roster-construction/counts?${params.toString()}`
+    const url = `/positions/roster-construction/counts?${params.toString()}`;
+    return getOrSet(
+      `GET ${url}`,
+      async () => {
+        const response = await api.get(url, { signal });
+        return response.data;
+      },
+      400
     );
-    return response.data;
   },
 
   // Get team data
   async getTeams(
-    limit: number = 100
+    limit: number = 100,
+    signal?: AbortSignal
   ): Promise<{ teams: string[]; total_count: number }> {
-    const response = await api.get(`/teams/?limit=${limit}`);
-    return response.data;
+    const url = `/teams/?limit=${limit}`;
+    return getOrSet(
+      `GET ${url}`,
+      async () => {
+        const response = await api.get(url, { signal });
+        return response.data;
+      },
+      500
+    );
   },
 
   // Get player details
@@ -340,13 +405,15 @@ export const apiService = {
     playerName: string,
     position: string,
     team: string
-  ): Promise<PlayerDetails> {
+  , signal?: AbortSignal): Promise<PlayerDetails> {
     const params = new URLSearchParams({
       player_name: playerName,
       position: position,
       team: team,
     });
-    const response = await api.get(`/players/details?${params.toString()}`);
+    const response = await api.get(`/players/details?${params.toString()}`,
+      { signal }
+    );
     return response.data;
   },
 
@@ -355,14 +422,15 @@ export const apiService = {
     slot: number,
     metric: 'count' | 'percent' | 'ratio' = 'percent',
     top_n: number = 25
-  ): Promise<DraftSlotResponse> {
+  , signal?: AbortSignal): Promise<DraftSlotResponse> {
     const params = new URLSearchParams({
       slot: slot.toString(),
       metric,
       top_n: top_n.toString(),
     });
     const response = await api.get(
-      `/analytics/draft-slot?${params.toString()}`
+      `/analytics/draft-slot?${params.toString()}`,
+      { signal }
     );
     return response.data;
   },
@@ -372,14 +440,15 @@ export const apiService = {
     scope: 'team' | 'player',
     entity: string,
     limit: number = 10
-  ): Promise<Week17BringBackResponse> {
+  , signal?: AbortSignal): Promise<Week17BringBackResponse> {
     const params = new URLSearchParams({
       scope,
       entity,
       limit: limit.toString(),
     });
     const response = await api.get(
-      `/analytics/week17-bringback?${params.toString()}`
+      `/analytics/week17-bringback?${params.toString()}`,
+      { signal }
     );
     return response.data;
   },
