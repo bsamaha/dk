@@ -36,7 +36,6 @@ RUN apt-get update \
         curl \
         build-essential \
         python3-dev \
-
     && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
