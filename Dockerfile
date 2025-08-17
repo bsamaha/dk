@@ -29,8 +29,14 @@ FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim AS runtime
 ENV UV_LINK_MODE=copy
 
 # Install system packages needed by duckdb & friends
+# Also include build tools so native wheels (e.g., psutil) can compile if needed
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq5 curl \
+    && apt-get install -y --no-install-recommends \
+        libpq5 \
+        curl \
+        build-essential \
+        python3-dev \
+
     && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
