@@ -39,7 +39,12 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        // Force a single resolved React to avoid mismatched module instances
+        react: path.resolve(__dirname, 'node_modules/react'),
+        'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
       },
+      // Prevent multiple React copies (fixes hooks like useLayoutEffect being undefined)
+      dedupe: ['react', 'react-dom'],
     },
     build: {
       rollupOptions: {

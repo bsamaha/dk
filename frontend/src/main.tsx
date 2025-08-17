@@ -33,6 +33,8 @@ if (import.meta.env.PROD && typeof window !== 'undefined') {
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import 'mantine-datatable/styles.css';
+import 'react';
+import 'react-dom';
 
 import './index.css';
 
@@ -47,4 +49,10 @@ if (container) {
       </MantineProvider>
     </StrictMode>
   );
+}
+else {
+  // Fail fast to aid debugging in environments with a missing root node
+  // eslint-disable-next-line no-console
+  console.error('Root element with id "root" was not found. Application cannot mount.');
+  throw new Error('Root element #root not found');
 }
