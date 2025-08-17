@@ -66,6 +66,17 @@ export async function getOrSet<T>(
   return promise;
 }
 
+// Allow per-endpoint TTL constants to live here for documentation
+export const HTTP_CACHE_TTL = {
+  METADATA: 500,
+  POSITION_STATS: 500,
+  ROUND_COUNTS: 400,
+  COMBINATIONS: 400,
+  ROSTER_CONSTRUCTION: 500,
+  ROSTER_COUNTS: 400,
+  TEAMS: 500,
+} as const;
+
 export function setHttpCacheEnabled(enabled: boolean): void {
   cacheEnabled = enabled;
 }

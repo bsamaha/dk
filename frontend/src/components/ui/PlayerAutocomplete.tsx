@@ -1,7 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { MultiSelect, Select } from '@mantine/core';
-import { useQueryPlus } from '../../hooks/useQueryPlus';
+// Note: Virtualization hooks are installed and ready if needed for giant lists
+// import { useVirtualizer } from '@tanstack/react-virtual';
+// import { useRef, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { apiService } from '../../services/api';
 import { sanitizeSearchTerm } from '../../utils/sanitization';
 
@@ -42,7 +45,7 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
     data: metadataData,
     isLoading,
     error,
-  } = useQueryPlus({
+  } = useQuery({
     // Reuse same cache entry as sidebar and overview to avoid duplicate requests
     queryKey: ['metadata'],
     queryFn: ({ signal }) => apiService.getMetadata(signal),
@@ -115,6 +118,9 @@ const PlayerAutocomplete = (props: PlayerAutocompleteProps) => {
       return [];
     }
   }, [playerOptions, debouncedSearch]);
+
+  // Virtualization for large lists
+  // For now, rely on Mantine's performant list; enable react-virtual later if needed
 
   // Show error state if API call failed
   if (error) {

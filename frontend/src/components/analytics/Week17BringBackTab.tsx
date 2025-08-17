@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useWeek17Bringback } from '../../hooks/useWeek17Bringback';
-import { useQueryPlus } from '../../hooks/useQueryPlus';
+import { useQuery } from '@tanstack/react-query';
 import { apiService } from '../../services/api';
 import {
   SegmentedControl,
@@ -71,7 +71,7 @@ const Week17BringBackTab = () => {
   // keep for possible styling downstream
 
   // Fetch all players from metadata
-  const { data: metadataData } = useQueryPlus({
+  const { data: metadataData } = useQuery({
     queryKey: ['metadata'],
     queryFn: ({ signal }) => apiService.getMetadata(signal),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes

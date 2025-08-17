@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getOrSet } from './httpCache';
+import { getOrSet, HTTP_CACHE_TTL } from './httpCache';
 
 // Create a unique symbol for metadata to prevent conflicts
 const METADATA_SYMBOL = Symbol('analytics-metadata');
@@ -31,23 +31,9 @@ import type {
 } from '../types';
 import { sanitizeSearchTerm, isValidSearchTerm } from '../utils/sanitization';
 import { trackPerformance, trackError } from '../utils/analytics';
-import { z } from 'zod';
-import {
-  validateApiResponse,
-  PlayersResponseSchema,
-  MetadataResponseSchema,
-  PositionStatsResponseSchema,
-  FirstPlayerDraftStatsSchema,
-  CombinationsResponseSchema,
-  RosterConstructionResponseSchema,
-  RosterConstructionCountSchema,
-  TeamsResponseSchema,
-  PlayerDetailsSchema,
-  DraftSlotResponseSchema,
-  Week17BringBackResponseSchema,
-  SearchPlayersResponseSchema,
-  PositionRoundCountsResponseSchema,
-} from '../utils/api-validation';
+import { getOpenApiClient } from './openapiClient';
+// Runtime validation is handled via backend's OpenAPI and optional generated client.
+// We no longer maintain manual Zod schema mapping here.
 
 // Create axios instance with base configuration
 // Determine API base URL dynamically
@@ -79,64 +65,9 @@ if (import.meta.env.DEV) {
   );
 }
 
-// Schema mapping for centralized validation
-const endpointSchemas: Record<string, z.ZodSchema> = {
-  '/metadata/': MetadataResponseSchema,
-  '/players/': PlayersResponseSchema,
-  '/players/search': SearchPlayersResponseSchema,
-  '/positions/stats': PositionStatsResponseSchema,
-  '/positions/stats/first_player': z.array(FirstPlayerDraftStatsSchema),
-  // Dynamic: validate /positions/stats/{position}/by_round
-  '/positions/stats/{position}/by_round': PositionRoundCountsResponseSchema,
-  '/combinations/': CombinationsResponseSchema,
-  '/positions/roster-construction/': RosterConstructionResponseSchema,
-  '/positions/roster-construction/counts': z.array(
-    RosterConstructionCountSchema
-  ),
-  '/teams/': TeamsResponseSchema,
-  '/players/details': PlayerDetailsSchema,
-  '/analytics/draft-slot': DraftSlotResponseSchema,
-  '/analytics/week17-bringback': Week17BringBackResponseSchema,
-};
-
-// Helper function to find matching schema for URL
-function findSchemaForUrl(url: string): z.ZodSchema | null {
-  // Remove query parameters for matching
-  const path = url.split('?')[0];
-
-  // Try exact match first
-  if (endpointSchemas[path]) {
-    return endpointSchemas[path];
-  }
-
-  // Try pattern matching for dynamic routes
-  for (const [pattern, schema] of Object.entries(endpointSchemas)) {
-    if (pattern.includes('{') || pattern.includes('*')) {
-      // Simple pattern matching - could be enhanced with regex
-      const patternParts = pattern.split('/');
-      const pathParts = path.split('/');
-
-      if (patternParts.length === pathParts.length) {
-        let matches = true;
-        for (let i = 0; i < patternParts.length; i++) {
-          if (
-            patternParts[i] !== pathParts[i] &&
-            !patternParts[i].startsWith('{') &&
-            patternParts[i] !== '*'
-          ) {
-            matches = false;
-            break;
-          }
-        }
-        if (matches) {
-          return schema;
-        }
-      }
-    }
-  }
-
-  return null;
-}
+// Note: For strong runtime validation, generate a client via `pnpm openapi:zod`
+// which outputs `src/types/api.zod.ts`. You can integrate those schemas in
+// components or services as needed.
 
 // Add request interceptor for logging and performance tracking
 api.interceptors.request.use(
@@ -181,21 +112,6 @@ api.interceptors.response.use(
       trackPerformance(`API ${endpoint}`, duration);
     }
 
-    // Apply schema validation if schema exists for this endpoint
-    const schema = findSchemaForUrl(response.config.url || '');
-    if (schema) {
-      try {
-        response.data = validateApiResponse(response.data, schema);
-      } catch (error) {
-        console.error('Schema validation failed:', error);
-        trackError(
-          'API Validation',
-          `Schema validation failed for ${response.config.url}`
-        );
-        return Promise.reject(error);
-      }
-    }
-
     return response;
   },
   error => {
@@ -222,13 +138,19 @@ api.interceptors.response.use(
 export const apiService = {
   // Get metadata
   async getMetadata(signal?: AbortSignal): Promise<MetadataResponse> {
+    // Try generated client first
+    const client = await getOpenApiClient();
+    if (client) {
+      const res = await client.GET('/metadata/', { signal });
+      return res.data as MetadataResponse;
+    }
     return getOrSet(
       'GET /metadata/',
       async () => {
         const response = await api.get('/metadata/', { signal });
         return response.data;
       },
-      500
+      HTTP_CACHE_TTL.METADATA
     );
   },
 
@@ -288,13 +210,18 @@ export const apiService = {
 
   // Get position statistics
   async getPositionStats(signal?: AbortSignal): Promise<PositionStatsResponse> {
+    const client = await getOpenApiClient();
+    if (client) {
+      const res = await client.GET('/positions/stats', { signal });
+      return res.data as PositionStatsResponse;
+    }
     return getOrSet(
       'GET /positions/stats',
       async () => {
         const response = await api.get('/positions/stats', { signal });
         return response.data;
       },
-      500
+      HTTP_CACHE_TTL.POSITION_STATS
     );
   },
 
@@ -319,13 +246,21 @@ export const apiService = {
         })
       );
     }
+    const client = await getOpenApiClient();
+    if (client) {
+      const res = await client.GET('/positions/stats/{position}/by_round', {
+        params: { path: { position }, query: { aggregation } },
+        signal,
+      });
+      return res.data as PositionRoundCountsResponse;
+    }
     return getOrSet(
       `GET ${url}`,
       async () => {
         const response = await api.get(url, { signal });
         return response.data;
       },
-      400
+      HTTP_CACHE_TTL.ROUND_COUNTS
     );
   },
 
@@ -348,7 +283,7 @@ export const apiService = {
         const response = await api.get(url, { signal });
         return response.data;
       },
-      400
+      HTTP_CACHE_TTL.COMBINATIONS
     );
   },
 
@@ -360,7 +295,7 @@ export const apiService = {
         const response = await api.get('/positions/roster-construction/', { signal });
         return response.data;
       },
-      500
+      HTTP_CACHE_TTL.ROSTER_CONSTRUCTION
     );
   },
 
@@ -380,7 +315,7 @@ export const apiService = {
         const response = await api.get(url, { signal });
         return response.data;
       },
-      400
+      HTTP_CACHE_TTL.ROSTER_COUNTS
     );
   },
 
@@ -396,7 +331,7 @@ export const apiService = {
         const response = await api.get(url, { signal });
         return response.data;
       },
-      500
+      HTTP_CACHE_TTL.TEAMS
     );
   },
 

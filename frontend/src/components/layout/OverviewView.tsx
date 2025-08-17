@@ -1,13 +1,12 @@
-// import { useQuery } from '@tanstack/react-query';
-import { useQueryPlus } from '../../hooks/useQueryPlus';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useState, useMemo, useEffect, useRef, Suspense, lazy } from 'react';
 import { apiService } from '../../services/api';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useYouTubePlaylistId } from '../../hooks/useMediaEmbeds';
 import { useQuickStats } from '../../hooks/useQuickStats';
 import { ResponsivePieLabel } from '../ui/ResponsivePieLabel';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { ThemedBarChart } from '../ui/charts/ThemedBarChart';
+const ThemedBarChart = lazy(() => import('../ui/charts/ThemedBarChart').then(m => ({ default: m.ThemedBarChart })));
 import { Select, SegmentedControl, Loader, Alert } from '@mantine/core';
 import type { Position } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
@@ -27,7 +26,7 @@ const OverviewView = () => {
   // Shared chart color map to keep legend and segments in sync (brand-based)
   const chartColors = CHART_COLORS_CORE;
 
-  const { isLoading: metadataLoading } = useQueryPlus({
+  const { isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
     queryFn: ({ signal }) => apiService.getMetadata(signal),
     refetchOnMount: false,
@@ -37,7 +36,7 @@ const OverviewView = () => {
     data: positionStats,
     isLoading: positionStatsLoading,
     error: positionStatsError,
-  } = useQueryPlus({
+  } = useQuery({
     queryKey: ['positionStats'],
     queryFn: ({ signal }) => apiService.getPositionStats(signal),
     refetchOnMount: false,
@@ -55,7 +54,7 @@ const OverviewView = () => {
     isLoading: roundCountsLoading,
     isError: roundCountsError,
     error: roundCountsErrorObj,
-  } = useQueryPlus({
+  } = useQuery({
     queryKey: ['roundCounts', selectedPosition, aggregation],
     queryFn: ({ signal }) =>
       apiService.getPositionDraftCountsByRound(
@@ -309,15 +308,17 @@ const OverviewView = () => {
               ) : roundBarData.length === 0 ? (
                 <div className="flex items-center justify-center h_full text-gray-500">No data available.</div>
               ) : (
-                <ThemedBarChart
-                  data={roundBarData}
-                  layout="horizontal"
-                  xLabel="Round"
-                  valueFormatter={(v: number) => Math.round(v).toString()}
-                  yDataKey="count"
-                  xDataKey="round"
-                  marginBottom={40}
-                />
+                <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader /></div>}>
+                  <ThemedBarChart
+                    data={roundBarData}
+                    layout="horizontal"
+                    xLabel="Round"
+                    valueFormatter={(v: number) => Math.round(v).toString()}
+                    yDataKey="count"
+                    xDataKey="round"
+                    marginBottom={40}
+                  />
+                </Suspense>
               )}
             </div>
           </div>

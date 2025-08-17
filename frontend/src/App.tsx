@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { MantineProvider } from '@mantine/core';
+import { BrowserRouter } from 'react-router-dom';
 import { ColorSchemeContext } from './contexts/ColorSchemeContext';
 import { useLocalStorage } from '@mantine/hooks';
 import { Notifications } from '@mantine/notifications';
@@ -65,8 +65,9 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ColorSchemeContext.Provider value={{ colorScheme, toggleColorScheme }}>
-        <MantineProvider
+      <BrowserRouter>
+        <ColorSchemeContext.Provider value={{ colorScheme, toggleColorScheme }}>
+          <MantineProvider
           forceColorScheme={colorScheme}
           theme={{
             fontFamily: 'Inter, system-ui, sans-serif',
@@ -105,26 +106,37 @@ function App() {
             components: {},
           }}
         >
-          <Notifications position="top-right" />
-          <div className="min-h-screen bg-gray-50 dark:bg-gridiron-graphite-light flex flex-col">
-            <Header />
-            <div className="flex flex-1 min-h-0 relative">
-              {/* Mobile overlay when menu is open */}
-              {isMobile && isMobileMenuOpen && (
-                <div
-                  className="fixed inset-0 bg-black bg-opacity-50 z-40"
-                  onClick={() => useAppStore.getState().toggleMobileMenu()}
-                />
-              )}
-              <Sidebar />
-              <MainContent view={currentView} />
+            <Notifications position="top-right" />
+            <div className="min-h-screen bg-gray-50 dark:bg-gridiron-graphite-light flex flex-col">
+              <Header />
+              <div className="flex flex-1 min-h-0 relative">
+                {/* Mobile overlay when menu is open */}
+                {isMobile && isMobileMenuOpen && (
+                  <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                    onClick={() => useAppStore.getState().toggleMobileMenu()}
+                  />
+                )}
+                <Sidebar />
+                <MainContent view={currentView} />
+              </div>
             </div>
-          </div>
-          {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-        </MantineProvider>
-      </ColorSchemeContext.Provider>
+            {import.meta.env.DEV && (
+              <Suspense fallback={null}>
+                <LazyReactQueryDevtools initialIsOpen={false} />
+              </Suspense>
+            )}
+          </MantineProvider>
+        </ColorSchemeContext.Provider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
 
 export default App;
+
+// Lazy-load React Query Devtools only in development to avoid bundling in production
+const LazyReactQueryDevtools = lazy(async () => {
+  const mod = await import('@tanstack/react-query-devtools');
+  return { default: mod.ReactQueryDevtools };
+});

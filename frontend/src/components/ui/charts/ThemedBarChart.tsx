@@ -55,7 +55,7 @@ export function ThemedBarChart<T extends Record<string, unknown>>({
           tickFormatter={yIsNumeric && valueFormatter ? (v) => valueFormatter(Number(v)) : undefined}
         />
         <RechartsTooltip formatter={(v: number) => (valueFormatter ? valueFormatter(Number(v)) : v)} contentStyle={getTooltipStyle(isDark)} />
-        <Bar dataKey={yDataKey} {...getBarChartProps()} />
+        <Bar dataKey={yDataKey} {...getBarChartProps()} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>
   );

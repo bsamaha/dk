@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { useQueryPlus } from '../../hooks/useQueryPlus';
 import {
   Title,
   Grid,
@@ -82,7 +81,7 @@ const PlayersView = () => {
   } = usePlayers(activePage, activePositions, selectedPlayer ? [selectedPlayer] : []);
 
   const { data: playerDetailsData, isLoading: isPlayerDetailsLoading } =
-    useQueryPlus({
+    useQuery({
       queryKey: [
         'playerDetails',
         selectedPlayerDetails?.name,
@@ -99,6 +98,8 @@ const PlayersView = () => {
             )
           : null,
       enabled: !!selectedPlayerDetails,
+      gcTime: 5 * 60 * 1000,
+      staleTime: 60 * 1000,
     });
 
   // Memoized derived state
