@@ -1,4 +1,4 @@
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, within } from '@testing-library/react';
 import PlayersView from '../../layout/PlayersView';
 import { vi, describe, it, expect } from 'vitest';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -35,14 +35,18 @@ vi.mocked(useQueryClient).mockReturnValue({
 describe('PlayersView', () => {
   it('renders player table', () => {
     renderWithContext(<PlayersView />);
-    expect(screen.getByText('Test')).toBeInTheDocument();
+    const table = screen.getByRole('table');
+    const rows = within(table).getAllByRole('row');
+    expect(rows.length).toBeGreaterThan(1);
+    expect(within(rows[1]).getByText(/Test/i)).toBeInTheDocument();
   });
 
   it('renders in dark mode', () => {
     renderWithContext(<PlayersView />, { colorScheme: 'dark' });
-    expect(screen.getByText('Test')).toBeInTheDocument();
-    // Test that dark mode class or styles are applied
-    // This will depend on your specific implementation
+    const table = screen.getByRole('table');
+    const rows = within(table).getAllByRole('row');
+    expect(rows.length).toBeGreaterThan(1);
+    expect(within(rows[1]).getByText(/Test/i)).toBeInTheDocument();
   });
 
   it('toggles color scheme', () => {

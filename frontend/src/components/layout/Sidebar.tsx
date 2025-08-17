@@ -10,7 +10,7 @@ const Sidebar = () => {
   // Get metadata for sidebar stats
   const { data: metadata, isLoading } = useQuery({
     queryKey: ['metadata'],
-    queryFn: apiService.getMetadata,
+    queryFn: ({ signal }) => apiService.getMetadata(signal),
   });
 
   return (

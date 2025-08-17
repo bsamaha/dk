@@ -1,32 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, Suspense, lazy } from 'react';
 import { apiService } from '../../services/api';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useYouTubePlaylistId } from '../../hooks/useMediaEmbeds';
 import { useQuickStats } from '../../hooks/useQuickStats';
 import { ResponsivePieLabel } from '../ui/ResponsivePieLabel';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+const ThemedBarChart = lazy(() => import('../ui/charts/ThemedBarChart').then(m => ({ default: m.ThemedBarChart })));
 import { Select, SegmentedControl, Loader, Alert } from '@mantine/core';
 import type { Position } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
 import { PositionLegend } from '../ui/PositionLegend';
-import {
-  getTooltipStyle,
-  getPrimaryChartColor,
-  isCorePosition,
-  CHART_COLORS_CORE,
-} from '../../utils/chartTheme';
+import { isCorePosition, CHART_COLORS_CORE } from '../../utils/chartTheme';
 import { useCorePieData } from '../../hooks/useCorePieData';
 
 const OverviewView = () => {
@@ -37,14 +22,14 @@ const OverviewView = () => {
 
   // Theme-aware values
   const isDark = colorScheme === 'dark';
-  const tickColor = isDark ? '#ffffff' : '#374151';
 
   // Shared chart color map to keep legend and segments in sync (brand-based)
   const chartColors = CHART_COLORS_CORE;
 
   const { isLoading: metadataLoading } = useQuery({
     queryKey: ['metadata'],
-    queryFn: apiService.getMetadata,
+    queryFn: ({ signal }) => apiService.getMetadata(signal),
+    refetchOnMount: false,
   });
 
   const {
@@ -53,7 +38,8 @@ const OverviewView = () => {
     error: positionStatsError,
   } = useQuery({
     queryKey: ['positionStats'],
-    queryFn: apiService.getPositionStats,
+    queryFn: ({ signal }) => apiService.getPositionStats(signal),
+    refetchOnMount: false,
   });
 
   // State for position analysis controls
@@ -61,8 +47,7 @@ const OverviewView = () => {
     'QB' | 'RB' | 'WR' | 'TE'
   >('QB');
   const [aggregation, setAggregation] = useState<'mean' | 'median'>('mean');
-  const [roundChartKey, setRoundChartKey] = useState(0);
-  const hasForcedRoundRerender = useRef(false);
+  // Removed roundChartKey since ThemedBarChart manages internal rendering
 
   const {
     data: roundCountsData,
@@ -71,10 +56,11 @@ const OverviewView = () => {
     error: roundCountsErrorObj,
   } = useQuery({
     queryKey: ['roundCounts', selectedPosition, aggregation],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       apiService.getPositionDraftCountsByRound(
         selectedPosition as Position,
-        aggregation
+        aggregation,
+        signal
       ),
     retry: 2,
     refetchOnMount: 'always',
@@ -122,16 +108,7 @@ const OverviewView = () => {
     }
   }, [positionStatsLoading, positionStats, pieData.length]);
 
-  useEffect(() => {
-    if (
-      !hasForcedRoundRerender.current &&
-      !roundCountsLoading &&
-      roundBarData.length > 0
-    ) {
-      hasForcedRoundRerender.current = true;
-      setRoundChartKey(prev => prev + 1);
-    }
-  }, [roundCountsLoading, roundBarData.length]);
+  // no-op: previous forced re-render logic is no longer necessary
 
   if (positionStatsError) {
     if (import.meta.env.DEV) {
@@ -331,30 +308,17 @@ const OverviewView = () => {
               ) : roundBarData.length === 0 ? (
                 <div className="flex items-center justify-center h_full text-gray-500">No data available.</div>
               ) : (
-                <ResponsiveContainer key={`round-container-${roundChartKey}`} width="100%" height="100%">
-                  <BarChart data={roundBarData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#555' : '#e5e7eb'} />
-                    <XAxis
-                      dataKey="round"
-                      fontSize={responsive.fontSize.small}
-                      angle={responsive.chartAngle}
-                      textAnchor={responsive.chartTextAnchor}
-                      height={responsive.chartAxisHeight}
-                      tick={{ fill: tickColor }}
-                      axisLine={{ stroke: tickColor }}
-                      tickLine={{ stroke: tickColor }}
-                    />
-                    <YAxis
-                      fontSize={responsive.fontSize.small}
-                      tick={{ fill: tickColor }}
-                      axisLine={{ stroke: tickColor }}
-                      tickLine={{ stroke: tickColor }}
-                      tickFormatter={value => Math.round(value).toString()}
-                    />
-                    <Tooltip formatter={(v: number) => v.toFixed(2)} contentStyle={getTooltipStyle(isDark)} />
-                    <Bar dataKey="count" name="Count" fill={getPrimaryChartColor()} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader /></div>}>
+                  <ThemedBarChart
+                    data={roundBarData}
+                    layout="horizontal"
+                    xLabel="Round"
+                    valueFormatter={(v: number) => Math.round(v).toString()}
+                    yDataKey="count"
+                    xDataKey="round"
+                    marginBottom={40}
+                  />
+                </Suspense>
               )}
             </div>
           </div>

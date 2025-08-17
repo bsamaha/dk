@@ -4,7 +4,7 @@
 repos:
   # ===== GENERAL FILE CHECKS =====
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -25,14 +25,14 @@ repos:
 
   # ===== PYTHON BACKEND =====
   - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
         args: ["--profile", "black", "--filter-files"]
         files: ^backend/
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.2
+    rev: v0.12.9
     hooks:
       - id: ruff
         args: ["--fix", "--exit-non-zero-on-fix"]
@@ -52,7 +52,7 @@ repos:
 
   # Python security and quality
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.5
+    rev: 1.8.6
     hooks:
       - id: bandit
         files: ^backend/.*\.py$
@@ -72,7 +72,7 @@ repos:
 
   # ===== PACKAGE MANAGEMENT =====
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
         files: ^frontend/package\.json$
@@ -80,7 +80,7 @@ repos:
 
   # ===== DOCUMENTATION =====
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.37.0
+    rev: v0.45.0
     hooks:
       - id: markdownlint
         args: ["--fix"]
@@ -88,7 +88,7 @@ repos:
 
   # ===== COMMIT MESSAGE =====
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v3.0.0
+    rev: v4.2.0
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
@@ -96,7 +96,7 @@ repos:
 
   # ===== SECRETS DETECTION =====
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']

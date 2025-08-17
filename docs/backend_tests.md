@@ -45,23 +45,10 @@ PYTHONPATH=. python -m pytest tests/ -v --cov=app --cov-report=term-missing
 
 ## Unit Tests
 
-### DataService (`test_data_service.py`)
+### QueryService (`test_query_service.py`)
 
-- Covers initialization, get_players (filtering/sorting/pagination), get_player_details, position stats, draft counts, combinations, roster construction.
-- Uses sample Parquet mock and assertions on shapes/models.
-- Edge cases: empty data, invalid filters.
-
-### DuckDBService (`test_duckdb_service.py`)
-
-- Tests init (connection, pragma, view creation) and query execution.
-- Mocks duckdb.connect and arrow returns.
-- **Recent Fix**: Improved path resolution for cross-platform compatibility.
-
-### AnalyticsService (`test_analytics_service.py`)
-
-- Covers get_players, combinations, draft slot correlation, heat map, fallback logic.
-- Mocks DuckDB/DataService queries with side_effects for multiple calls.
-- **Recent Fix**: Updated mocks to work with lazy service initialization pattern.
+- Covers initialization, `get_players` (filtering/sorting/pagination), `get_player_details`, position stats, draft counts, combinations, roster construction, heat map, draft slot correlation, ADP drift, Week 17 bringback helpers.
+- Uses in-memory DuckDB and small materialized tables; asserts shapes/models and edge cases (empty results, invalid params).
 
 ## Integration Tests
 
@@ -79,8 +66,8 @@ PYTHONPATH=. python -m pytest tests/ -v --cov=app --cov-report=term-missing
 
 ### Path Resolution Fixes
 
-- **Issue**: DuckDB service failed to initialize due to incorrect path calculation on Windows.
-- **Fix**: Updated `DuckDBService._get_data_path()` to correctly traverse from `backend/app/services/` to project root using `pathlib.Path`.
+- **Issue**: Query service failed to initialize due to incorrect path calculation on Windows.
+- **Fix**: Updated `QueryService._get_data_path()` to correctly traverse to the project root using `pathlib.Path`.
 - **Impact**: Tests now work consistently across Windows, Linux, and macOS.
 
 ### Test Fixture Simplification
@@ -97,8 +84,8 @@ PYTHONPATH=. python -m pytest tests/ -v --cov=app --cov-report=term-missing
 
 ### Mock Pattern Updates
 
-- **Issue**: Analytics service tests failed due to changes in service instantiation pattern.
-- **Fix**: Updated mocks to work with lazy service initialization (`get_duckdb_service()` function).
+- **Issue**: Tests needed to adapt to the singleton/lazy init pattern.
+- **Fix**: Use the exported `query_service` or instantiate `QueryService()` and mock methods directly.
 - **Impact**: Tests properly isolate service dependencies.
 
 ## Coverage and Current Status

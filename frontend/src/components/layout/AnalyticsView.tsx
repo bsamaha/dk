@@ -1,7 +1,8 @@
 import { Tabs } from '@mantine/core';
+import { Suspense, lazy } from 'react';
 import { IconGraph, IconStack3, IconTrophy } from '@tabler/icons-react';
-import DraftSlotTab from '../analytics/DraftSlotTab';
-import Week17BringBackTab from '../analytics/Week17BringBackTab';
+const DraftSlotTab = lazy(() => import('../analytics/DraftSlotTab'));
+const Week17BringBackTab = lazy(() => import('../analytics/Week17BringBackTab'));
 
 const AnalyticsView = () => {
   return (
@@ -22,10 +23,14 @@ const AnalyticsView = () => {
       </Tabs.List>
 
       <Tabs.Panel value="draftSlot" pt="sm">
-        <DraftSlotTab />
+        <Suspense fallback={<div className="p-4 text-gray-500">Loading…</div>}>
+          <DraftSlotTab />
+        </Suspense>
       </Tabs.Panel>
       <Tabs.Panel value="week17-bringback" pt="sm">
-        <Week17BringBackTab />
+        <Suspense fallback={<div className="p-4 text-gray-500">Loading…</div>}>
+          <Week17BringBackTab />
+        </Suspense>
       </Tabs.Panel>
       <Tabs.Panel value="stacks" pt="sm">
         <div className="text-center text-gray-500 mt-20">

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueryPlus } from './useQueryPlus';
 import { apiService } from '../services/api';
 import type { Week17BringBackResponse, Week17Scope } from '../types';
 
@@ -18,10 +18,8 @@ export const useWeek17Bringback = ({
   limit = 10,
   enabled = true,
 }: UseWeek17BringbackOptions) =>
-  useQuery<Week17BringBackResponse, Error>({
+  useQueryPlus<Week17BringBackResponse, Error>({
     queryKey: ['week17-bringback', scope, entity, limit],
-    queryFn: () => apiService.getWeek17Bringback(scope, entity, limit),
+    queryFn: ({ signal }) => apiService.getWeek17Bringback(scope, entity, limit, signal),
     enabled: enabled && !!entity, // Only enabled if entity is provided
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
   });

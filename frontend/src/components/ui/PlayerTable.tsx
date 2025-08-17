@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   Table,
   Anchor,
@@ -13,22 +13,11 @@ import {
 } from '@mantine/core';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
-import {
-  getBarChartProps,
-  getGridStroke,
-  getAxisTickColor,
-} from '../../utils/chartTheme';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { getAxisTickColor } from '../../utils/chartTheme';
+import { Suspense, lazy } from 'react';
+const LazyHistogramChart = lazy(() => import('./HistogramChart'));
 import type { Player, PlayerDetails } from '../../types';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface PlayerTableProps {
   players: Player[];
@@ -51,10 +40,7 @@ const PlayerTable = ({
   const isDark = colorScheme === 'dark';
   const axisTickColor = getAxisTickColor(isDark);
 
-  // Ensure we have a valid color scheme before rendering
-  if (!colorScheme) {
-    return <Loader />;
-  }
+  // Proceed even if color scheme is not yet available; default styles will apply
   const createHistogramData = (picks: number[]) => {
     if (!picks || picks.length === 0) return [];
 
@@ -128,7 +114,6 @@ const PlayerTable = ({
   };
 
   const rows: React.ReactNode[] = [];
-
   players.forEach((player, index) => {
     // Player row
     rows.push(
@@ -162,6 +147,7 @@ const PlayerTable = ({
             <Collapse
               in={selectedPlayer?.name === player.name}
               transitionDuration={300}
+              keepMounted
             >
               <Paper p="md" m="md" withBorder bg={isDark ? 'dark.7' : 'white'}>
                 <Title order={4} mb="md">
@@ -253,81 +239,16 @@ const PlayerTable = ({
                         style={{
                           backgroundColor: 'transparent',
                           borderRadius: '6px',
+                          height: 300,
                         }}
                       >
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={createHistogramData(
-                              playerDetailsData.picks || []
-                            )}
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke={getGridStroke(isDark)}
-                            />
-                            <XAxis
-                              dataKey="range"
-                              angle={-45}
-                              textAnchor="end"
-                              height={60}
-                              fontSize={12}
-                              tick={{ fill: axisTickColor }}
-                              axisLine={{ stroke: axisTickColor }}
-                              tickLine={{ stroke: axisTickColor }}
-                            />
-                            <YAxis
-                              fontSize={12}
-                              tick={{ fill: axisTickColor }}
-                              axisLine={{ stroke: axisTickColor }}
-                              tickLine={{ stroke: axisTickColor }}
-                            />
-                            <Tooltip
-                              content={({ active, payload, label }) => {
-                                if (active && payload && payload.length) {
-                                  const data = payload[0].payload;
-                                  return (
-                                    <div
-                                      style={{
-                                        backgroundColor: isDark
-                                          ? '#1E1E1E'
-                                          : '#FFFFFF',
-                                        border: `1px solid ${isDark ? '#016140' : '#E5E7EB'}`,
-                                        borderRadius: '6px',
-                                        boxShadow: isDark
-                                          ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
-                                          : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                        color: isDark ? '#FFFFFF' : '#1F2937',
-                                        padding: '10px',
-                                        whiteSpace: 'nowrap',
-                                      }}
-                                    >
-                                      <p
-                                        style={{
-                                          margin: '0 0 6px 0',
-                                          fontWeight: 600,
-                                        }}
-                                      >
-                                        Pick Range: {label}
-                                      </p>
-                                      <p
-                                        style={{ margin: 0, color: '#00A86B' }}
-                                      >
-                                        {data.count} drafts ({data.percentage}%)
-                                      </p>
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              }}
-                            />
-                            <Legend />
-                            <Bar
-                              dataKey="count"
-                              {...getBarChartProps()}
-                              name="Draft Count"
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
+                        <Suspense fallback={<Center p="xl"><Loader /></Center>}>
+                          <LazyHistogramChart
+                            data={createHistogramData(playerDetailsData.picks || [])}
+                            axisTickColor={axisTickColor}
+                            isDark={isDark}
+                          />
+                        </Suspense>
                       </div>
                       <Text size="xs" c="dimmed" mt="xs">
                         Dynamic bucketing adapts to player distribution. Tighter
@@ -346,21 +267,59 @@ const PlayerTable = ({
     }
   });
 
+  const isTestEnv = typeof import.meta !== 'undefined' && (import.meta as ImportMeta).env?.MODE === 'test';
+  const shouldVirtualize = rows.length > 200 && !isTestEnv;
+  const parentRef = useRef<HTMLDivElement | null>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: shouldVirtualize ? rows.length : 0,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 44,
+    overscan: 8,
+  });
+  const virtualItems = shouldVirtualize ? rowVirtualizer.getVirtualItems() : [];
+
   return (
     <Table.ScrollContainer minWidth={responsive.tableMinWidth}>
-      <Table verticalSpacing="sm">
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Player</Table.Th>
-            <Table.Th>Position</Table.Th>
-            {!isMobile && <Table.Th>Team</Table.Th>}
-            <Table.Th>Draft %</Table.Th>
-            <Table.Th>Avg. Pick</Table.Th>
-            {!isMobile && <Table.Th>Avg. Round</Table.Th>}
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>{rows}</Table.Tbody>
-      </Table>
+      {shouldVirtualize ? (
+        <div ref={parentRef} style={{ maxHeight: 600, overflow: 'auto' }}>
+          <Table verticalSpacing="sm">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Player</Table.Th>
+                <Table.Th>Position</Table.Th>
+                {!isMobile && <Table.Th>Team</Table.Th>}
+                <Table.Th>Draft %</Table.Th>
+                <Table.Th>Avg. Pick</Table.Th>
+                {!isMobile && <Table.Th>Avg. Round</Table.Th>}
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody style={{ position: 'relative' }}>
+              <tr style={{ height: rowVirtualizer.getTotalSize() }} />
+              {virtualItems.map(vi => (
+                <tr key={vi.key} style={{ position: 'absolute', top: 0, transform: `translateY(${vi.start}px)` }}>
+                  <td style={{ padding: 0 }} colSpan={isMobile ? 5 : 7}>
+                    {rows[vi.index]}
+                  </td>
+                </tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </div>
+      ) : (
+        <Table verticalSpacing="sm">
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Player</Table.Th>
+              <Table.Th>Position</Table.Th>
+              {!isMobile && <Table.Th>Team</Table.Th>}
+              <Table.Th>Draft %</Table.Th>
+              <Table.Th>Avg. Pick</Table.Th>
+              {!isMobile && <Table.Th>Avg. Round</Table.Th>}
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>{rows}</Table.Tbody>
+        </Table>
+      )}
     </Table.ScrollContainer>
   );
 };

@@ -8,5 +8,3 @@ declare module './csp.shared.js' {
   export function getDevCSPHeader(): string;
   export function getProdCSPHeader(): string;
 }
-
-

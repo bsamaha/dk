@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useEffect, lazy, Suspense } from 'react';
 import { MantineProvider } from '@mantine/core';
+import { BrowserRouter } from 'react-router-dom';
 import { ColorSchemeContext } from './contexts/ColorSchemeContext';
 import { useLocalStorage } from '@mantine/hooks';
 import { Notifications } from '@mantine/notifications';
@@ -55,15 +56,18 @@ function App() {
   const toggleColorScheme = (value?: 'light' | 'dark') =>
     setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
 
-  // Sync Tailwind dark class
-  if (typeof document !== 'undefined') {
-    document.documentElement.classList.toggle('dark', colorScheme === 'dark');
-  }
+  // Sync Tailwind dark class when color scheme changes
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark', colorScheme === 'dark');
+    }
+  }, [colorScheme]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ColorSchemeContext.Provider value={{ colorScheme, toggleColorScheme }}>
-        <MantineProvider
+      <BrowserRouter>
+        <ColorSchemeContext.Provider value={{ colorScheme, toggleColorScheme }}>
+          <MantineProvider
           forceColorScheme={colorScheme}
           theme={{
             fontFamily: 'Inter, system-ui, sans-serif',
@@ -99,60 +103,40 @@ function App() {
             },
             primaryColor: 'brand',
             defaultRadius: 'md',
-            components: {
-              MultiSelect: {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                styles: (theme: any) => ({
-                  dropdown: {
-                    backgroundColor:
-                      theme.colorScheme === 'dark'
-                        ? theme.colors.dark[7]
-                        : theme.white,
-                  },
-                  option: {
-                    color:
-                      theme.colorScheme === 'dark' ? theme.white : theme.black,
-                  },
-                }),
-              },
-              Select: {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                styles: (theme: any) => ({
-                  dropdown: {
-                    backgroundColor:
-                      theme.colorScheme === 'dark'
-                        ? theme.colors.dark[7]
-                        : theme.white,
-                  },
-                  option: {
-                    color:
-                      theme.colorScheme === 'dark' ? theme.white : theme.black,
-                  },
-                }),
-              },
-            },
+            components: {},
           }}
         >
-          <Notifications position="top-right" />
-          <div className="min-h-screen bg-gray-50 dark:bg-gridiron-graphite-light flex flex-col">
-            <Header />
-            <div className="flex flex-1 min-h-0 relative">
-              {/* Mobile overlay when menu is open */}
-              {isMobile && isMobileMenuOpen && (
-                <div
-                  className="fixed inset-0 bg-black bg-opacity-50 z-40"
-                  onClick={() => useAppStore.getState().toggleMobileMenu()}
-                />
-              )}
-              <Sidebar />
-              <MainContent view={currentView} />
+            <Notifications position="top-right" />
+            <div className="min-h-screen bg-gray-50 dark:bg-gridiron-graphite-light flex flex-col">
+              <Header />
+              <div className="flex flex-1 min-h-0 relative">
+                {/* Mobile overlay when menu is open */}
+                {isMobile && isMobileMenuOpen && (
+                  <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                    onClick={() => useAppStore.getState().toggleMobileMenu()}
+                  />
+                )}
+                <Sidebar />
+                <MainContent view={currentView} />
+              </div>
             </div>
-          </div>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </MantineProvider>
-      </ColorSchemeContext.Provider>
+            {import.meta.env.DEV && (
+              <Suspense fallback={null}>
+                <LazyReactQueryDevtools initialIsOpen={false} />
+              </Suspense>
+            )}
+          </MantineProvider>
+        </ColorSchemeContext.Provider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
 
 export default App;
+
+// Lazy-load React Query Devtools only in development to avoid bundling in production
+const LazyReactQueryDevtools = lazy(async () => {
+  const mod = await import('@tanstack/react-query-devtools');
+  return { default: mod.ReactQueryDevtools };
+});

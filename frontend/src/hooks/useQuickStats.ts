@@ -14,5 +14,3 @@ export function useQuickStats(
     return { position: pos, total: s?.total_drafted ?? 0 };
   });
 }
-
-

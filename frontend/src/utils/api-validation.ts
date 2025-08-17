@@ -120,8 +120,6 @@ export const RosterConstructionCountSchema = z.object({
   RB: z.number(),
   WR: z.number(),
   TE: z.number(),
-  K: z.number().optional(),
-  DST: z.number().optional(),
   count: z.number(),
 });
 
@@ -138,11 +136,12 @@ export const PlayerDetailsSchema = z.object({
   team: z.string(),
   picks: z.array(z.number()),
   rounds: z.array(z.number()),
-  avg_pick: z.number().optional(),
-  min_pick: z.number().optional(),
-  max_pick: z.number().optional(),
-  std_dev_pick: z.number().optional(),
-  total_drafts: z.number().optional(),
+  // Backend may return null for these stats; accept null/undefined
+  avg_pick: z.number().nullable().optional(),
+  min_pick: z.number().nullable().optional(),
+  max_pick: z.number().nullable().optional(),
+  std_dev_pick: z.number().nullable().optional(),
+  total_drafts: z.number().nullable().optional(),
 });
 
 // Draft slot
