@@ -33,8 +33,6 @@ if (import.meta.env.PROD && typeof window !== 'undefined') {
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import 'mantine-datatable/styles.css';
-import 'react';
-import 'react-dom';
 
 import './index.css';
 

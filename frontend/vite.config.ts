@@ -48,20 +48,7 @@ export default defineConfig(({ mode }) => {
         input: {
           main: path.resolve(__dirname, 'index.html'),
         },
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (id.includes('/react/') || id.includes('react-dom')) return 'vendor-react';
-              if (id.includes('@mantine/core') || id.includes('@mantine/hooks') || id.includes('@mantine/notifications')) return 'vendor-mantine';
-              if (id.includes('recharts')) return 'vendor-recharts';
-              if (id.includes('@tanstack/react-query')) return 'vendor-react-query';
-              if (id.includes('react-router') || id.includes('history')) return 'vendor-router';
-              if (id.includes('zustand')) return 'vendor-zustand';
-              if (id.includes('/axios/')) return 'vendor-axios';
-              return 'vendor';
-            }
-          },
-        },
+        // Let Vite handle chunking by default to avoid interop/ordering issues
         plugins: [
           env.VITE_VISUALIZE === 'true'
             ? visualizer({ filename: 'dist/stats.html', template: 'treemap' })
