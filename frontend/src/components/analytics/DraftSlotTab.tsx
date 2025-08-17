@@ -12,23 +12,10 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { ThemedBarChart } from '../ui/charts/ThemedBarChart';
 import type { DraftSlotRow, DraftSlotMetric } from '../../types';
 import { useColorScheme } from '../../contexts/ColorSchemeContext';
-import {
-  getTooltipStyle,
-  getCursorStyle,
-  getBarChartProps,
-  getGridStroke,
-} from '../../utils/chartTheme';
+//
 
 const metricOptions: { label: string; value: DraftSlotMetric }[] = [
   { label: 'Count', value: 'count' },
@@ -50,7 +37,6 @@ const DraftSlotTab = () => {
   // Theme-aware values
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const axisTickColor = isDark ? '#E5E7EB' : '#4B5563';
 
   const { data, isLoading, error } = useDraftSlotCorrelation({
     slot,
@@ -188,10 +174,7 @@ const DraftSlotTab = () => {
       </div>
 
       {/* Chart */}
-      <div
-        className="bg-white dark:bg-surface-dark p-4 rounded-lg card-shadow"
-        style={{ height: '400px', minHeight: '300px' }}
-      >
+      <div className="bg-white dark:bg-surface-dark p-4 rounded-lg card-shadow" style={{ height: '400px', minHeight: '300px' }}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader />
@@ -201,42 +184,16 @@ const DraftSlotTab = () => {
             No data available.
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} layout="vertical" margin={{ left: 60 }}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke={getGridStroke(isDark)}
-              />
-              <XAxis
-                type="number"
-                domain={[0, 'auto']}
-                tickFormatter={v => (v as number).toFixed(2)}
-                tick={{ fill: axisTickColor }}
-                label={{
-                  value: 'Count Drafted in Draft Slot',
-                  position: 'insideBottom',
-                  offset: -10,
-                  style: {
-                    textAnchor: 'middle',
-                    fill: axisTickColor,
-                    fontSize: '12px',
-                  },
-                }}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                width={150}
-                tick={{ fill: axisTickColor }}
-              />
-              <RechartsTooltip
-                formatter={(v: number) => (v as number).toFixed(3)}
-                contentStyle={getTooltipStyle(isDark)}
-                cursor={{ ...getCursorStyle(isDark), opacity: 0.2 }}
-              />
-              <Bar dataKey="value" name="Count" {...getBarChartProps()} />
-            </BarChart>
-          </ResponsiveContainer>
+          <ThemedBarChart
+            data={chartData}
+            layout="vertical"
+            xLabel="Count Drafted in Draft Slot"
+            valueFormatter={(v: number) => v.toFixed(3)}
+            yDataKey="value"
+            xDataKey="name"
+            height={360}
+            marginLeft={150}
+          />
         )}
       </div>
 

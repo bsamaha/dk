@@ -59,13 +59,16 @@ const CombinationsView = () => {
 
   const { data, isLoading, error, isFetching } = useQuery({
     queryKey: ['combinations', selectedPlayers, nRounds, page],
-    queryFn: () =>
-      apiService.getPlayerCombinations({
-        required_players: selectedPlayers,
-        n_rounds: nRounds,
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-      }),
+    queryFn: ({ signal }) =>
+      apiService.getPlayerCombinations(
+        {
+          required_players: selectedPlayers,
+          n_rounds: nRounds,
+          limit: pageSize,
+          offset: (page - 1) * pageSize,
+        },
+        signal
+      ),
     enabled: isSubmitted && selectedPlayers.length > 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1,
@@ -76,8 +79,8 @@ const CombinationsView = () => {
     isLoading: isRosterConstructionLoading,
   } = useQuery<RosterConstructionCount[], Error>({
     queryKey: ['rosterConstructionCounts', rosterSelectedPlayers],
-    queryFn: () =>
-      apiService.getRosterConstructionCounts(rosterSelectedPlayers),
+    queryFn: ({ signal }) =>
+      apiService.getRosterConstructionCounts(rosterSelectedPlayers, signal),
     enabled: view === 'rosters',
   });
 

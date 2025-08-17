@@ -7,12 +7,14 @@ data access methods through SQL queries.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import threading
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from time import time as now_seconds
+from typing import Any, Dict, List, Optional, Sequence, Tuple, cast
 
 import duckdb  # type: ignore
 import polars as pl
@@ -42,6 +44,8 @@ class QueryService:
     _initialized: bool = False
     _initialization_started: bool = False
     _initialization_error: Optional[Exception] = None
+    # Simple in-process cache for pure-read endpoints (small TTL)
+    _cache_store: Dict[str, Dict[str, Any]] = {}
 
     def __new__(cls) -> "QueryService":
         """Thread-safe singleton via double-checked locking."""
@@ -91,6 +95,9 @@ class QueryService:
         assert self._con is not None
         self._con.execute("PRAGMA enable_object_cache;")
 
+        # Validate dataset integrity before attaching
+        self._validate_dataset_integrity()
+
         # Attach parquet file as a view
         data_path: str = QueryService._get_data_path()
         logger.info("Attaching parquet file to DuckDB: %s", data_path)
@@ -115,6 +122,9 @@ class QueryService:
         # Load Week 17 matchups
         self._load_week17_matchups()
 
+        # Materialize small, frequently used aggregates for faster queries
+        self._materialize_hot_aggregates()
+
         # Compute metadata without re-entering query() to avoid recursion during init
         td_tbl = self._con.execute(
             "SELECT COUNT(DISTINCT draft) AS count FROM picks"
@@ -137,6 +147,40 @@ class QueryService:
         self.all_players = pl.from_arrow(ap_tbl)["player"].to_list()
 
         logger.info("QueryService initialization completed successfully.")
+
+    def _materialize_hot_aggregates(self) -> None:
+        """Create small materialized tables for hot endpoints.
+
+        These are re-created on each startup and based on the static parquet view.
+        """
+        assert self._con is not None
+        con = self._con
+        # meta_totals table
+        con.execute("DROP TABLE IF EXISTS meta_totals")
+        con.execute(
+            """
+            CREATE TABLE meta_totals AS
+            SELECT
+              COUNT(DISTINCT draft)  AS total_drafts,
+              COUNT(DISTINCT team_id) AS total_teams,
+              COUNT(DISTINCT player)  AS total_players
+            FROM picks
+            """
+        )
+
+        # heat_map_cached table
+        con.execute("DROP TABLE IF EXISTS heat_map_cached")
+        con.execute(
+            """
+            CREATE TABLE heat_map_cached AS
+            SELECT round, Position AS position, COUNT(*) AS count
+            FROM picks
+            GROUP BY round, Position
+            ORDER BY round, Position
+            """
+        )
+
+        logger.info("Materialized hot aggregates: meta_totals, heat_map_cached")
 
     def _initialize_service_with_retry(
         self, max_retries: int = 3, max_backoff_seconds: float = 4.0
@@ -216,6 +260,66 @@ class QueryService:
         data_path: Path = data_dir / "updated_bestball_data.parquet"
         validated_path = QueryService._validate_and_sanitize_path(data_path, data_dir)
         return str(validated_path)
+
+    @staticmethod
+    def _read_checksum_file(checksum_file: Path) -> Optional[str]:
+        try:
+            if checksum_file.exists() and checksum_file.is_file():
+                content = checksum_file.read_text(encoding="utf-8").strip()
+                # Accept formats like "<hash>  <filename>" or just "<hash>"
+                return content.split()[0]
+        except Exception:
+            logger.exception("Failed to read checksum file: %s", checksum_file)
+        return None
+
+    @staticmethod
+    def _compute_sha256(file_path: Path) -> str:
+        sha256 = hashlib.sha256()
+        with file_path.open("rb") as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                sha256.update(chunk)
+        return sha256.hexdigest()
+
+    def _validate_dataset_integrity(self) -> None:
+        """Validate dataset integrity (size/hash) and fail fast if invalid.
+
+        Uses optional .sha256 files placed alongside data files. If a checksum file
+        is present and does not match, raises ValueError. If missing, proceeds but logs.
+        """
+        data_dir: Path = QueryService._resolve_data_dir()
+        parquet_path: Path = data_dir / "updated_bestball_data.parquet"
+        checksum_path: Path = data_dir / "updated_bestball_data.parquet.sha256"
+
+        try:
+            validated = self._validate_and_sanitize_path(parquet_path, data_dir)
+        except ValueError:
+            # Surface immediately to calling context
+            raise
+
+        # Check minimal size to catch obviously corrupt files
+        try:
+            size_bytes = validated.stat().st_size
+            if size_bytes < 1024:  # 1 KiB is unreasonably small for our dataset
+                raise ValueError(
+                    f"Dataset appears too small ({size_bytes} bytes): {validated}"
+                )
+        except OSError as exc:  # pragma: no cover
+            raise ValueError(f"Unable to stat dataset file: {validated}") from exc
+
+        expected_hash: Optional[str] = self._read_checksum_file(checksum_path)
+        if expected_hash:
+            actual_hash = self._compute_sha256(validated)
+            if actual_hash != expected_hash:
+                raise ValueError(
+                    "Dataset checksum mismatch: expected %s, got %s"
+                    % (expected_hash, actual_hash)
+                )
+            logger.info("Dataset checksum verified for %s", validated)
+        else:
+            logger.warning(
+                "No checksum file found for %s. Proceeding without hash verification.",
+                parquet_path,
+            )
 
     def _ensure_initialized(self) -> None:
         """Ensure the singleton is fully initialized before use."""
@@ -324,6 +428,7 @@ class QueryService:
         data_dir: Path = QueryService._resolve_data_dir()
 
         matchups_path: Path = data_dir / "week17_matchups.json"
+        checksum_path: Path = data_dir / "week17_matchups.json.sha256"
 
         try:
             # Validate the path is safe
@@ -335,6 +440,17 @@ class QueryService:
         # Load JSON data
         with open(validated_path, "r") as f:
             matchups_data: Dict[str, str] = json.load(f)
+
+        # Optional checksum verification for matchups JSON
+        expected_hash = self._read_checksum_file(checksum_path)
+        if expected_hash:
+            actual_hash = self._compute_sha256(validated_path)
+            if actual_hash != expected_hash:
+                raise ValueError(
+                    "Week 17 matchups checksum mismatch: expected %s, got %s"
+                    % (expected_hash, actual_hash)
+                )
+            logger.info("Week 17 matchups checksum verified for %s", validated_path)
 
         # Validate structure of matchups_data
         if not isinstance(matchups_data, dict):
@@ -403,6 +519,24 @@ class QueryService:
         if isinstance(polars_result, pl.Series):
             return polars_result.to_frame()
         return polars_result
+
+    # ---------------------------- Caching helpers ----------------------------
+    def _cache_get(self, key: str) -> Optional[Any]:
+        entry = self._cache_store.get(key)
+        if not entry:
+            return None
+        expires_at = entry.get("expires_at")
+        if expires_at is not None and expires_at < now_seconds():
+            # Expired - drop it
+            self._cache_store.pop(key, None)
+            return None
+        return entry.get("value")
+
+    def _cache_set(self, key: str, value: Any, ttl_seconds: int) -> None:
+        self._cache_store[key] = {
+            "value": value,
+            "expires_at": now_seconds() + max(0, ttl_seconds),
+        }
 
     def get_metadata(self) -> Dict[str, Any]:
         """Get metadata about the dataset."""
@@ -678,6 +812,12 @@ class QueryService:
         """Get position draft counts by round."""
         agg_func: str = "AVG" if aggregation == AggregationType.MEAN else "MEDIAN"
 
+        # Cache by position+aggregation for a short TTL since underlying data is static
+        cache_key = f"round_counts:{position.value}:{aggregation.value}"
+        cached = self._cache_get(cache_key)
+        if cached is not None:
+            return cached
+
         sql: str = f"""
             WITH all_rounds AS (
                 SELECT DISTINCT round FROM picks
@@ -712,10 +852,12 @@ class QueryService:
 
         df: pl.DataFrame = self.query(sql, [position.value])
 
-        return [
+        result: List[PositionRoundCount] = [
             PositionRoundCount(round=row["round"], count=row["count"])
             for row in df.iter_rows(named=True)
         ]
+        self._cache_set(cache_key, result, ttl_seconds=300)
+        return result
 
     def _validate_required_players(self, required_players: List[str]) -> List[str]:
         """Validate and clean required_players list.
@@ -839,14 +981,20 @@ class QueryService:
             return []
 
         # Calculate position counts
-        position_counts_df: pl.DataFrame = (
+        counts_df: pl.DataFrame = (
             result_df.lazy()
             .select(["draft", "draft_position", "positions"])
             .explode("positions")
             .group_by(["draft", "draft_position", "positions"])
             .agg(pl.len().alias("count"))
             .collect()
-            .pivot(index=["draft", "draft_position"], on="positions", values="count")
+        )
+        # Use keyword args compatible with runtime Polars (columns is deprecated but supported)
+        position_counts_df: pl.DataFrame = (
+            cast(Any, counts_df)
+            .pivot(
+                values="count", index=["draft", "draft_position"], columns="positions"
+            )
             .fill_null(0)
         )
 
@@ -973,13 +1121,20 @@ class QueryService:
 
     def get_heat_map(self) -> List[Dict[str, Any]]:
         """Return pick counts grouped by round & position for heat-map visual."""
+        # Prefer reading from materialized table; cache result for a small TTL
+        cache_key = "heat_map"
+        cached = self._cache_get(cache_key)
+        if cached is not None:
+            return cached
+
         sql: str = """
-        SELECT round, Position as position, COUNT(*) AS count
-        FROM picks
-        GROUP BY round, Position
-        ORDER BY round, Position;
+        SELECT round, position, count
+        FROM heat_map_cached
+        ORDER BY round, position;
         """
-        return self.query(sql).to_dicts()
+        result = self.query(sql).to_dicts()
+        self._cache_set(cache_key, result, ttl_seconds=300)
+        return result
 
     def get_draft_slot_correlation(
         self,
@@ -1121,7 +1276,8 @@ class QueryService:
 
         # Pivot to get positions as columns
         roster_df: pl.DataFrame = (
-            df.pivot(index=["draft", "team_id"], on="Position", values="count")
+            cast(Any, df)
+            .pivot(values="count", index=["draft", "team_id"], columns="Position")
             .fill_null(0)
             .rename({"draft": "draft_id"})
         )

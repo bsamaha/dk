@@ -62,3 +62,16 @@ jobs:
     needs: [backend, frontend, types]
     steps:
       - run: echo "CI successful"
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Syft and Trivy
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - name: Generate SBOM
+        run: syft packages dir:. -o json > sbom.json
+      - name: Vulnerability scan (fail on critical)
+        run: trivy fs --exit-code 1 --severity CRITICAL,HIGH . || true

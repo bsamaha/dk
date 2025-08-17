@@ -3,6 +3,7 @@ import { loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { getDevCSPHeader, getProdCSPHeader } from './csp.shared.js';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // Shared security headers configuration
 const securityHeaders = {
@@ -24,6 +25,11 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: './src/setupTests.ts',
       css: true,
+      exclude: [
+        'tests/e2e/**',
+        'node_modules/**',
+        'dist/**',
+      ],
     },
     plugins: [
       react({
@@ -40,7 +46,42 @@ export default defineConfig(({ mode }) => {
         input: {
           main: path.resolve(__dirname, 'index.html'),
         },
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('/react/') || id.includes('react-dom')) return 'vendor-react';
+              if (id.includes('@mantine/core') || id.includes('@mantine/hooks') || id.includes('@mantine/notifications')) return 'vendor-mantine';
+              if (id.includes('recharts')) return 'vendor-recharts';
+              if (id.includes('@tanstack/react-query')) return 'vendor-react-query';
+              if (id.includes('react-router') || id.includes('history')) return 'vendor-router';
+              if (id.includes('zustand')) return 'vendor-zustand';
+              if (id.includes('/axios/')) return 'vendor-axios';
+              return 'vendor';
+            }
+          },
+        },
+        plugins: [
+          env.VITE_VISUALIZE === 'true'
+            ? visualizer({ filename: 'dist/stats.html', template: 'treemap' })
+            : undefined,
+        ].filter(Boolean) as unknown as []
       },
+      chunkSizeWarningLimit: 1200,
+    },
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        '@mantine/core',
+        '@mantine/hooks',
+        '@mantine/notifications',
+        '@tanstack/react-query',
+        'recharts',
+        'axios',
+      ],
+      exclude: [
+        '@tanstack/react-query-devtools',
+      ],
     },
     server: {
       host: env.VITE_HOST || 'localhost',
@@ -48,6 +89,12 @@ export default defineConfig(({ mode }) => {
       headers: {
         ...securityHeaders,
         'Content-Security-Policy': getDevCSPHeader(),
+      },
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+        },
       },
     },
     preview: {

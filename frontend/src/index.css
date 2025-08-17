@@ -23,6 +23,11 @@
   --color-text-secondary: #6b7280;
   --color-text-tertiary: #9ca3af;
 
+  /* Component tokens */
+  /* Default (light) combobox option hover surface/text */
+  --combobox-option-hover-bg: #e6f9f2;
+  --combobox-option-hover-text: var(--color-turf-dark);
+
   --radius-card: 12px;
   --space-m: 16px;
   --elev-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -50,6 +55,10 @@ body {
   --color-text-primary: #ffffff;
   --color-text-secondary: #d1d5db;
   --color-text-tertiary: #9ca3af;
+
+  /* Dark scheme hover surface/text, mirroring Mantine default from devtools */
+  --combobox-option-hover-bg: #9ca3af;
+  --combobox-option-hover-text: var(--color-gridiron-graphite);
 }
 
 /* Custom component styles */
@@ -372,9 +381,7 @@ body {
   aspect-ratio: 1;
 }
 
-.logo-placeholder {
-  font-family: 'Space Grotesk', sans-serif;
-}
+
 
 /* Tooltip styles */
 .tooltip-content {
@@ -400,6 +407,17 @@ body {
   .mantine-SegmentedControl-control[data-active='true']
   .mantine-SegmentedControl-innerLabel {
   color: var(--color-audible-gold) !important;
+}
+
+/* Non-active segmented items – subtle light/dark background for readability */
+.mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active='false'] {
+  background-color: rgba(0, 0, 0, 0.04) !important; /* light grey in light mode */
+}
+.dark .mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active='false'] {
+  background-color: rgba(255, 255, 255, 0.08) !important; /* light grey-ish in dark */
+}
+.mantine-SegmentedControl-root .mantine-SegmentedControl-control[data-active='false'] .mantine-SegmentedControl-innerLabel {
+  color: inherit !important;
 }
 
 /* Custom Tabs styles */
@@ -498,16 +516,6 @@ body {
   border-color: rgba(0, 168, 107, 0.1);
 }
 
-/* Player Autocomplete Option Styles */
-.player-autocomplete-option[data-selected] {
-  background-color: #00a86b !important; /* Signal Green from brand book */
-  color: #ffffff !important;
-}
-
-.player-autocomplete-option[data-hover] {
-  background-color: #e6f9f2 !important; /* Light green tint */
-  color: #016140 !important; /* Turf Dark Green from brand book */
-}
 
 /* Gold outline styling for inputs and multiselect chips (Audible Gold) */
 .mantine-MultiSelect-root .mantine-Input-input,
@@ -577,7 +585,7 @@ body {
 
 /* Option hover/active with gold left border accent */
 .mantine-Select-item[data-hovered] {
-  border-left: 3px solid var(--color-audible-gold);
+  border-left: 3px solid var(--color-gridiron-graphite);
 }
 
 /* Reusable brand input styling across inputs (Select, MultiSelect, TextInput) */
@@ -618,4 +626,31 @@ body {
 .brand-input.brand-input-selected .mantine-Input-input::placeholder,
 .brand-input.brand-input-selected .mantine-Select-input::placeholder {
   color: var(--color-gridiron-graphite) !important;
+}
+
+.player-autocomplete-option[data-hovered],
+.player-autocomplete-option:hover:where(:not([data-combobox-selected], [data-combobox-disabled])) {
+  background-color: var(--combobox-option-hover-bg) !important;
+  color: var(--combobox-option-hover-text) !important;
+}
+
+.player-autocomplete-option[data-checked] {
+  background-color: #00a86b !important;
+  color: #ffffff !important;
+}
+
+/* Highest precedence override to beat component-scoped hash classes (e.g., .m_92253aa5) */
+@media (hover: hover) {
+  :where([data-mantine-color-scheme]) .player-autocomplete-option:hover:where(:not([data-combobox-selected], [data-combobox-disabled])) {
+    background-color: var(--combobox-option-hover-bg) !important;
+    color: var(--combobox-option-hover-text) !important;
+  }
+}
+
+/* Optional left-border accent on hover */
+.mantine-Combobox-option[data-hovered],
+[data-mantine-color-scheme] .mantine-Combobox-option:hover:where(:not([data-combobox-selected], [data-combobox-disabled])) {
+  border-left: 3px solid var(--color-audible-gold);
+  background-color: var(--combobox-option-hover-bg) !important;
+  color: var(--combobox-option-hover-text) !important;
 }

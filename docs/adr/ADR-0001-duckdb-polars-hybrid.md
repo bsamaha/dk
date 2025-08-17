@@ -11,13 +11,10 @@ Meanwhile, **DuckDB** provides an in-process analytical SQL engine that can dire
 
 ## Decision
 
-1. Embed a single in-memory DuckDB connection at start-up (`duckdb_service`).
-2. Keep the full Polars DataFrame in memory and register it into DuckDB as `picks_df` to enable hybrid queries.
-3. Introduce **AnalyticsService** that:
-   a. Executes the heavy SQL in DuckDB.
-   b. Measures execution time.
-   c. Executes an equivalent Polars path when DuckDB latency > 50 ms; if Polars is **≥ 20 %** faster, Polars results are returned instead (transparent to callers).
-4. Preserve existing Pydantic response models and router contracts—callers are agnostic to the engine used.
+1. Embed a single in-memory DuckDB connection at start-up.
+2. Keep the design simple: use DuckDB SQL for analytics, with lightweight Polars shaping when needed.
+3. Consolidate into a single **QueryService** with parameterized SQL and small materialized tables for hot reads.
+4. Preserve existing Pydantic response models and router contracts—callers are agnostic to internal query details.
 
 ## Consequences
 
@@ -25,7 +22,7 @@ Meanwhile, **DuckDB** provides an in-process analytical SQL engine that can dire
 * Runtime automatically selects the fastest path per query/workload—"best of both worlds".
 * The fallback adds negligible overhead (<0.1 ms) when DuckDB is fast; significant speed-ups when it is not.
 * Slightly higher memory footprint (~25 MB) due to holding both Polars DataFrame and DuckDB object cache.
-* Future work: move Polars fallback threshold to a settings flag; extend fallback to all AnalyticsService methods.
+* Future work: consider additional materialized views for other hot endpoints if needed.
 
 ## Alternatives Considered
 
@@ -36,4 +33,4 @@ Meanwhile, **DuckDB** provides an in-process analytical SQL engine that can dire
 ## References
 
 * Benchmark script: `scripts/benchmark_duckdb_vs_polars.py`
-* Implementation: `backend/app/services/duckdb_service.py`, `analytics_service.py`
+* Implementation: `backend/app/services/query_service.py`

@@ -1,10 +1,11 @@
 import logging
 import time
+import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import polars as pl
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -13,16 +14,19 @@ from starlette.concurrency import run_in_threadpool
 
 from .api import router
 from .core.config import settings
-from .core.validation import unhandled_exception_handler, validation_exception_handler
+from .core.logging import configure_logging
+from .core.validation import (
+    http_error_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
 from .services.query_service import QueryService
 
 # Enable Polars string cache for categorical comparisons
 pl.enable_string_cache()
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+# Configure structured logging
+configure_logging()
 
 logger = logging.getLogger(__name__)
 
@@ -74,18 +78,52 @@ def create_app():
         allowed_hosts=settings.ALLOWED_HOSTS,
     )
 
-    # Rate limiting and security headers middleware
+    # Request ID + timing middleware
+    @app.middleware("http")
+    async def request_id_middleware(request: Request, call_next):
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+        # Stash request_id early so downstream can use it
+        if hasattr(request, "state"):
+            setattr(request.state, "request_id", request_id)
+        start = time.perf_counter()
+        response = await call_next(request)
+        elapsed_ms = int((time.perf_counter() - start) * 1000)
+        if hasattr(request, "state"):
+            setattr(request.state, "latency_ms", elapsed_ms)
+        return response
+
+    # Security headers + access log middleware
     @app.middleware("http")
     async def security_middleware(request: Request, call_next):
-        start_time = time.time()
         response = await call_next(request)
-        process_time = time.time() - start_time
 
         # Add security headers
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["X-Process-Time"] = str(process_time)
+
+        # Propagate request id to client
+        request_id = getattr(request.state, "request_id", None)
+        if request_id:
+            response.headers["X-Request-ID"] = request_id
+
+        # Structured access log
+        latency_ms = getattr(request.state, "latency_ms", None)
+        try:
+            client_ip = request.client.host if request.client else None
+        except Exception:
+            client_ip = None
+        logger.info(
+            "request",
+            extra={
+                "request_id": request_id,
+                "path": request.url.path,
+                "method": request.method,
+                "status_code": getattr(response, "status_code", None),
+                "latency_ms": latency_ms,
+                "client_ip": client_ip,
+            },
+        )
 
         return response
 
@@ -99,8 +137,9 @@ def create_app():
 
     # Register validation exception handler
     app.add_exception_handler(ValidationError, validation_exception_handler)
-    # Register a catch-all exception handler to reduce per-endpoint boilerplate
+    # Register HTTPException to unify schema
     app.add_exception_handler(Exception, unhandled_exception_handler)
+    app.add_exception_handler(HTTPException, http_error_handler)
 
     # Include API routers; individual endpoints use Depends(get_query_service)
     app.include_router(router, prefix="/api")

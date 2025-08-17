@@ -4,6 +4,8 @@ import { MantineProvider } from '@mantine/core';
 import { useAppStore } from '../../../store/appStore';
 import { ColorSchemeContext } from '../../../contexts/ColorSchemeContext';
 import Header from '../Header';
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('../../../store/appStore', () => ({
   useAppStore: vi.fn(),
@@ -18,14 +20,19 @@ beforeEach(() => {
 
 describe('Header', () => {
   it('renders navigation buttons', () => {
+    const qc = new QueryClient();
     render(
-      <MantineProvider>
-        <ColorSchemeContext.Provider
-          value={{ colorScheme: 'dark', toggleColorScheme: vi.fn() }}
-        >
-          <Header />
-        </ColorSchemeContext.Provider>
-      </MantineProvider>
+      <QueryClientProvider client={qc}>
+        <MemoryRouter>
+          <MantineProvider>
+            <ColorSchemeContext.Provider
+              value={{ colorScheme: 'dark', toggleColorScheme: vi.fn() }}
+            >
+              <Header />
+            </ColorSchemeContext.Provider>
+          </MantineProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Players')).toBeInTheDocument();
@@ -45,14 +52,19 @@ describe('Header', () => {
   it('calls setCurrentView on button click', () => {
     const setCurrentView = vi.fn();
     vi.mocked(useAppStore).mockReturnValue({ setCurrentView });
+    const qc = new QueryClient();
     render(
-      <MantineProvider>
-        <ColorSchemeContext.Provider
-          value={{ colorScheme: 'dark', toggleColorScheme: vi.fn() }}
-        >
-          <Header />
-        </ColorSchemeContext.Provider>
-      </MantineProvider>
+      <QueryClientProvider client={qc}>
+        <MemoryRouter>
+          <MantineProvider>
+            <ColorSchemeContext.Provider
+              value={{ colorScheme: 'dark', toggleColorScheme: vi.fn() }}
+            >
+              <Header />
+            </ColorSchemeContext.Provider>
+          </MantineProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
     );
     fireEvent.click(screen.getByText('Players'));
     expect(setCurrentView).toHaveBeenCalledWith('players');

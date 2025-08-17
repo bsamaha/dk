@@ -47,17 +47,6 @@ class MetadataResponse(BaseModel):
     all_players: List[str] = Field(..., description="List of all player names")
 
 
-class PlayerFilter(BaseModel):
-    """Request model for filtering players."""
-
-    positions: Optional[List[Position]] = Field(None, description="Filter by positions")
-    search_term: Optional[str] = Field(None, description="Search term for player names")
-    limit: Optional[int] = Field(
-        100, description="Maximum number of results", ge=1, le=1000
-    )
-    offset: Optional[int] = Field(0, description="Offset for pagination", ge=0)
-
-
 class Player(BaseModel):
     """Player model."""
 
@@ -121,53 +110,6 @@ class PositionStatsResponse(BaseModel):
     total_picks: int = Field(..., description="Total draft picks analyzed")
 
 
-class TeamCombination(BaseModel):
-    """Detailed model for a team with a specific player combination."""
-
-    draft_id: int = Field(..., description="Draft identifier")
-    draft_position: int = Field(..., description="Draft position of the team owner")
-    players: List[str] = Field(..., description="Full list of players on the team")
-    position_counts: str = Field(
-        ...,
-        description="Comma-separated string of position counts (e.g., 'QB: 2, RB: 5')",
-    )
-
-
-class CombinationFilter(BaseModel):
-    """Request model for player combination filtering."""
-
-    required_players: Optional[List[str]] = Field(
-        None, description="Players that must be in combinations"
-    )
-    n_rounds: int = Field(
-        20, description="Number of draft rounds to consider", ge=1, le=20
-    )
-    limit: Optional[int] = Field(
-        100, description="Maximum number of results", ge=1, le=1000
-    )
-
-
-class RosterConstructionFilter(BaseModel):
-    """Request model for roster construction filtering."""
-
-    required_players: Optional[List[str]] = Field(
-        None, description="Players that must be in roster constructions"
-    )
-    limit: Optional[int] = Field(
-        100, description="Maximum number of results", ge=1, le=1000
-    )
-
-
-class CombinationsResponse(BaseModel):
-    """Response model for player combinations."""
-
-    combinations: List[TeamCombination] = Field(
-        ..., description="List of teams matching the combination criteria"
-    )
-    total_combinations: int = Field(..., description="Total number of teams found")
-    filter_applied: CombinationFilter = Field(..., description="Applied filters")
-
-
 class FirstPlayerDraftStats(BaseModel):
     """Statistics for the first player drafted at a position."""
 
@@ -189,17 +131,6 @@ class PositionRoundCount(BaseModel):
     round: int = Field(..., description="Draft round")
     count: float = Field(
         ..., description="Average number of players drafted in this round"
-    )
-
-
-class PositionRoundCountsResponse(BaseModel):
-    """Response model for position draft counts by round."""
-
-    position: Position = Field(
-        ..., description="The position for which the counts are provided"
-    )
-    round_counts: List[PositionRoundCount] = Field(
-        ..., description="List of draft counts per round"
     )
 
 
@@ -231,83 +162,6 @@ class RosterConstruction(BaseModel):
     )
 
 
-class DriftEntry(BaseModel):
-    """ADP drift for a player between two time periods."""
-
-    name: str
-    position: Position
-    avg_pick_early: float
-    avg_pick_late: float
-    drift: float  # positive means rising (later pick number), negative means ADP climbs
-
-
-class DriftResponse(BaseModel):
-    drifts: List[DriftEntry]
-
-
-class HeatMapCell(BaseModel):
-    round: int
-    position: Position
-    count: int
-
-
-class HeatMapResponse(BaseModel):
-    cells: List[HeatMapCell]
-    total_picks: int
-
-
-class DraftSlotRow(BaseModel):
-    """Statistics for a single player relative to a draft slot."""
-
-    player: str = Field(..., description="Player name")
-    slot: int = Field(
-        ..., description="Number of teams in the slot that drafted the player"
-    )
-    overall: int = Field(
-        ..., description="Number of teams overall that drafted the player"
-    )
-    p_slot: float = Field(
-        ..., description="Percentage of slot teams drafting the player"
-    )
-    p_overall: float = Field(
-        ..., description="Percentage of all teams drafting the player"
-    )
-    score: float = Field(..., description="Metric score used for ranking")
-
-
-class DraftSlotResponse(BaseModel):
-    """Response payload for draft slot correlation request."""
-
-    slot: int = Field(..., description="Draft slot analysed (1-12)")
-    metric: str = Field(..., description="Metric used – count | percent | ratio")
-    rows: List[DraftSlotRow] = Field(
-        ..., description="Top players correlated with the slot"
-    )
-
-
-class StackEntry(BaseModel):
-    draft_id: int
-    draft_position: int
-    nfl_team: str  # e.g., PHI
-    qb: str
-    receiver: str  # WR or TE
-    round_qb: int
-    round_receiver: int
-
-
-class StackFinderResponse(BaseModel):
-    stacks: List[StackEntry]
-    total_stacks: int
-
-
-class RosterConstructionResponse(BaseModel):
-    """Response model for roster construction analysis."""
-
-    roster_constructions: List[RosterConstruction] = Field(
-        ..., description="List of team roster constructions"
-    )
-
-
 class Week17BringBackPlayer(BaseModel):
     """Model for Week 17 bring back player data."""
 
@@ -330,11 +184,3 @@ class Week17BringBackResponse(BaseModel):
     players: List[Week17BringBackPlayer] = Field(
         ..., description="Top bring back players"
     )
-
-
-class ErrorResponse(BaseModel):
-    """Error response model."""
-
-    error: str = Field(..., description="Error message")
-    detail: Optional[str] = Field(None, description="Detailed error information")
-    code: Optional[int] = Field(None, description="Error code")

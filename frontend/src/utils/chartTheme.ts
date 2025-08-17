@@ -50,13 +50,15 @@ export const getResponsiveTooltipStyle = (
 /**
  * Chart color constants based on brand book
  */
+import { Brand } from './branding';
+
 export const CHART_COLORS = {
-  primary: '#00A86B', // Signal Green
-  secondary: '#FFC300', // Audible Gold
-  tertiary: '#016140', // Turf Dark Green
-  quaternary: '#1E1E1E', // Gridiron Graphite
-  accent1: '#89C4AA', // Lighter green
-  accent2: '#0891b2', // Blue-ish
+  primary: Brand.colors.signalGreen,
+  secondary: Brand.colors.audibleGold,
+  tertiary: Brand.colors.turfDarkGreen,
+  quaternary: Brand.colors.graphite,
+  accent1: Brand.colors.accent1,
+  accent2: Brand.colors.accent2,
 } as const;
 
 /**

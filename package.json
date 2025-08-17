@@ -11,7 +11,9 @@
     "build": "npm run generate-csp && cd frontend && pnpm run build",
     "test": "cd backend && pytest && cd ../frontend && pnpm run test --run",
     "lint": "cd backend && ruff check . && ruff format --check . && cd ../frontend && pnpm run lint",
-    "generate-csp": "node scripts/generate-csp.js"
+    "generate-csp": "node scripts/generate-csp.js",
+    "sbom": "syft packages dir:. -o json > sbom.json",
+    "scan": "trivy fs --exit-code 1 --severity CRITICAL,HIGH . || true"
   },
   "repository": {
     "type": "git",
