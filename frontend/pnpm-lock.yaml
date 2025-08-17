@@ -3434,14 +3434,6 @@ snapshots:
 
   '@tanstack/virtual-core@3.13.12': {}
 
-  '@tanstack/react-virtual@3.13.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
-    dependencies:
-      '@tanstack/virtual-core': 3.13.12
-      react: 19.1.1
-      react-dom: 19.1.1(react@19.1.1)
-
-  '@tanstack/virtual-core@3.13.12': {}
-
   '@testing-library/dom@10.4.0':
     dependencies:
       '@babel/code-frame': 7.27.1
