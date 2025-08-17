@@ -1,11 +1,11 @@
 import logging
 import time
+import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
-import uuid
 
 import polars as pl
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -14,9 +14,13 @@ from starlette.concurrency import run_in_threadpool
 
 from .api import router
 from .core.config import settings
-from .core.validation import unhandled_exception_handler, validation_exception_handler, http_error_handler
-from .services.query_service import QueryService
 from .core.logging import configure_logging
+from .core.validation import (
+    http_error_handler,
+    unhandled_exception_handler,
+    validation_exception_handler,
+)
+from .services.query_service import QueryService
 
 # Enable Polars string cache for categorical comparisons
 pl.enable_string_cache()
