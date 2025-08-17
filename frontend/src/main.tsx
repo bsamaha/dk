@@ -36,12 +36,15 @@ import 'mantine-datatable/styles.css';
 
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <MantineProvider theme={brandTheme} defaultColorScheme="auto">
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </MantineProvider>
-  </StrictMode>
-);
+const container = document.getElementById('root');
+if (container) {
+  createRoot(container).render(
+    <StrictMode>
+      <MantineProvider theme={brandTheme} defaultColorScheme="auto">
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </MantineProvider>
+    </StrictMode>
+  );
+}
