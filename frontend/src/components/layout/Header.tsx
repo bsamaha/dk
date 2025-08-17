@@ -20,6 +20,7 @@ const Header = () => {
     { id: 'combinations', path: '/combinations', label: 'Combinations', icon: '🔗' },
     { id: 'tools', path: '/tools', label: 'Tools', icon: '🧰' },
     { id: 'about', path: '/about', label: 'About', icon: 'ℹ️' },
+
   ] as const;
 
   const { colorScheme, toggleColorScheme } = useColorScheme();
