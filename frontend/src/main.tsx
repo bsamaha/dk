@@ -50,3 +50,9 @@ if (container) {
     </StrictMode>
   );
 }
+else {
+  // Fail fast to aid debugging in environments with a missing root node
+  // eslint-disable-next-line no-console
+  console.error('Root element with id "root" was not found. Application cannot mount.');
+  throw new Error('Root element #root not found');
+}
