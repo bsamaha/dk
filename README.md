@@ -122,6 +122,26 @@ The application analyzes fantasy football draft data from a Parquet file (`data/
 
 ## 🐛 Troubleshooting
 
+### Container healthcheck host header
+
+The container healthcheck in the `Dockerfile` sends a `Host` header to satisfy FastAPI's `TrustedHostMiddleware`.
+Override the host used during healthchecks by setting the `ALLOWED_HOST_HEALTHCHECK` environment variable (defaults to `thesignalcallers.com`).
+
+Examples:
+
+```bash
+# Run container with custom Host header for healthcheck
+docker run -e ALLOWED_HOST_HEALTHCHECK=mydomain.example ...
+```
+
+```yaml
+# docker-compose.yml
+services:
+  app:
+    environment:
+      - ALLOWED_HOST_HEALTHCHECK=mydomain.example
+```
+
 ### Port Already in Use
 
 If you get port conflicts, kill existing processes:

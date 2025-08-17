@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, lazy, Suspense } from 'react';
 import { MantineProvider } from '@mantine/core';
+import { brandTheme } from './theme/brand';
 import { BrowserRouter } from 'react-router-dom';
 import { ColorSchemeContext } from './contexts/ColorSchemeContext';
 import { useLocalStorage } from '@mantine/hooks';
@@ -67,45 +68,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ColorSchemeContext.Provider value={{ colorScheme, toggleColorScheme }}>
-          <MantineProvider
-          forceColorScheme={colorScheme}
-          theme={{
-            fontFamily: 'Inter, system-ui, sans-serif',
-            headings: {
-              fontFamily: 'Space Grotesk, ui-sans-serif, system-ui, sans-serif',
-              fontWeight: '600',
-            },
-            colors: {
-              brand: [
-                '#e6f9f2',
-                '#c1f0df',
-                '#99e6cc',
-                '#66d9b8',
-                '#33cca3',
-                '#00A86B',
-                '#008d5a',
-                '#00734b',
-                '#005c3b',
-                '#00452c',
-              ],
-              gold: [
-                '#fffbe6',
-                '#fff5c2',
-                '#ffef99',
-                '#ffe966',
-                '#ffe333',
-                '#FFC300',
-                '#d9a000',
-                '#b38000',
-                '#8c6000',
-                '#664500',
-              ],
-            },
-            primaryColor: 'brand',
-            defaultRadius: 'md',
-            components: {},
-          }}
-        >
+          <MantineProvider forceColorScheme={colorScheme} theme={brandTheme}>
             <Notifications position="top-right" />
             <div className="min-h-screen bg-gray-50 dark:bg-gridiron-graphite-light flex flex-col">
               <Header />
