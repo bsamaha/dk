@@ -3338,8 +3338,6 @@ snapshots:
 
   '@remix-run/router@1.23.0': {}
 
-  '@remix-run/router@1.23.0': {}
-
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
   '@rollup/rollup-android-arm-eabi@4.45.1':
