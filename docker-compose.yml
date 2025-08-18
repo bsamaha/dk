@@ -18,6 +18,7 @@ services:
     environment:
       - ENVIRONMENT=production
       - ALLOWED_HOSTS=thesignalcallers.com,www.thesignalcallers.com
+      - ALLOWED_HOST_HEALTHCHECK=thesignalcallers.com
     restart: unless-stopped
     networks:
       - app-network

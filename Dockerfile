@@ -58,8 +58,8 @@ COPY data ./data
 # Expose API port
 EXPOSE 8000
 
-# Container healthcheck
-HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD curl -f http://127.0.0.1:8000/health || exit 1
+# Container healthcheck (send Host header to satisfy TrustedHostMiddleware)
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD curl -f -H "Host: ${ALLOWED_HOST_HEALTHCHECK:-thesignalcallers.com}" http://127.0.0.1:8000/health || exit 1
 
 # Create non-root user and adjust permissions
 RUN adduser --disabled-password --gecos "appuser" appuser \
